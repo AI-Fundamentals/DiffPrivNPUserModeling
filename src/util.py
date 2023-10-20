@@ -1,11 +1,41 @@
 """
 Several additional definitions for working with NP-based models.
+These come from the DP user modelling Julia code
 """
 
 import neuralprocesses as nps
 import lab as B
 
 
+def build_categorical_noise(
+        build_local_transform=lambda n: n,
+        dim_y=1
+        ):
+    """
+    Build a categorical noise model.
+
+    Parameters
+    ----------
+    build_local_transform : function, optional
+        Function to build local transformation (default identity function),
+        meaning no local transformation will be used.
+    dim_y : int, optional
+        Dimensionality of y (default 1).
+
+    Returns
+    -------
+    tuple
+        A tuple containing the number of noise channels and the constructed
+        noise model.
+    """
+    
+    num_noise_channels = dim_y
+    noise = nps.Chain([
+        build_local_transform(dim_y),  # Apply the local transformation
+        SoftmaxLikelihood(4)  # Apply a softmax
+    ])
+
+    return num_noise_channels, noise
 
 
 
