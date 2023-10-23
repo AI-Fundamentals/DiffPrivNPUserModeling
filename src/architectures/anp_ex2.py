@@ -55,16 +55,16 @@ def anp_ex2(dim_embedding,
     encoder_pt3 = nps.Chain(
         MLPCoder(
             nps.MLP(
-                dim_in=dim_x + dim_y,
-                dim_hidden=dim_embedding,
-                dim_out=dim_embedding,
+                in_dim=dim_x + dim_y,
+                width=dim_embedding,
+                out_dim=dim_embedding,
                 num_layers=num_encoder_layers,
                 nonlinearity='LeakyReLU'
             ),
             nps.MLP(
-                dim_in=dim_embedding,
-                dim_hidden=dim_embedding,
-                dim_out=2 * dim_embedding,
+                in_dim=dim_embedding,
+                width=dim_embedding,
+                out_dim=2 * dim_embedding,
                 num_layers=num_encoder_layers,
                 nonlinearity='LeakyReLU'
             )
@@ -79,9 +79,9 @@ def anp_ex2(dim_embedding,
     decoder = nps.Chain(
         nps.Materialise(),
         nps.MLP(
-            dim_in=dim_x + 2 * dim_embedding,
-            dim_hidden=dim_embedding,
-            dim_out=num_noise_channels,
+            in_dim=dim_x + 2 * dim_embedding,
+            width=dim_embedding,
+            out_dim=num_noise_channels,
             num_layers=num_decoder_layers,
             nonlinearity='LeakyReLU'
         ),
