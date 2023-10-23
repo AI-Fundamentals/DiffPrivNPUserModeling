@@ -1,11 +1,31 @@
-"""
-Construct the attentive neural process (ANP) used in experiment 2
-"""
-
 import neuralprocesses.tensorflow as nps
 from src.util import build_categorical_noise, MLPCoder
 
-def anp_ex2(dim_embedding, num_encoder_layers, num_encoder_heads, num_decoder_layers):
+def anp_ex2(dim_embedding,
+            num_encoder_layers,
+            num_encoder_heads,
+            num_decoder_layers
+    ):
+    """
+    Construct the attentive neural process (ANP) used in experiment 2.
+    
+    Parameters
+    ----------
+    dim_embedding : int
+        Embedding dimension in the MLPs.
+    num_encoder_layers : int
+        Number of layers in the encoder MLPs.
+    num_encoder_heads : int
+        Number of encoder attention heads.
+    num_decoder_layers : int
+        Number of layers in the decoder MLP.
+
+    Returns
+    -------
+    neuralprocesses Model
+        Attentive neual process model.
+
+    """
     dim_x = 17
     dim_y = 9
 
