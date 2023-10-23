@@ -110,3 +110,22 @@ class Categorical:
 
 
 
+class MLPCoder:
+    """
+        MLPCoder
+
+    Code with an MLP. Seems to be some sort of avg pooling in an ANP.
+    Based on NeuralProcesses.jl/src/model/coder.jl
+    Not 100% clear what exactly it's doing
+
+    # Fields
+    - `mlp1`: Pre-pooling MLP.
+    - `mlp2`: Post-pooling MLP.
+    """
+
+    def __init__(self,mlp1,mlp2):
+        self.mlp1 = mlp1
+        self.mlp2 = mlp2
+        
+    def code(self,xz,z,x):
+        return x, self.mlp2(B.mean(self.mlp1(B.concat(xz, z, dims=1)), dims=0))
