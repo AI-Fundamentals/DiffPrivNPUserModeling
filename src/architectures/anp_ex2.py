@@ -33,7 +33,7 @@ def anp_ex2(dim_embedding,
     num_noise_channels, noise = build_categorical_noise(dim_y=dim_y)
 
     # The encoder is made of 3 parts that go in parallel:
-    # Part 1:
+    # Part 1: Deterministic part
     encoder_pt1 = nps.Chain(
         nps.InputsCoder(),
         nps.DeterministicLikelihood()
@@ -41,7 +41,7 @@ def anp_ex2(dim_embedding,
 
     # Part 2: Attention
     encoder_pt2 = nps.Chain(
-        nps.attention(
+        nps.Attention(
             dim_x=dim_x,
             dim_y=dim_y,
             dim_embedding=dim_embedding,
