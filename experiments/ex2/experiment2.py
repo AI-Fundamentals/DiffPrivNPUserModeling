@@ -105,12 +105,12 @@ print("Setting up data generator...")
 batch_size  = args["batch_size"]
 
 # Redundant. Required to fit the DataGenerator definition
-x_context = nps.uniform.UniformContinuous(-2, 2)
-x_target  = Distributions.Uniform(-2, 2)
+x_context = nps.UniformContinuous(-2, 2)
+x_target  = nps.UniformContinuous(-2, 2)
 
 # Always use 10 context/target points
-num_context = 10#nps.dist.B.randint(lower=10,upper=11)
-num_target  = 10#nps.dist.B.randint(lower=10,upper=11)
+num_context = nps.UniformDiscrete(lower=10,upper=10)
+num_target  = nps.UniformDiscrete(lower=10,upper=10)
 
 
 
