@@ -2,7 +2,7 @@
 import sys
 sys.path.insert(0,'/Users/user/github/neuralprocesses')
 
-import neuralprocesses as nps
+import neuralprocesses.tensorflow as nps
 import argparse
 from src.architectures.anp_ex2 import anp_ex2
 
@@ -55,6 +55,20 @@ model = anp_ex2(
     num_encoder_heads=8,
     num_encoder_layers=6,
     num_decoder_layers=6,
+)
+
+#Wessel's suggestion
+model2 = nps.construct_agnp(
+    dim_x=17,
+    dim_y=9,
+    num_enc_layers=3,
+    num_dec_layers=6,
+    dim_embedding=128,
+    num_heads=8,
+    enc_same=False,        # This is an optimisation you could try. Try setting it to `True`.
+    width=512,
+    likelihood="lowrank",  # Make joint Gaussian predictions!
+    num_basis_functions=512,
 )
 
 ## Initialise loss
