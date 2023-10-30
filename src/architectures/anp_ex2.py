@@ -46,7 +46,8 @@ def anp_ex2(dim_embedding,
             dim_y=dim_y,
             dim_embedding=dim_embedding,
             num_heads=num_encoder_heads,
-            num_enc_layers=num_encoder_layers
+            num_enc_layers=num_encoder_layers,
+            nonlinearity='LeakyReLU'
         ),
         nps.DeterministicLikelihood()
     )    
