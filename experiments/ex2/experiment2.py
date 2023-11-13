@@ -72,6 +72,40 @@ model2 = nps.construct_agnp(
     num_basis_functions=512,
 )
 
+
+# #Wessel's softmax version
+# num_categories = 5
+
+# agnp = nps.construct_agnp(
+#     dim_x=2,  # Dimensionality of context and target inputs
+#     dim_yc=3,  # Dimensionality of context outputs
+#     dim_yt=num_categories,
+#     likelihood="het",
+#     nonlinearity="leakyrelu",
+# )
+# agnp.decoder = nps.Chain(
+#     # Strip off the heterogeneous likelihood.
+#     *agnp.decoder[:-2],  
+#     # Add in a softmax.
+#     lambda x: torch.softmax(x[..., :num_categories], dim=-1),
+# )
+
+# out = agnp(
+#     torch.randn(4, 2, 15),  # Context inputs
+#     torch.randn(4, 3, 15),  # Context outputs
+#     torch.randn(4, 2, 10),  # Target inputs
+# )
+# print(out.shape)  # Log-probabilities of shape `(4, 5, 10)`
+
+
+
+
+
+
+
+
+
+
 ## Initialise loss
 print("Initializing loss...")
 
