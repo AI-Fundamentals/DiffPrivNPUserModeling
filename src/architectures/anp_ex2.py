@@ -30,6 +30,7 @@ def anp_ex2(dim_embedding,
     dim_y = 9
 
     # Build noise channels
+    # These determine part of the output distribution
     num_noise_channels, noise = build_categorical_noise(dim_y=dim_y)
 
     # The encoder is made of 3 parts that go in parallel:
@@ -53,6 +54,8 @@ def anp_ex2(dim_embedding,
     )    
 
     # Part 3: Encoder MLPs, using MLPCoder for average pooling
+    # This part split the latent space into mean and variance 
+    
     encoder_pt3 = nps.Chain(
         MLPCoder(
             nps.MLP(
