@@ -67,6 +67,7 @@ model2 = nps.construct_agnp(
     num_heads=8,
     enc_same=False,        # This is an optimisation you could try. Try setting it to `True`.
     width=512,
+    nonlinearity="LeakyReLU",
     likelihood="lowrank",  # Make joint Gaussian predictions!
     num_basis_functions=512,
 )
