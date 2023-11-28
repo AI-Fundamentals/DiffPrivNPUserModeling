@@ -18,7 +18,7 @@ def print_hdf_structure(file_name):
 
 # %%
 
-def hdf_to_tf_dataset(filepath):
+def hdf_to_tf_dataset(filepath,dtype=tf.float32):
     """
     Load data from an HDF5 file and convert it into a TensorFlow dataset.
     The output dataset will have a batch size of 1. To create batches you
@@ -48,10 +48,10 @@ def hdf_to_tf_dataset(filepath):
 
     # Define the output types for the generator
     output_signature = (
-        tf.TensorSpec(shape=(None, None, None), dtype=tf.float32),
-        tf.TensorSpec(shape=(None, None, None), dtype=tf.float32),
-        tf.TensorSpec(shape=(None, None, None), dtype=tf.float32),
-        tf.TensorSpec(shape=(None, None, None), dtype=tf.float32)
+        tf.TensorSpec(shape=(None, None, None), dtype=dtype),
+        tf.TensorSpec(shape=(None, None, None), dtype=dtype),
+        tf.TensorSpec(shape=(None, None, None), dtype=dtype),
+        tf.TensorSpec(shape=(None, None, None), dtype=dtype)
     )
 
     # Create a TensorFlow dataset from the generator
