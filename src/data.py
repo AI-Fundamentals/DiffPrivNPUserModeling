@@ -16,7 +16,53 @@ def print_hdf_structure(file_name):
         f.visit(print)
 
 
+# %%
 
+def hdf_to_tf_dataset(filepath):
+    """
+    Load data from an HDF5 file and convert it into a TensorFlow dataset.
+    The output dataset will have a batch size of 1. To create batches you
+    will likely have to use data.padded_batch(minibatch_size).    
+
+    Parameters
+    ----------
+    filepath : str
+        The path to the HDF5 file.
+
+    Returns
+    -------
+    data : tf.data.Dataset
+        The TensorFlow dataset.
+
+    """
+    # Define a generator for the data
+    def gen():
+        with h5py.File(filepath, 'r') as hf:
+            for sample_name in hf:
+                sample_group = hf[sample_name]
+                xc = sample_group['xc'][:]
+                yc = sample_group['yc'][:]
+                xt = sample_group['xt'][:]
+                yt = sample_group['yt'][:]
+                yield (xc, yc, xt, yt)
+
+    # Define the output types for the generator
+    output_signature = (
+        tf.TensorSpec(shape=(None, None, None), dtype=tf.float32),
+        tf.TensorSpec(shape=(None, None, None), dtype=tf.float32),
+        tf.TensorSpec(shape=(None, None, None), dtype=tf.float32),
+        tf.TensorSpec(shape=(None, None, None), dtype=tf.float32)
+    )
+
+    # Create a TensorFlow dataset from the generator
+    data = tf.data.Dataset.from_generator(gen, output_signature=output_signature)
+
+    return data
+
+
+
+
+#######OLD FUNCTIONS, NEVER QUITE GOT THEM WORKING#######
 
 # def load_hdf5_to_tensor(file_path):
 #     """
@@ -85,63 +131,3 @@ def print_hdf_structure(file_name):
 
 
 
-# %%
-
-def hdf_to_tf_dataset(filepath, preload=True):
-    """
-    Load data from an HDF5 file and convert it into a TensorFlow dataset.
-    Note that the output dataset will have a batch size of 1.
-
-    Parameters
-    ----------
-    filepath : str
-        The path to the HDF5 file.
-    preload : bool, optional
-        If True, all data will be loaded into memory at once. If False, a
-        generator will be used to load the data at runtime. Setting it to
-        True will be faster but you may run out of memory. Default is True.
-
-    Returns
-    -------
-    data : tf.data.Dataset
-        The TensorFlow dataset.
-
-    """
-    if preload:
-        # Load all data into memory
-        data = []
-        with h5py.File(filepath, 'r') as hf:
-            for sample_name in hf:
-                sample_group = hf[sample_name]
-                xc = sample_group['xc'][:]
-                yc = sample_group['yc'][:]
-                xt = sample_group['xt'][:]
-                yt = sample_group['yt'][:]
-                data.append((xc, yc, xt, yt))
-
-        # Convert your data to a TensorFlow dataset
-        data = tf.data.Dataset.from_tensor_slices(data)
-    else:
-        # Define a generator for the data
-        def gen():
-            with h5py.File(filepath, 'r') as hf:
-                for sample_name in hf:
-                    sample_group = hf[sample_name]
-                    xc = sample_group['xc'][:]
-                    yc = sample_group['yc'][:]
-                    xt = sample_group['xt'][:]
-                    yt = sample_group['yt'][:]
-                    yield (xc, yc, xt, yt)
-
-        # Define the output types for the generator
-        output_signature = (
-            tf.TensorSpec(shape=(None, None, None), dtype=tf.float32),
-            tf.TensorSpec(shape=(None, None, None), dtype=tf.float32),
-            tf.TensorSpec(shape=(None, None, None), dtype=tf.float32),
-            tf.TensorSpec(shape=(None, None, None), dtype=tf.float32)
-        )
-
-        # Create a TensorFlow dataset from the generator
-        data = tf.data.Dataset.from_generator(gen, output_signature=output_signature)
-
-    return data
