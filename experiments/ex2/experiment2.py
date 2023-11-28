@@ -4,7 +4,9 @@ sys.path.insert(0,'/Users/user/github/neuralprocesses')
 
 import neuralprocesses.tensorflow as nps
 import argparse
+import tensorflow as tf
 from src.architectures.anp_ex2 import anp_ex2
+from src.data import hdf_to_tf_dataset
 
 
 # First, parse any command line arguments
@@ -97,8 +99,59 @@ model2 = nps.construct_agnp(
 # )
 # print(out.shape)  # Log-probabilities of shape `(4, 5, 10)`
 
+# %%
 
+# Load the data
+experiment2_training_hdf = "data/ex2/experiment2_training_data.hdf"
 
+# %%
+import pdb
+# Assume you have defined your model and optimizer
+gnp = nps.construct_gnp(dim_x=17, dim_y=9, dim_lv=0, dim_embedding=2,
+                        num_enc_layers=3,num_dec_layers=10,
+                        width=16,
+                        likelihood="lowrank",
+                        enc_same=True) #This improves training if true
+
+optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=1e-3)
+
+# Load your data
+data = hdf_to_tf_dataset(experiment2_training_hdf)
+minibatch_size = 4
+data = data.padded_batch(minibatch_size)
+
+# Training loop
+num_epochs = 5
+for epoch in range(num_epochs):
+    print(f"Start of epoch {epoch}")
+
+    # Iterate over the batches of the dataset.
+    for step, (xc, yc, xt, yt) in enumerate(data):
+        #pdb.set_trace()
+        
+        # Fix the dimensions
+        yc = tf.transpose(yc,perm=[0,1,3,2])
+        yt = tf.transpose(yt,perm=[0,1,3,2])
+        
+        with tf.GradientTape() as tape:
+            # Compute the loss value for this minibatch.
+            loss = -tf.reduce_mean(nps.loglik(gnp, xc,
+                                   yc, xt, yt, normalise=True))
+
+        # Use the gradient tape to automatically retrieve
+        # the gradients of the trainable variables with respect to the loss.
+        grads = tape.gradient(loss, gnp.trainable_weights)
+
+        # Run one step of gradient descent by updating
+        # the value of the variables to minimize the loss.
+        optimizer.apply_gradients(zip(grads, gnp.trainable_weights))
+
+        # Log every 200 batches.
+        if step % 5 == 0:
+            print(
+                f"Training loss (for one batch) at step {step}: {float(loss)} "
+                f"Seen so far: {(step + 1) * minibatch_size} samples"
+            )
 
 
 
@@ -107,7 +160,7 @@ model2 = nps.construct_agnp(
 
 
 ## Initialise loss
-print("Initializing loss...")
+#print("Initializing loss...")
 
 # loss() = nps.elbo(
 #     xs...,
