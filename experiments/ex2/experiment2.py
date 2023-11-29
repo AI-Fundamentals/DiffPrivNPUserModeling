@@ -48,7 +48,7 @@ parser.add_argument("--bson",
 args = parser.parse_args()
 
 
-
+# %%
 # Initialise model
 print("Initializing model...")
 
@@ -59,45 +59,53 @@ model = anp_ex2(
     num_decoder_layers=6,
 )
 
-#Wessel's suggestion
-model2 = nps.construct_agnp(
-    dim_x=17,
-    dim_y=9,
-    num_enc_layers=3,
-    num_dec_layers=6,
-    dim_embedding=128,
-    num_heads=8,
-    enc_same=False,        # This is an optimisation you could try. Try setting it to `True`.
-    width=512,
-    nonlinearity="LeakyReLU",
-    likelihood="lowrank",  # Make joint Gaussian predictions!
-    num_basis_functions=512,
+# #Wessel's suggestion
+# model2 = nps.construct_agnp(
+#     dim_x=17,
+#     dim_y=9,
+#     num_enc_layers=3,
+#     num_dec_layers=6,
+#     dim_embedding=128,
+#     num_heads=8,
+#     enc_same=False,        # This is an optimisation you could try. Try setting it to `True`.
+#     width=512,
+#     nonlinearity="LeakyReLU",
+#     likelihood="lowrank",  # Make joint Gaussian predictions!
+#     num_basis_functions=512,
+# )
+
+# %%
+#Wessel's softmax version
+num_categories = 5
+
+agnp = nps.construct_agnp(
+    dim_x=2,  # Dimensionality of context and target inputs
+    dim_yc=3,  # Dimensionality of context outputs
+    dim_yt=num_categories,
+    likelihood="het",
+    nonlinearity="leakyrelu",
 )
 
 
-# #Wessel's softmax version
-# num_categories = 5
+agnp.encoder = nps.Chain(
+    # Add in onehot encoding layer
+    tf.keras.layers.CategoryEncoding(num_tokens=num_categories, output_mode='one_hot'),
+    agnp.encoder
+    )
 
-# agnp = nps.construct_agnp(
-#     dim_x=2,  # Dimensionality of context and target inputs
-#     dim_yc=3,  # Dimensionality of context outputs
-#     dim_yt=num_categories,
-#     likelihood="het",
-#     nonlinearity="leakyrelu",
-# )
-# agnp.decoder = nps.Chain(
-#     # Strip off the heterogeneous likelihood.
-#     *agnp.decoder[:-2],  
-#     # Add in a softmax.
-#     lambda x: torch.softmax(x[..., :num_categories], dim=-1),
-# )
+agnp.decoder = nps.Chain(    
+    # Strip off the heterogeneous likelihood.
+    *agnp.decoder[:-2],  
+    # Add in a softmax.
+    lambda x: tf.nn.softmax(x[..., :num_categories], axis=-1)
+)
 
-# out = agnp(
-#     torch.randn(4, 2, 15),  # Context inputs
-#     torch.randn(4, 3, 15),  # Context outputs
-#     torch.randn(4, 2, 10),  # Target inputs
-# )
-# print(out.shape)  # Log-probabilities of shape `(4, 5, 10)`
+out = agnp(
+    tf.random.normal([1,4, 2, 15]),  # Context inputs
+    tf.random.normal([1,4, 3, 15]),  # Context outputs
+    tf.random.normal([1,4, 2, 10]),  # Target inputs
+)
+print(out.shape)  # Log-probabilities of shape `(4, 5, 10)`
 
 # %%
 
@@ -116,9 +124,12 @@ gnp = nps.construct_gnp(dim_x=17, dim_y=9, dim_lv=0, dim_embedding=2,
 optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=1e-3)
 
 # Load your data
-data = hdf_to_tf_dataset(experiment2_training_hdf)
-minibatch_size = 4
+data = hdf_to_tf_dataset(experiment2_training_hdf,dtype=tf.int32)
+minibatch_size = 1
 data = data.padded_batch(minibatch_size)
+
+#This is specified in the supplement of the paper
+num_categories = 8
 
 # Training loop
 num_epochs = 5
@@ -127,15 +138,24 @@ for epoch in range(num_epochs):
 
     # Iterate over the batches of the dataset.
     for step, (xc, yc, xt, yt) in enumerate(data):
-        #pdb.set_trace()
+        pdb.set_trace()
         
-        # Fix the dimensions
+        # Fix the dimensions of the y ata
         yc = tf.transpose(yc,perm=[0,1,3,2])
         yt = tf.transpose(yt,perm=[0,1,3,2])
         
+        
+        
+        xc2 = tf.one_hot(xc,depth=num_categories)
+        yc2 = tf.one_hot(yc,depth=num_categories)
+        xt2 = tf.one_hot(xt,depth=num_categories)
+        yt2 = tf.one_hot(yt,depth=num_categories)
+        
+        
+        
         with tf.GradientTape() as tape:
             # Compute the loss value for this minibatch.
-            loss = -tf.reduce_mean(nps.loglik(gnp, xc,
+            loss = -tf.reduce_mean(nps.elbo(gnp, xc,
                                    yc, xt, yt, normalise=True))
 
         # Use the gradient tape to automatically retrieve
@@ -226,3 +246,43 @@ data_gen = NeuralProcesses.DataGenerator(
                 num_target=num_target,
                 σ²=1e-8
             )
+
+
+
+# %%
+
+import tensorflow as tf
+
+# Define some integer categorical data
+data = tf.constant([1, 2, 3, 4, 5])
+
+# Initialize a CategoryEncoding layer
+encoder = tf.keras.layers.CategoryEncoding(
+    num_tokens=6,  # Number of unique integers in your data + 1
+    output_mode="binary"  # Choose "binary" for one-hot encoding
+)
+
+
+# Initialize an IntegerLookup layer
+encoder = tf.keras.layers.IntegerLookup(
+    max_tokens=5  # Number of unique integers in your data + 1
+)
+
+# Add this line to initialize the tables
+tf.tables_initializer().run()
+
+# Call the layer on your data
+output = encoder(data)
+
+
+
+
+
+# Call the layer on your data
+output = encoder(data)
+
+
+
+#To turn softmax output into integer, use this
+# But you can't differentiate it so can't use it in training???
+output_integer = tf.argmax(output_softmax, axis=1)
