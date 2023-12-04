@@ -50,14 +50,14 @@ args = parser.parse_args()
 
 # %%
 # Initialise model
-print("Initializing model...")
+# print("Initializing model...")
 
-model = anp_ex2(
-    dim_embedding=128,
-    num_encoder_heads=8,
-    num_encoder_layers=6,
-    num_decoder_layers=6,
-)
+# model = anp_ex2(
+#     dim_embedding=128,
+#     num_encoder_heads=8,
+#     num_encoder_layers=6,
+#     num_decoder_layers=6,
+# )
 
 # #Wessel's suggestion
 # model2 = nps.construct_agnp(
@@ -75,35 +75,30 @@ model = anp_ex2(
 # )
 
 # %%
-#Wessel's softmax version
-num_categories = 5
+# #Wessel's softmax version
+num_categories = 8
 
+# Make a standard AGNP
 agnp = nps.construct_agnp(
-    dim_x=2,  # Dimensionality of context and target inputs
-    dim_yc=3,  # Dimensionality of context outputs
+    dim_x=17,  # Dimensionality of context and target inputs
+    dim_yc=9,  # Dimensionality of context outputs
     dim_yt=num_categories,
     likelihood="het",
     nonlinearity="leakyrelu",
 )
 
 
-agnp.encoder = nps.Chain(
-    # Add in onehot encoding layer
-    tf.keras.layers.CategoryEncoding(num_tokens=num_categories, output_mode='one_hot'),
-    agnp.encoder
-    )
-
-agnp.decoder = nps.Chain(    
-    # Strip off the heterogeneous likelihood.
-    *agnp.decoder[:-2],  
-    # Add in a softmax.
-    lambda x: tf.nn.softmax(x[..., :num_categories], axis=-1)
-)
+# agnp.decoder = nps.Chain(    
+#     # Strip off the heterogeneous likelihood.
+#     *agnp.decoder[:-2],  
+#     # Add in a softmax.
+#     lambda x: tf.nn.softmax(x[..., :num_categories], axis=-1)
+# )
 
 out = agnp(
-    tf.random.normal([1,4, 2, 15]),  # Context inputs
-    tf.random.normal([1,4, 3, 15]),  # Context outputs
-    tf.random.normal([1,4, 2, 10]),  # Target inputs
+    tf.random.uniform([1, 4, 17, 15], minval=0, maxval=num_categories, dtype=tf.float32),  # Context inputs
+    tf.random.uniform([1, 4, 9, 15], minval=0, maxval=num_categories, dtype=tf.float32),  # Context outputs
+    tf.random.uniform([1, 4, 17, 10], minval=0, maxval=num_categories, dtype=tf.float32),  # Target inputs
 )
 print(out.shape)  # Log-probabilities of shape `(4, 5, 10)`
 
@@ -113,19 +108,54 @@ print(out.shape)  # Log-probabilities of shape `(4, 5, 10)`
 experiment2_training_hdf = "data/ex2/experiment2_training_data.hdf"
 
 # %%
+
+def elbo(labels, logits, mean, logvar):
+    # Log-Likelihood
+    log_likelihood = -tf.nn.sparse_softmax_cross_entropy_with_logits(labels=labels, logits=logits)
+
+    # KL Divergence
+    kl_divergence = -0.5 * tf.reduce_sum(1 + logvar - tf.square(mean) - tf.exp(logvar), axis=-1)
+
+    # ELBO is the sum of the expected log-likelihood and the KL divergence
+    return tf.reduce_mean(log_likelihood - kl_divergence)
+
+# %%
+def diff_indices_tensor(tensor_list1, tensor_list2):
+    # Initialize a list to hold the indices of the differing tensors
+    diff_indices = []
+
+    # Compare each pair of tensors
+    for i, (tensor1, tensor2) in enumerate(zip(tensor_list1, tensor_list2)):
+        if not tf.reduce_all(tf.equal(tensor1, tensor2)):
+            diff_indices.append(i)
+
+    return diff_indices
+
+# %%
 import pdb
 # Assume you have defined your model and optimizer
-gnp = nps.construct_gnp(dim_x=17, dim_y=9, dim_lv=0, dim_embedding=2,
+gnp = nps.construct_gnp(dim_x=17, dim_y=9, dim_lv=2, dim_embedding=128,
                         num_enc_layers=3,num_dec_layers=10,
                         width=16,
                         likelihood="lowrank",
                         enc_same=True) #This improves training if true
 
+agnp = nps.construct_agnp(dim_x=17, dim_y=9, dim_lv=2, dim_embedding=128,
+                        num_enc_layers=3,num_dec_layers=10,
+                        width=16,
+                        likelihood="het",
+                        enc_same=False) #This improves training if true
+
+
+model = agnp
+
+
 optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=1e-3)
 
 # Load your data
-data = hdf_to_tf_dataset(experiment2_training_hdf,dtype=tf.int32)
-minibatch_size = 1
+data = hdf_to_tf_dataset(experiment2_training_hdf,dtype=tf.float32)
+
+minibatch_size = 4
 data = data.padded_batch(minibatch_size)
 
 #This is specified in the supplement of the paper
@@ -138,33 +168,36 @@ for epoch in range(num_epochs):
 
     # Iterate over the batches of the dataset.
     for step, (xc, yc, xt, yt) in enumerate(data):
-        pdb.set_trace()
         
-        # Fix the dimensions of the y ata
+        
+        # Fix the dimensions of the y data
         yc = tf.transpose(yc,perm=[0,1,3,2])
         yt = tf.transpose(yt,perm=[0,1,3,2])
         
         
         
-        xc2 = tf.one_hot(xc,depth=num_categories)
-        yc2 = tf.one_hot(yc,depth=num_categories)
-        xt2 = tf.one_hot(xt,depth=num_categories)
-        yt2 = tf.one_hot(yt,depth=num_categories)
-        
-        
+        #xc2 = tf.one_hot(xc,depth=num_categories)
+        #yc2 = tf.one_hot(tf.cast(yc, tf.int32),depth=num_categories)
+        #xt2 = tf.one_hot(xt,depth=num_categories)
+        #yt2 = tf.one_hot(tf.cast(yt, tf.int32),depth=num_categories)
         
         with tf.GradientTape() as tape:
             # Compute the loss value for this minibatch.
-            loss = -tf.reduce_mean(nps.elbo(gnp, xc,
-                                   yc, xt, yt, normalise=True))
+            loss = -tf.reduce_mean(nps.elbo(model, xc,
+                                   yc, xt, yt, normalise=False))
+            
+            #loss = -nps.elbo(agnp, xc,
+            #                       yc, xt, yt2, normalise=False)
 
         # Use the gradient tape to automatically retrieve
         # the gradients of the trainable variables with respect to the loss.
-        grads = tape.gradient(loss, gnp.trainable_weights)
+        grads = tape.gradient(loss, model.trainable_weights)
+
+
 
         # Run one step of gradient descent by updating
         # the value of the variables to minimize the loss.
-        optimizer.apply_gradients(zip(grads, gnp.trainable_weights))
+        optimizer.apply_gradients(zip(grads, model.trainable_weights))
 
         # Log every 200 batches.
         if step % 5 == 0:
@@ -177,6 +210,15 @@ for epoch in range(num_epochs):
 
 
 
+# %% Now try to test trained model
+for step, (xc, yc, xt, yt) in enumerate(data):
+
+    pdb.set_trace()
+    # Fix the dimensions of the y data
+    yc = tf.transpose(yc,perm=[0,1,3,2])
+    yt = tf.transpose(yt,perm=[0,1,3,2])
+    
+    out = agnp(xc,yc,xt)
 
 
 ## Initialise loss
