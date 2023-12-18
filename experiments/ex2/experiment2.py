@@ -6,11 +6,13 @@ sys.path.insert(0,'/Users/user/github/stheno')
 import neuralprocesses.tensorflow as nps
 import argparse
 import tensorflow as tf
+import tensorflow.keras.backend as K
 from src.architectures.anp_ex2 import anp_ex2
 from src.data import hdf_to_tf_dataset
 import pdb
 import lab as B
 import numpy as np
+import matplotlib.pyplot as plt
 # %%
 
 # First, parse any command line arguments
@@ -117,7 +119,11 @@ experiment2_training_hdf = "data/ex2/experiment2_training_data.hdf"
 
 
 # %%
+# Calculate the likelihood of the most likely prediction of a categorical
 def calc_cat_confidence(y_pred_onehot, categorical_dim):
+    # Normalise y_pred_onehot with a softmax
+    y_pred_onehot = tf.nn.softmax(y_pred_onehot)
+    
     # Calculate confidence of y_pred
     y_pred_confidence = tf.reduce_max(y_pred_onehot, axis=categorical_dim)
 
@@ -127,12 +133,28 @@ def calc_cat_confidence(y_pred_onehot, categorical_dim):
     return mean_confidence
 
 # %%
-
+K.clear_session()
 # This version works for standard ELBO loss, but floats in and floats out
-agnp = nps.construct_agnp(dim_x=17, dim_y=9, dim_lv=0, dim_embedding=128,
+
+# dim_yc = (1,) * 9
+# dim_yt = 9
+
+
+agnp = nps.construct_agnp(dim_x=17, dim_y=9, dim_lv=10, dim_embedding=16,
                         num_enc_layers=6,num_dec_layers=6,
                         likelihood="het",
+                        #transform="positive",#doesnt work in training, gives nans
                         enc_same=False) #This improves training if true
+
+print("Running with dim_embedding = 16 for speed but it should be 128")
+
+# agnp = nps.construct_agnp(dim_x=17, dim_yc=dim_yc,dim_yt=dim_yt,
+#                           dim_lv=2, dim_embedding=128,
+#                         num_enc_layers=6,num_dec_layers=6,
+#                         likelihood="het",
+#                         #transform="positive",#doesnt work in training, gives nans
+#                         enc_same=False) #This improves training if true
+
 
 gnp = nps.construct_gnp(dim_x=17, dim_y=9, dim_lv=0, dim_embedding=2,
                         num_enc_layers=6,num_dec_layers=6,
@@ -154,14 +176,13 @@ optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=5e-4)
 # Load your data
 data = hdf_to_tf_dataset(experiment2_training_hdf,dtype=tf.float32)
 num_tasks = len(list(data))
-
-minibatch_size = 4
-data4 = data.padded_batch(minibatch_size)
-data4_unshuffled = data4
-data1_unshuffled = data.padded_batch(1)
+#data = data.padded_batch()
 
 #For keeping track of how many tasks the model has seen
 num_tasks_seen = 0
+
+# Number of samples taken to assess sample accuracy/confidence
+n_test_draws=10
 
 # Metrics to keep track of training within epochs
 per_epoch_loss = tf.keras.metrics.Mean(name='elbo_loss')
@@ -170,10 +191,7 @@ per_epoch_mean_conf = tf.keras.metrics.Mean(name='mean_confidence')
 per_epoch_sample_acc = tf.keras.metrics.Mean(name='sample_accuracy')
 per_epoch_sample_conf = tf.keras.metrics.Mean(name='sample_conf')
 
-# Number of samples taken to assess sample accuracy/confidence
-n_test_draws=10
-
-# Keep track of training metrics
+# Keep track of training metrics per epoch
 epochs_list = []
 epochs_loss = []
 epochs_mean_acc = []
@@ -181,14 +199,33 @@ epochs_mean_conf = []
 epochs_sample_acc = []
 epochs_sample_conf = []
 
+# Metrics to keep track of training within batches
+per_task_loss = tf.keras.metrics.Mean(name='elbo_loss')
+per_task_mean_acc = tf.keras.metrics.Mean(name='mean_acc')
+per_task_mean_conf = tf.keras.metrics.Mean(name='mean_confidence')
+per_task_sample_acc = tf.keras.metrics.Mean(name='sample_accuracy')
+per_task_sample_conf = tf.keras.metrics.Mean(name='sample_conf')
+
+# Keep track of training metrics per task
+tasks_list = []
+tasks_loss = []
+tasks_mean_acc = []
+tasks_mean_conf = []
+tasks_sample_acc = []
+tasks_sample_conf = []
+
+
+#Testing standard loss
+loss_fn = tf.keras.losses.CategoricalCrossentropy()
+
 # %%
 # Training loop
-num_epochs = 2
+num_epochs = 5
 for epoch in range(num_epochs+1):
     print(f"""######## Start of epoch {epoch} ########""")
     
     # Shuffle the dataset
-    data = data.shuffle(buffer_size=num_tasks)
+    #data = data.shuffle(buffer_size=num_tasks)
     
     # Reset epoch metrics
     per_epoch_loss.reset_states()
@@ -199,19 +236,41 @@ for epoch in range(num_epochs+1):
 
 
     # Iterate over the batches of the dataset.
-    for step, (xc, yc, xt, yt) in enumerate(data4):
-        #pdb.set_trace()
+    for step, (xc, yc, xt, yt) in enumerate(data):
+        
+        # if epoch==0:
+        #     pdb.set_trace()
+        
+        # Reset task metrics
+        per_task_loss.reset_states()
+        per_task_mean_acc.reset_states()
+        per_task_mean_conf.reset_states()
+        per_task_sample_acc.reset_states()
+        per_task_sample_conf.reset_states()         
+        
         
         # Fix the dimensions of the y data
-        yc_t = tf.transpose(yc,perm=[0,1,3,2])
-        yt_t = tf.transpose(yt,perm=[0,1,3,2])
+        #yc_t = tf.transpose(yc,perm=[0,1,3,2])
+        #yt_t = tf.transpose(yt,perm=[0,1,3,2])
+        
+        #Without padded batch
+        yc_t = tf.transpose(yc,perm=[0,2,1])
+        yt_t = tf.transpose(yt,perm=[0,2,1])
         
         
         with tf.GradientTape() as tape:
-            # Compute the loss value for this minibatch.
-            loss = -tf.reduce_mean(nps.loglik(model, xc,
-                                    yc_t, xt, yt_t, normalise=False,
-                                    dtype_lik=tf.float32))
+            
+            
+            # Assess accuracy
+            mean, var, noiseless_samples, noisy_samples = nps.predict(
+                model,xc, yc_t, xt, num_samples=n_test_draws
+                )
+            loss = loss_fn(yt_t, mean)
+            
+            # # Compute the loss value for this minibatch.
+            # loss = -tf.reduce_mean(nps.elbo(model, xc,
+            #                         yc_t, xt, yt_t, normalise=False,
+            #                         dtype_lik=tf.float32))
 
         # with tf.GradientTape() as tape:
         #     # Compute the loss value for this minibatch.
@@ -239,39 +298,69 @@ for epoch in range(num_epochs+1):
             optimizer.apply_gradients(zip(grads, model.trainable_weights))
     
             # Add to num_tasks
-            num_tasks_seen = num_tasks_seen + xc.shape[0]        
+            num_tasks_seen = num_tasks_seen + 1        
 
         # Keep track of epoch metrics
         per_epoch_loss(loss)
+        per_task_loss(loss)
         
         #pdb.set_trace()
 
-        # Assess accuracy
+        # Assess accuracy after updating model gradients
         mean, var, noiseless_samples, noisy_samples = nps.predict(
             model,xc, yc_t, xt, num_samples=n_test_draws
             )
-        mean = tf.transpose(mean, perm=[0, 1, 3, 2])
+        # with no padded batch
+        mean = tf.transpose(mean, perm=[0, 2, 1])
+        #mean = tf.transpose(mean, perm=[0, 1, 3, 2])
         
         yt_reshaped = tf.reshape(yt, [-1, 9])
         mean_reshaped = tf.reshape(mean, [-1, 9])
         
         batch_accuracy = tf.keras.metrics.categorical_accuracy(yt_reshaped, mean_reshaped)
         per_epoch_mean_acc(batch_accuracy)
+        per_task_mean_acc(batch_accuracy)
         
         # Keep track of confidence in mean predictions
         # The categorical dimension is now 3 after it was transposed
-        per_epoch_mean_conf(calc_cat_confidence(mean, 3))
+        # with no padded batch
+        per_epoch_mean_conf(calc_cat_confidence(mean, 2))
+        per_task_mean_conf(calc_cat_confidence(mean, 2))
+        
+        #per_epoch_mean_conf(calc_cat_confidence(mean, 3))
+        #per_task_mean_conf(calc_cat_confidence(mean, 3))
         
         
         # Loop through sampled predictions and assess accuracy
         for sample in noisy_samples:
             #pdb.set_trace()
-            sample = tf.transpose(sample, perm=[0, 1, 3, 2])
+            #with no padded batch
+            sample = tf.transpose(sample, perm=[0, 2, 1])
+            #sample = tf.transpose(sample, perm=[0, 1, 3, 2])
             sample_reshaped = tf.reshape(sample, [-1, 9])
             sample_accuracy = tf.keras.metrics.categorical_accuracy(yt_reshaped, sample_reshaped)
             per_epoch_sample_acc(sample_accuracy)
-            per_epoch_sample_conf(calc_cat_confidence(sample, 3))
+            per_task_sample_acc(sample_accuracy)
+            # with no padded batch
+            per_epoch_sample_conf(calc_cat_confidence(sample, 2))
+            per_task_sample_conf(calc_cat_confidence(sample, 2))
+            #per_epoch_sample_conf(calc_cat_confidence(sample, 3))
+            #per_task_sample_conf(calc_cat_confidence(sample, 3))
 
+        
+        # Keep track of the metrics
+        tasks_loss.append(per_task_loss.result())
+        tasks_mean_acc.append(per_task_mean_acc.result())
+        tasks_mean_conf.append(per_task_mean_conf.result())
+        tasks_sample_acc.append(per_task_sample_acc.result())
+        tasks_sample_conf.append(per_task_sample_conf.result())
+            
+        # End of the task
+        # Keep track of the tasks that have been run
+        if not tasks_list:
+            tasks_list.append(0)
+        else:
+            tasks_list.append(tasks_list[-1]+1)
 
     # End of the epoch
     # Keep track of the epochs that have been run
@@ -295,9 +384,13 @@ for epoch in range(num_epochs+1):
     print(f"Mean confidence of sampled predictions: {np.round(float(epochs_sample_conf[-1]),3)}")
     print(f"Seen so far: {num_tasks_seen} tasks")
         
+    
+    
+# Fix the task list so 0 is start of first training epoch
+tasks_list = [item - 192 for item in tasks_list]
 # %% Plot training metrics
-import matplotlib.pyplot as plt
-# Creating subplots
+
+# Plots per epoch
 
 fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8, 6), sharex=True)
 
@@ -317,6 +410,66 @@ ax[1].set_ylabel('Values')
 # Adding legend
 ax[0].legend()
 ax[1].legend()
+
+# Displaying the plot
+plt.tight_layout()
+plt.show()
+
+# %%
+plt.rcParams.update({'font.size': 14}) # set global font size
+
+# Plots per task
+fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(12, 8), sharex=True)
+
+# Plotting the data
+ax[0].plot(tasks_list, tasks_loss, label='Loss')
+ax[1].plot(tasks_list, tasks_mean_acc, label='Mean Accuracy')
+ax[1].plot(tasks_list, tasks_mean_conf, label='Mean Confidence')
+ax[1].plot(tasks_list, tasks_sample_acc, label='Sample Accuracy')
+ax[1].plot(tasks_list, tasks_sample_conf, label='Sample Confidence')
+
+# Adding labels and title
+ax[0].set_xlabel('Tasks completed')
+ax[0].set_ylabel('Loss')
+ax[1].set_xlabel('Tasks completed')
+ax[1].set_ylabel('Values')
+
+# Adding legend
+ax[0].legend()
+ax[1].legend()
+
+ymin0, ymax0 = ax[0].get_ylim()
+ymin1, ymax1 = ax[1].get_ylim()
+
+# Add a dotted vertical line at x=191.5
+ax[0].vlines(x=-0.5, ymin=ymin0,ymax=ymax0,linestyle='dotted')
+ax[1].vlines(x=-0.5, ymin=ymin1,ymax=ymax1,linestyle='dotted')
+ax[0].vlines(x=191.5, ymin=ymin0,ymax=ymax0,linestyle='dotted')
+ax[1].vlines(x=191.5, ymin=ymin1,ymax=ymax1,linestyle='dotted')
+ax[0].vlines(x=383.5, ymin=ymin0,ymax=ymax0,linestyle='dotted')
+ax[1].vlines(x=383.5, ymin=ymin1,ymax=ymax1,linestyle='dotted')
+ax[0].vlines(x=575.5, ymin=ymin0,ymax=ymax0,linestyle='dotted')
+ax[1].vlines(x=575.5, ymin=ymin1,ymax=ymax1,linestyle='dotted')
+ax[0].vlines(x=767.5, ymin=ymin0,ymax=ymax0,linestyle='dotted')
+ax[1].vlines(x=767.5, ymin=ymin1,ymax=ymax1,linestyle='dotted')
+
+
+
+# Add text annotations
+ax[0].text(x=(180-192), y=0.95*ymax0, s='Untrained model', ha='right')
+ax[0].text(x=3, y=0.95*ymax0, s='Epoch 1', ha='left')
+#ax[1].text(x=(180-192), y=0.95*ymax1, s='Untrained model', ha='right')
+#ax[1].text(x=3, y=0.95*ymax1, s='Training epoch 1', ha='left')
+ax[0].text(x=195, y=0.95*ymax1, s='Epoch 2', ha='left')
+ax[0].text(x=387, y=0.95*ymax1, s='Epoch 3', ha='left')
+#ax[1].text(x=387, y=0.95*ymax1, s='Training epoch 2', ha='left')
+ax[0].text(x=580, y=0.95*ymax1, s='Epoch 4', ha='left')
+#ax[1].text(x=580, y=0.95*ymax1, s='Training epoch 3', ha='left')
+ax[0].text(x=772, y=0.95*ymax1, s='Epoch 4', ha='left')
+
+
+
+
 
 # Displaying the plot
 plt.tight_layout()
