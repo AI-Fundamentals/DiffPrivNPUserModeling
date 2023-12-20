@@ -216,11 +216,12 @@ tasks_sample_conf = []
 
 
 #Testing standard loss
-loss_fn = tf.keras.losses.CategoricalCrossentropy()
+# This trains the model but is wrong?
+#loss_fn = tf.keras.losses.CategoricalCrossentropy()
 
 # %%
 # Training loop
-num_epochs = 5
+num_epochs = 2
 for epoch in range(num_epochs+1):
     print(f"""######## Start of epoch {epoch} ########""")
     
@@ -238,7 +239,10 @@ for epoch in range(num_epochs+1):
     # Iterate over the batches of the dataset.
     for step, (xc, yc, xt, yt) in enumerate(data):
         
-        # if epoch==0:
+        if epoch == 0:
+            continue
+        
+        # if epoch==1:
         #     pdb.set_trace()
         
         # Reset task metrics
@@ -265,12 +269,22 @@ for epoch in range(num_epochs+1):
             mean, var, noiseless_samples, noisy_samples = nps.predict(
                 model,xc, yc_t, xt, num_samples=n_test_draws
                 )
-            loss = loss_fn(yt_t, mean)
+            #loss = loss_fn(yt_t, mean)
+            
+            mean_t = tf.transpose(mean, perm=[0, 2, 1])
+            
+            probabilities = tf.nn.softmax(mean_t)
+            
+            loss = tf.reduce_mean(
+                tf.nn.softmax_cross_entropy_with_logits(yt,mean_t)
+                )
             
             # # Compute the loss value for this minibatch.
             # loss = -tf.reduce_mean(nps.elbo(model, xc,
             #                         yc_t, xt, yt_t, normalise=False,
-            #                         dtype_lik=tf.float32))
+            #                         dtype_lik=tf.float32,
+            #                         num_samples=n_test_draws
+            #                         ))
 
         # with tf.GradientTape() as tape:
         #     # Compute the loss value for this minibatch.
