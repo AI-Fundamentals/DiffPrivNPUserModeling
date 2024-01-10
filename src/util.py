@@ -129,3 +129,38 @@ class MLPCoder:
         
     def code(self,xz,z,x):
         return x, self.mlp2(B.mean(self.mlp1(B.concat(xz, z, dims=1)), dims=0))
+    
+    
+    
+def calc_cat_confidence(y_pred_onehot, categorical_axis):
+    """
+    Calculate the mean confidence of the most likely prediction of a categorical.
+
+    1. Apply a softmax
+    2. Extract the confidence of the most likely category (i.e. the highest value)
+    3. Take the mean of all these values
+
+    Parameters
+    ----------
+    y_pred_onehot : array_like
+        One-hot encoded predicted values.
+    categorical_axis : int
+        The categorical axis.
+
+    Returns
+    -------
+    float
+        The mean confidence of the most likely prediction.
+
+    """
+    # Normalise y_pred_onehot with a softmax
+    y_pred_onehot = B.softmax(y_pred_onehot,axis=categorical_axis)
+    
+    # Calculate confidence of y_pred
+    y_pred_confidence = B.max(y_pred_onehot, axis=categorical_axis)
+
+    # Calculate the mean confidence
+    mean_confidence = B.mean(y_pred_confidence)
+    
+    return mean_confidence
+
