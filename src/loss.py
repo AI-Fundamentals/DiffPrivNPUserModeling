@@ -93,8 +93,8 @@ def elbo_tf_cat(
     )
     d = nps.util.fix_noise(d, fix_noise)
     
-    # import pdb
-    # pdb.set_trace()
+    #import pdb
+    #pdb.set_trace()
 
     #VERSION THAT WORKS WITH THE MEAN
     # Transpose y_true and y_pred to shape [minibatch, num_data_points, num_categories]
@@ -111,7 +111,8 @@ def elbo_tf_cat(
     yt_true_transposed = tf.transpose(yt, perm=[0,2,1])
     # Now give it an extra dimension to match the sampled predictions
     yt_true_transposed = tf.expand_dims(yt_true_transposed, axis=0)
-    yt_true_transposed = tf.tile(yt_true_transposed, [num_samples, 1, 1, 1])
+    if yt_pred_transposed.shape[0] >1:
+        yt_true_transposed = tf.tile(yt_true_transposed, [num_samples, 1, 1, 1])
     yt_true_transposed = B.cast(dtype_lik,yt_true_transposed)
     
     # Reconstruction loss
