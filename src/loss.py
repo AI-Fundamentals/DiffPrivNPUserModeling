@@ -4,6 +4,8 @@ import neuralprocesses.tensorflow as nps
 import numpy as np
 import tensorflow as tf
 
+from neuralprocesses import normal
+
 def elbo_tf_cat(
     state: B.RandomState,
     model: nps.Model,
@@ -95,40 +97,91 @@ def elbo_tf_cat(
     
     #import pdb
     #pdb.set_trace()
+    
+  
 
     #VERSION THAT WORKS WITH THE MEAN
+    # We have already sampled from the latent distribution
     # Transpose y_true and y_pred to shape [minibatch, num_data_points, num_categories]
     # So they can go into softmax_cross_entropy_with_logits correctly 
-    # yt_true_transposed = tf.transpose(yt, perm=[0,2,1])
-    # yt_pred_transposed = tf.transpose(d.mean[0], perm=[0,2,1])
-    # yt_true_transposed = B.cast(dtype_lik,yt_true_transposed)
-
-    # VERSION THAT SAMPLES
-    # Sample yt_pred and transpose
-    yt_pred_transposed = tf.transpose(d.sample(),perm=[0,1,3,2])
-    
-    # Transpose yt_true so it's right for the loss function
     yt_true_transposed = tf.transpose(yt, perm=[0,2,1])
-    # Now give it an extra dimension to match the sampled predictions
-    yt_true_transposed = tf.expand_dims(yt_true_transposed, axis=0)
-    if yt_pred_transposed.shape[0] >1:
-        yt_true_transposed = tf.tile(yt_true_transposed, [num_samples, 1, 1, 1])
+    yt_pred_transposed = tf.transpose(d.mean[0], perm=[0,2,1])
     yt_true_transposed = B.cast(dtype_lik,yt_true_transposed)
+
+    # # VERSION THAT SAMPLES
+    # # Sample yt_pred and transpose
+    # yt_pred_transposed = tf.transpose(d.sample(),perm=[0,1,3,2])
+    
+    # # Transpose yt_true so it's right for the loss function
+    # yt_true_transposed = tf.transpose(yt, perm=[0,2,1])
+    # # Now give it an extra dimension to match the sampled predictions
+    # yt_true_transposed = tf.expand_dims(yt_true_transposed, axis=0)
+    # if yt_pred_transposed.shape[0] >1:
+    #     yt_true_transposed = tf.tile(yt_true_transposed, [num_samples, 1, 1, 1])
+    # yt_true_transposed = B.cast(dtype_lik,yt_true_transposed)
+    
+    #import pdb
+    #pdb.set_trace()
     
     # Reconstruction loss
-    recon_loss = tf.nn.softmax_cross_entropy_with_logits(labels=yt_true_transposed, logits=yt_pred_transposed)
-    # Average loss over the model samples
-    recon_loss = tf.reduce_mean(recon_loss,axis=[0])
-    # Average loss over the data samples/tasks
-    recon_loss = tf.reduce_mean(recon_loss,axis=[-1])
-
-    #kl_term = _kl(qz, pz)
+    # Categorical crossentropy
+    # recon_loss = tf.nn.softmax_cross_entropy_with_logits(labels=yt_true_transposed, logits=yt_pred_transposed)
+    # # Log-likelihood
+    # #recon_loss = -tf.reduce_sum(yt_true_transposed * tf.math.log(yt_pred_transposed), axis=-1)
+    # # Average loss over the model samples
+    # recon_loss = tf.reduce_mean(recon_loss,axis=[0])
+    # # Average loss over the data samples/tasks
+    # recon_loss = tf.reduce_mean(recon_loss,axis=[-1])
     
-    # # Compute the ELBO.
-    elbos = - (recon_loss + _kl(qz, pz))
+    # # # Compute the ELBO using my loss
+    # elbos = - (recon_loss + _kl(qz, pz))
+    
+    
+    # Compute the ELBO using Wessel's loglik loss
+    #elbos = B.mean(d.logpdf(B.cast(dtype_lik, yt)), axis=0) - _kl(qz, pz)
+    
+    #import pdb
+    #pdb.set_trace()
+    
+    # Compute the loglik using Alex's method
+    # Calculate the probabilities of the different categories by applying a softmax
+    yt_pred_prob = B.softmax(yt_pred_transposed,axis=-1)
+    
+    log_loss = logpdf_explicit(yt_pred_prob, yt_true_transposed)
+    #log_loss = tf.reduce_mean(log_loss,axis=[0])
+    # Average loss over the data samples/tasks
+    log_loss = tf.reduce_mean(log_loss,axis=[-1])
+    
+    elbos = log_loss - _kl(qz, pz)
+
 
     if normalise:
         # Normalise by the number of targets.
         elbos = elbos / B.cast(dtype_lik, nps.num_data(xt, yt))
 
     return elbos
+
+
+
+
+def logpdf_explicit(d, x, axis=-1):
+    """
+    Explicitly compute the natural logarithm of the maximum product along each
+    on the given axis
+
+    Parameters
+    ----------
+    d : tensor-like
+        The first input tensor.
+    x : tensor-like
+        The second input tensor.
+    axis : int
+        The axis along which to compute the calculation. Default is -1.
+
+    Returns
+    -------
+    tf.Tensor
+        A tensor representing the natural logarithm of the maximum product along each row.
+
+    """
+    return B.log(B.max(x * d, axis=-1))
