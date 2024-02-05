@@ -1,0 +1,7 @@
+backends==1.5.5
+h5py==3.9.0
+matplotlib==3.8.0
+neuralprocesses==0.2.3
+numpy==1.26.3
+tensorflow==2.14.0
+tensorflow_macos==2.14.0
