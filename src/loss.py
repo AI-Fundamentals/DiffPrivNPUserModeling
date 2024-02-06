@@ -13,14 +13,18 @@ def np_elbo_explicit(
     xt,
     yt,
     *,
+    cat_axis=-2,
     num_samples=1,
     normalise=False,
     subsume_context=False,
     fix_noise=None,
     dtype_lik=None,
+
     **kw_args,
 ):
-    """ELBO objective, calculated explicitly.
+    """ELBO objective, with the log-likelihood part calculated explicitly by
+    calculating the log of the probability of the correct category. Try this if
+    nps.elbo doesn't train the model.
 
     Args:
         state (random state, optional): Random state.
@@ -29,6 +33,7 @@ def np_elbo_explicit(
         yc (tensor): Output of the context set.
         xt (input): Inputs of the target set.
         yt (tensor): Outputs of the target set.
+        cat_axis (int) : Categorical axis of y data. Defaults to -2.
         num_samples (int, optional): Number of samples. Defaults to 1.
         normalise (bool, optional): Normalise the objective by the number of targets.
             Defaults to `False`.
@@ -95,30 +100,22 @@ def np_elbo_explicit(
     )
     d = nps.util.fix_noise(d, fix_noise)
     
-    #import pdb
-    #pdb.set_trace()
-    
-    cat_axis = 1
-    # We have already sampled from the latent distribution
-    # Transpose y_true and y_pred to shape [minibatch, num_data_points, num_categories]
-    # So they can go into softmax_cross_entropy_with_logits correctly 
-    #yt_true_transposed = B.transpose(yt, perm=[0,2,1])
+    # d.mean is the mean of our samples from the latent distribution through 
+    # the decoder
     yt_pred = d.mean[0]
-    #yt_pred_transposed = B.transpose(d.mean[0], perm=[0,2,1])
     yt_pred = B.cast(dtype_lik,yt_pred)
 
-    
     # Compute the loglik using Alex's method
     # Calculate the probabilities of the different categories by applying a softmax
     yt_pred_prob = B.softmax(yt_pred,axis=cat_axis)
-    
+
+    # Calculate the log probability of the correct category    
     log_loss = logpdf_explicit(yt_pred_prob, yt,axis=cat_axis)
-    #log_loss = tf.reduce_mean(log_loss,axis=[0])
+
     # Average loss over the data samples/tasks
     log_loss = tf.reduce_mean(log_loss,axis=[-1])
     
     elbos = log_loss - _kl(qz, pz)
-
 
     if normalise:
         # Normalise by the number of targets.
@@ -129,13 +126,14 @@ def np_elbo_explicit(
 
 
 
-def elbo_tf_cat(
+def np_elbo_tf_cat(
     state: B.RandomState,
     model: nps.Model,
     contexts: list,
     xt,
     yt,
     *,
+    cat_axis=-2,
     num_samples=1,
     normalise=False,
     subsume_context=False,
@@ -143,7 +141,10 @@ def elbo_tf_cat(
     dtype_lik=None,
     **kw_args,
 ):
-    """ELBO objective.
+    """ELBO objective, with the log-likelihood part calculated using 
+    tf.nn.softmax_cross_entropy_with_logits. As such it will only work with
+    tensorflow tensors as the input data, with categorical y data. The output
+    of this function should be the same as np_elbo_explicit.
 
     Args:
         state (random state, optional): Random state.
@@ -152,6 +153,7 @@ def elbo_tf_cat(
         yc (tensor): Output of the context set.
         xt (input): Inputs of the target set.
         yt (tensor): Outputs of the target set.
+        cat_axis (int) : Categorical axis of y data. Defaults to -2.
         num_samples (int, optional): Number of samples. Defaults to 1.
         normalise (bool, optional): Normalise the objective by the number of targets.
             Defaults to `False`.
@@ -218,66 +220,24 @@ def elbo_tf_cat(
     )
     d = nps.util.fix_noise(d, fix_noise)
     
-    #import pdb
-    #pdb.set_trace()
-    
-  
-
-    #VERSION THAT WORKS WITH THE MEAN
-    # We have already sampled from the latent distribution
+    # d.mean is the mean of our samples from the latent distribution through 
+    # the decoder
     # Transpose y_true and y_pred to shape [minibatch, num_data_points, num_categories]
     # So they can go into softmax_cross_entropy_with_logits correctly 
     yt_true_transposed = B.transpose(yt, perm=[0,2,1])
     yt_pred_transposed = B.transpose(d.mean[0], perm=[0,2,1])
     yt_pred_transposed = B.cast(dtype_lik,yt_pred_transposed)
 
-    # # VERSION THAT SAMPLES
-    # # Sample yt_pred and transpose
-    # yt_pred_transposed = tf.transpose(d.sample(),perm=[0,1,3,2])
-    
-    # # Transpose yt_true so it's right for the loss function
-    # yt_true_transposed = tf.transpose(yt, perm=[0,2,1])
-    # # Now give it an extra dimension to match the sampled predictions
-    # yt_true_transposed = tf.expand_dims(yt_true_transposed, axis=0)
-    # if yt_pred_transposed.shape[0] >1:
-    #     yt_true_transposed = tf.tile(yt_true_transposed, [num_samples, 1, 1, 1])
-    # yt_true_transposed = B.cast(dtype_lik,yt_true_transposed)
-    
-
     #Reconstruction loss
     #Categorical crossentropy
     recon_loss = tf.nn.softmax_cross_entropy_with_logits(labels=yt_true_transposed, logits=yt_pred_transposed)
-    # Log-likelihood
-    #recon_loss = -tf.reduce_sum(yt_true_transposed * tf.math.log(yt_pred_transposed), axis=-1)
-    # Average loss over the model samples
-    recon_loss = -tf.reduce_mean(recon_loss,axis=[0])
+    
     # Average loss over the data samples/tasks
-    #recon_loss = tf.reduce_mean(recon_loss,axis=[-1])
+    dims = tf.range(1, tf.rank(recon_loss))
+    recon_loss = tf.reduce_mean(recon_loss,axis=dims)
     
-    # # # Compute the ELBO using my loss
-    # elbos = - (recon_loss + _kl(qz, pz))
-    
-    
-    # Compute the ELBO using Wessel's loglik loss
-    #elbos = B.mean(d.logpdf(B.cast(dtype_lik, yt)), axis=0) - _kl(qz, pz)
-    
-    #import pdb
-    #pdb.set_trace()
-    
-    # Compute the loglik using Alex's method
-    # Calculate the probabilities of the different categories by applying a softmax
-    yt_pred_prob = B.softmax(yt_pred_transposed,axis=-1)
-    
-    log_loss = logpdf_explicit(yt_pred_prob, yt_true_transposed)
-    #log_loss = tf.reduce_mean(log_loss,axis=[0])
-    # Average loss over the data samples/tasks
-    log_loss = tf.reduce_mean(log_loss,axis=[-1])
-    
-    elbos = log_loss - _kl(qz, pz)
-    
-    print("REcon_loss:", recon_loss[0])
-    print("Log_loss:", log_loss[0])
-
+    # Calculate the ELBO loss
+    elbos = recon_loss - _kl(qz, pz)
 
     if normalise:
         # Normalise by the number of targets.
