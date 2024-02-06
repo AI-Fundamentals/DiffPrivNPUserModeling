@@ -164,3 +164,30 @@ def calc_cat_confidence(y_pred_onehot, categorical_axis):
     
     return mean_confidence
 
+
+def flatten_first_two_dims(tensor):
+    """
+    Flattens the first two dimensions of a tensor.
+
+    Parameters
+    ----------
+    tensor : Tensor
+        The input tensor to be reshaped. The tensor should have at least two
+        dimensions.
+
+    Returns
+    -------
+    Tensor
+        The reshaped tensor where the first two dimensions are flattened into
+        one, and the remaining dimensions are kept the same.
+
+    """
+    
+    # Get the shape of the tensor
+    shape = B.shape(tensor)
+    new_shape = ([shape[0] * shape[1]] + shape[2:]).as_list()
+
+    # Flatten the first two dimensions and keep the remaining dimensions the same
+    flattened_tensor = B.reshape(tensor, *new_shape)
+
+    return flattened_tensor
