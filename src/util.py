@@ -191,3 +191,32 @@ def flatten_first_two_dims(tensor):
     flattened_tensor = B.reshape(tensor, *new_shape)
 
     return flattened_tensor
+
+
+def reshape_to_last(tensor, axis):
+    """
+    Reshape a tensor so that a specified axis becomes the last dimension.
+
+    Args:
+        tensor (B.Tensor): The input tensor.
+        axis (int): The axis to move to the last dimension. Can be negative.
+
+    Returns:
+        B.Tensor: The reshaped tensor.
+    """
+    #pdb.set_trace()
+    # If the axis is negative, adjust it to be positive
+    if axis < 0:
+        axis = len(B.shape(tensor)) + axis
+
+    # Get the list of dimensions
+    dims = list(range(len(B.shape(tensor))))
+
+    # Remove the specified axis
+    dims.remove(axis)
+
+    # Append the specified axis at the end
+    dims.append(axis)
+
+    # Use tf.transpose to reshape the tensor
+    return B.transpose(tensor, dims)
