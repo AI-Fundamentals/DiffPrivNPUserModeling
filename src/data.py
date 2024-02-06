@@ -38,12 +38,12 @@ def hdf_to_tf_dataset(filepath,dtype=tf.float32):
     # Define a generator for the data
     def gen():
         with h5py.File(filepath, 'r') as hf:
-            for sample_name in hf:
-                sample_group = hf[sample_name]
-                xc = sample_group['xc'][:]
-                yc = sample_group['yc'][:]
-                xt = sample_group['xt'][:]
-                yt = sample_group['yt'][:]
+            for batch_name in hf['data']:
+                batch_group = hf['data'][batch_name]
+                xc = batch_group['xc'][:]
+                yc = batch_group['yc'][:]
+                xt = batch_group['xt'][:]
+                yt = batch_group['yt'][:]
                 yield (xc, yc, xt, yt)
 
     # Define the output types for the generator
