@@ -60,6 +60,27 @@ def hdf_to_tf_dataset(filepath,dtype=tf.float32):
     return data
 
 
+def hdf_print_metadata(filepath):
+    """
+    Print the metadata of an HDF5 file, which must be in the 'metadata' group.
+
+    Parameters
+    ----------
+    filepath : str
+        The path to the HDF5 file.
+
+    Returns
+    -------
+    None
+
+    """
+    print(f"Metadata for {filepath}:")
+    with h5py.File(filepath, 'r') as hf:
+        # Print all items from the 'metadata' group
+        if 'metadata' in hf:
+            for name, item in hf['metadata'].attrs.items():
+                print(f"{name}: {item}")
+
 
 
 #######OLD FUNCTIONS, NEVER QUITE GOT THEM WORKING#######
