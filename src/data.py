@@ -60,9 +60,9 @@ def hdf_to_tf_dataset(filepath,dtype=tf.float32):
     return data
 
 
-def hdf_print_metadata(filepath):
+def hdf_get_metadata(filepath):
     """
-    Print the metadata of an HDF5 file, which must be in the 'metadata' group.
+    Return the metadata of an HDF5 file, which must be in the 'metadata' group.
 
     Parameters
     ----------
@@ -71,15 +71,18 @@ def hdf_print_metadata(filepath):
 
     Returns
     -------
-    None
+    dict
+        A dictionary containing the metadata. Each key-value pair in the
+        dictionary corresponds to a name-item pair in the metadata.
 
     """
-    print(f"Metadata for {filepath}:")
+    metadata_dict = {}
     with h5py.File(filepath, 'r') as hf:
-        # Print all items from the 'metadata' group
+        # Add all items from the 'metadata' group to the dictionary
         if 'metadata' in hf:
             for name, item in hf['metadata'].attrs.items():
-                print(f"{name}: {item}")
+                metadata_dict[name] = item
+    return metadata_dict
 
 
 
