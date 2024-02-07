@@ -4,7 +4,7 @@ import neuralprocesses.tensorflow as nps
 import numpy as np
 import tensorflow as tf
 
-from src.util import reshape_to_last, logpdf_explicit
+from dppum.util import reshape_to_last, logpdf_explicit
 
 def np_elbo_explicit(
     state: B.RandomState,
