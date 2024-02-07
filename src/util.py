@@ -220,3 +220,26 @@ def reshape_to_last(tensor, axis):
 
     # Use tf.transpose to reshape the tensor
     return B.transpose(tensor, dims)
+
+
+def logpdf_explicit(d, x, axis=-1):
+    """
+    Explicitly compute the natural logarithm of the maximum product along each
+    on the given axis
+
+    Parameters
+    ----------
+    d : tensor-like
+        The first input tensor.
+    x : tensor-like
+        The second input tensor.
+    axis : int
+        The axis along which to compute the calculation. Default is -1.
+
+    Returns
+    -------
+    tf.Tensor
+        A tensor representing the natural logarithm of the maximum product along each row.
+
+    """
+    return B.log(B.max(x * d, axis=axis))
