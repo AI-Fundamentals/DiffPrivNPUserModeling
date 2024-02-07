@@ -6,6 +6,8 @@ import tensorflow as tf
 
 from neuralprocesses import normal
 
+from src.util import reshape_to_last
+
 def np_elbo_explicit(
     state: B.RandomState,
     model: nps.Model,
@@ -99,6 +101,9 @@ def np_elbo_explicit(
         **kw_args,
     )
     d = nps.util.fix_noise(d, fix_noise)
+    
+    # import pdb
+    # pdb.set_trace()
     
     # d.mean is the mean of our samples from the latent distribution through 
     # the decoder
@@ -220,12 +225,28 @@ def np_elbo_tf_cat(
     )
     d = nps.util.fix_noise(d, fix_noise)
     
+    
+    
+
+
+
+
+
+    
+    
+    
+    
+    
+    # import pdb
+    # pdb.set_trace()
     # d.mean is the mean of our samples from the latent distribution through 
     # the decoder
     # Transpose y_true and y_pred to shape [minibatch, num_data_points, num_categories]
     # So they can go into softmax_cross_entropy_with_logits correctly 
-    yt_true_transposed = B.transpose(yt, perm=[0,2,1])
-    yt_pred_transposed = B.transpose(d.mean[0], perm=[0,2,1])
+    yt_true_transposed = reshape_to_last(yt,cat_axis)
+    
+    
+    yt_pred_transposed = reshape_to_last(d.mean[0], cat_axis)
     yt_pred_transposed = B.cast(dtype_lik,yt_pred_transposed)
 
     #Reconstruction loss
@@ -237,7 +258,7 @@ def np_elbo_tf_cat(
     recon_loss = tf.reduce_mean(recon_loss,axis=dims)
     
     # Calculate the ELBO loss
-    elbos = recon_loss - _kl(qz, pz)
+    elbos = -recon_loss - _kl(qz, pz)
 
     if normalise:
         # Normalise by the number of targets.
@@ -248,24 +269,4 @@ def np_elbo_tf_cat(
 
 
 
-def logpdf_explicit(d, x, axis=-1):
-    """
-    Explicitly compute the natural logarithm of the maximum product along each
-    on the given axis
 
-    Parameters
-    ----------
-    d : tensor-like
-        The first input tensor.
-    x : tensor-like
-        The second input tensor.
-    axis : int
-        The axis along which to compute the calculation. Default is -1.
-
-    Returns
-    -------
-    tf.Tensor
-        A tensor representing the natural logarithm of the maximum product along each row.
-
-    """
-    return B.log(B.max(x * d, axis=axis))
