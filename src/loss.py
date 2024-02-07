@@ -4,9 +4,7 @@ import neuralprocesses.tensorflow as nps
 import numpy as np
 import tensorflow as tf
 
-from neuralprocesses import normal
-
-from src.util import reshape_to_last
+from src.util import reshape_to_last, logpdf_explicit
 
 def np_elbo_explicit(
     state: B.RandomState,
@@ -101,9 +99,6 @@ def np_elbo_explicit(
         **kw_args,
     )
     d = nps.util.fix_noise(d, fix_noise)
-    
-    # import pdb
-    # pdb.set_trace()
     
     # d.mean is the mean of our samples from the latent distribution through 
     # the decoder
@@ -225,20 +220,7 @@ def np_elbo_tf_cat(
     )
     d = nps.util.fix_noise(d, fix_noise)
     
-    
-    
 
-
-
-
-
-    
-    
-    
-    
-    
-    # import pdb
-    # pdb.set_trace()
     # d.mean is the mean of our samples from the latent distribution through 
     # the decoder
     # Transpose y_true and y_pred to shape [minibatch, num_data_points, num_categories]
