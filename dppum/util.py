@@ -243,3 +243,25 @@ def logpdf_explicit(d, x, axis=-1):
 
     """
     return B.log(B.max(x * d, axis=axis))
+
+
+
+def print_dictionary(dictionary):
+    """
+    Print all key-value pairs in a dictionary, line by line.
+    
+    Parameters
+    ----------
+    dictionary : dict
+        The dictionary to print
+
+
+    Returns
+    -------
+    None.
+
+    """
+    print("{")
+    for key, value in dictionary.items():
+        print(f"{key}: {value}")
+    print("}")
