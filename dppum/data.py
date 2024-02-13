@@ -56,8 +56,8 @@ def hdf_to_tf_dataset(filepath,dtype=tf.float32):
 
     # Create a TensorFlow dataset from the generator
     data = tf.data.Dataset.from_generator(gen, output_signature=output_signature)
-
-    return data
+    metadata = hdf_get_metadata(filepath)
+    return data, metadata
 
 
 def hdf_get_metadata(filepath):
