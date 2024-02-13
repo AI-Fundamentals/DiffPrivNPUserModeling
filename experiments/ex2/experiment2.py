@@ -9,7 +9,7 @@ import tensorflow as tf
 import tensorflow.keras.backend as K
 from dppum.data import hdf_to_tf_dataset, hdf_get_metadata
 from dppum.loss import np_elbo_tf_cat, np_elbo_explicit
-from dppum.util import calc_cat_confidence, flatten_first_two_dims
+from dppum.util import calc_cat_confidence, flatten_first_two_dims, print_dictionary
 import pdb
 import lab as B
 import numpy as np
@@ -53,12 +53,13 @@ args = parser.parse_args()
 # Load and prepare the data
 data = hdf_to_tf_dataset(args.hdf,dtype=tf.float32)
 metadata = hdf_get_metadata(args.hdf)
-print(metadata)
+print(f"\nMetadata for file '{args.hdf}':")
+print_dictionary(metadata)
 
 num_batches = 4  # replace with your desired number of batches
 data = data.shuffle(data.cardinality()).take(num_batches)
 num_users = len(list(data)) * metadata['batch_size']
-print(f"Data loaded for {num_users} users.")
+print(f"Dataset prepared for {num_users} users, in {num_batches} batches of size {metadata['batch_size']}.")
 
 # Prefetch the data to make training more efficient
 data = data.prefetch(tf.data.AUTOTUNE)
