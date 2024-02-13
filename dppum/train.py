@@ -28,11 +28,58 @@ def train_model_dp(
 ):
     
     """
-    The model is modified in-place
-    
-    
-    
-    dataset_metadata: a dictionary with keys 'n_users', 'n_minibatches'
+    Train a neural process model with differential privacy by streaming data
+    from a tensorflow dataset. The model is modified in-place.
+
+    Parameters
+    ----------
+    model : neuralprocesses.tensorflow.Model
+        The model to be trained.
+    dataset : tensorflow dataset
+        The dataset to be used for training.
+    dataset_metadata : dict
+        A dictionary with keys 'n_users', 'n_minibatches' representing the
+        metadata of the dataset.
+    loss_fn : callable
+        The loss function to be used for training. Must be from the file
+        dppum.loss
+    num_epochs : int
+        The number of epochs for training.
+    epsilon : float, optional
+        The privacy budget for differential privacy, by default 1.
+    delta : float, optional
+        The delta parameter for differential privacy, by default None, which
+        then defaults to 1/(num_users)^2
+    clipping_bound : float, optional
+        The clipping bound c for the gradients, by default 2.
+    optimizer_name : str, optional
+        The name of the optimizer to be used, must be from this list:
+        ['Adam']. By default 'Adam'.
+    learning_rate : float, optional
+        The learning rate for the optimizer, by default 5e-4.
+    dp_enc : bool, optional
+        Whether to use differential privacy for the encoder, by default True.
+    dp_dec : bool, optional
+        Whether to use differential privacy for the decoder, by default False.
+    num_samples : int, optional
+        The number of model samples from the latent space, by default 5.
+    warmup_epoch : bool, optional
+        Whether to use a warmup epoch, by default False. If True there will be
+        one epoch (0) where model performance is assessed but the model is not
+        trained.
+    shuffle : bool, optional
+        Whether to shuffle the dataset before each epoch, by default True.
+    model_save_dir : str, optional
+        The directory where the trained model should be saved, by default None.
+
+    Returns
+    -------
+    history : dict
+        A dictionary with the training metrics: loss, accuracy, confidence.
+
+    Notes
+    -----
+    The model is modified in-place so it is not returned.
     """
 
     # Calculate privacy sigma
@@ -110,11 +157,11 @@ def train_model_dp(
                 yt_t = B.transpose(yt,perm=[0,2,1])
             
            
-                
+            import pdb
+            pdb.set_trace()
             with tf.GradientTape() as encoder_tape, tf.GradientTape() as decoder_tape:
                 # Compute the loss value for this minibatch.
                 state = B.global_random_state(B.dtype(xc))
-                #vector_loss = -np_elbo_tf_cat(
                 vector_loss = -loss_fn(
                         state=state,
                         model=model,
@@ -166,7 +213,7 @@ def train_model_dp(
 
 
 
-        ##### End of the epoch#####
+        ##### End of the epoch #####
 
         # Append to epoch metrics
         loss_all_epochs.append(loss_per_epoch.result())
@@ -179,12 +226,13 @@ def train_model_dp(
         print(f"Confidence of mean predictions: {np.round(float(mean_confidence_all_epochs[-1]),3)}")
     
     
+    ##### End of training loop #####
     
     # Return the history data (training metrics)
     history = {
         'loss' : loss_all_epochs,
-        'accuracy' : accuracy_all_epochs,
-        'confidence' : mean_confidence_all_epochs
+        'cat_accuracy' : accuracy_all_epochs,
+        'cat_confidence' : mean_confidence_all_epochs
         }
     return history
 
