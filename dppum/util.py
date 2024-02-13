@@ -132,7 +132,7 @@ class MLPCoder:
     
     
     
-def calc_cat_confidence(y_pred_onehot, categorical_axis):
+def calc_cat_confidence(y_pred_onehot, cat_axis):
     """
     Calculate the mean confidence of the most likely prediction of a categorical.
 
@@ -144,7 +144,7 @@ def calc_cat_confidence(y_pred_onehot, categorical_axis):
     ----------
     y_pred_onehot : array_like
         One-hot encoded predicted values.
-    categorical_axis : int
+    cat_axis : int
         The categorical axis.
 
     Returns
@@ -154,10 +154,10 @@ def calc_cat_confidence(y_pred_onehot, categorical_axis):
 
     """
     # Normalise y_pred_onehot with a softmax
-    y_pred_onehot = B.softmax(y_pred_onehot,axis=categorical_axis)
+    y_pred_onehot = B.softmax(y_pred_onehot,axis=cat_axis)
     
     # Calculate confidence of y_pred
-    y_pred_confidence = B.max(y_pred_onehot, axis=categorical_axis)
+    y_pred_confidence = B.max(y_pred_onehot, axis=cat_axis)
 
     # Calculate the mean confidence
     mean_confidence = B.mean(y_pred_confidence)
