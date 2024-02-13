@@ -23,8 +23,8 @@ def np_elbo_explicit(
     **kw_args,
 ):
     """ELBO objective, with the log-likelihood part calculated explicitly by
-    calculating the log of the probability of the correct category. Try this if
-    nps.elbo doesn't train the model.
+    calculating the log of the probability of the correct category. Based on
+    nps.elbo. Try this if nps.elbo doesn't train the model.
 
     Args:
         state (random state, optional): Random state.
@@ -142,9 +142,10 @@ def np_elbo_tf_cat(
     **kw_args,
 ):
     """ELBO objective, with the log-likelihood part calculated using 
-    tf.nn.softmax_cross_entropy_with_logits. As such it will only work with
-    tensorflow tensors as the input data, with categorical y data. The output
-    of this function should be the same as np_elbo_explicit.
+    tf.nn.softmax_cross_entropy_with_logits. Based on nps.elbo.
+    As such it will only work with tensorflow tensors as the input data, with
+    categorical y data. The output of this function should be the same as
+    np_elbo_explicit, but this version is normally faster.
 
     Args:
         state (random state, optional): Random state.
