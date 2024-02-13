@@ -7,9 +7,12 @@ import neuralprocesses.tensorflow as nps
 import argparse
 import tensorflow as tf
 import tensorflow.keras.backend as K
+from tensorflow_privacy import DPKerasAdamOptimizer
+
 from dppum.data import hdf_to_tf_dataset, hdf_get_metadata
 from dppum.loss import np_elbo_tf_cat, np_elbo_explicit
 from dppum.util import calc_cat_confidence, flatten_first_two_dims, print_dictionary
+from dppum.privacy_oracle import get_sigma_from_privacy_loss_distribution as get_sigma
 import pdb
 import lab as B
 import numpy as np
@@ -131,23 +134,35 @@ if warmup_epoch:
 else:
     first_epoch = 1
 
-# Fix the noise for the early epochs to force the model to fit.
-fixed_sigma_epochs = -1
-fixed_sigma = 1e-2
 
 # %%
 # Training loop
 # The first training epoch is epoch 1
 num_epochs = 5
 
+batch_size = metadata['batch_size']
 
 
+# Clipping bound (<4)
+# Default should be 2 but some experiments comparing 1 - 10
+c = 2.
+#L = batches
+
+epsilon = 1
+delta = 1. / num_users**2
+
+num_repeats = num_batches * num_epochs
+subsampling_rate = 1/num_batches
+sigma = get_sigma(epsilon, delta, num_repeats, subsampling_rate)
+
+l2_norm_clip = 1.0 # Clipping norm
+noise_multiplier = 0.01 # Ratio of the standard deviation to the clipping norm
+optimizer_priv = DPKerasAdamOptimizer(l2_norm_clip=c,
+                                      noise_multiplier=sigma,
+                                     num_microbatches=1)
 
 
-
-
-
-
+# Train the model
 for epoch in range(first_epoch,num_epochs+1):
     print(f"""######## Start of epoch {epoch} ########""")
     
@@ -215,11 +230,27 @@ for epoch in range(first_epoch,num_epochs+1):
         #             dtype_lik=tf.float32,
         #             num_samples=num_samples,
         #             ))
-        with tf.GradientTape() as tape:
+        # with tf.GradientTape() as tape:
+        #     # Compute the loss value for this minibatch.
+        #     state = B.global_random_state(B.dtype(xc))
+        #     loss = -tf.reduce_mean(
+        #         np_elbo_tf_cat(
+        #             state=state,
+        #             model=model,
+        #             contexts=[(xc,yc_t)],
+        #             subsume_context=True,
+        #             xt=xt,
+        #             yt=yt_t,
+        #             normalise=False,
+        #             dtype_lik=tf.float32,
+        #             num_samples=num_samples,
+        #             ))
+            
+            
+        with tf.GradientTape() as encoder_tape, tf.GradientTape() as decoder_tape:
             # Compute the loss value for this minibatch.
             state = B.global_random_state(B.dtype(xc))
-            loss = -tf.reduce_mean(
-                np_elbo_tf_cat(
+            vector_loss = -np_elbo_tf_cat(
                     state=state,
                     model=model,
                     contexts=[(xc,yc_t)],
@@ -229,18 +260,26 @@ for epoch in range(first_epoch,num_epochs+1):
                     normalise=False,
                     dtype_lik=tf.float32,
                     num_samples=num_samples,
-                    ))
+                    )
+            scalar_loss = tf.reduce_mean(vector_loss)
+            
 
         # On the 0th epoch, do not train the model just run metrics for
         # untrained model. On other epochs, calculate and apply the gradients
         if epoch> 0 :
-            grads = tape.gradient(loss, model.trainable_weights)
-            optimizer.apply_gradients(zip(grads, model.trainable_weights))
+            #grads = tape.gradient(loss, model.trainable_weights)
+            #optimizer.apply_gradients(zip(grads, model.trainable_weights))
+            #DP encoder gradients        
+            optimizer_priv.minimize(vector_loss, model.encoder.trainable_variables, tape=encoder_tape)
+            
+            #Standard decoder gradients
+            decoder_gradients = decoder_tape.gradient(scalar_loss, model.decoder.trainable_variables)
+            optimizer.apply_gradients(zip(decoder_gradients, model.decoder.trainable_variables))
        
 
         # Update loss metrics
-        per_epoch_loss(loss)
-        per_batch_loss(loss)
+        per_epoch_loss(scalar_loss)
+        per_batch_loss(scalar_loss)
         
         
         # Assess accuracy after updating model gradients
