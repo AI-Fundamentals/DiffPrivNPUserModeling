@@ -47,7 +47,8 @@ def calc_cat_acc_onehot(y_true,y_pred,cat_axis_y_true=-1,cat_axis_y_pred=-1):
     y_true_cat = B.argmax(y_true,cat_axis_y_true)
     y_pred_cat = B.argmax(y_pred,cat_axis_y_pred)
     
-    accuracy = B.sum(B.eq(y_true_cat,y_pred_cat)) / B.length(y_true_cat)
+    accuracy = B.sum(B.where(B.eq(y_true_cat,y_pred_cat),1,0)) / B.length(y_true_cat)
+    
     return accuracy
 
 
