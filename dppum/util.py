@@ -6,41 +6,6 @@ These come from the DP user modelling Julia code
 import neuralprocesses as nps
 import lab as B
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-class MLPCoder:
-    """
-        MLPCoder
-
-    Code with an MLP. Seems to be some sort of avg pooling in an ANP.
-    Based on NeuralProcesses.jl/src/model/coder.jl
-    Not 100% clear what exactly it's doing
-
-    # Fields
-    - `mlp1`: Pre-pooling MLP.
-    - `mlp2`: Post-pooling MLP.
-    """
-
-    def __init__(self,mlp1,mlp2):
-        self.mlp1 = mlp1
-        self.mlp2 = mlp2
-        
-    def code(self,xz,z,x):
-        return x, self.mlp2(B.mean(self.mlp1(B.concat(xz, z, dims=1)), dims=0))
-    
-    
-
 def calc_cat_acc_onehot(y_true,y_pred,cat_axis_y_true=-1,cat_axis_y_pred=-1):
     """
     Calculate the categorical accuracy of one-hot encoded predictions and true
