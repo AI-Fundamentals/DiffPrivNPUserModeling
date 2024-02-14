@@ -123,7 +123,6 @@ def reshape_to_last(tensor, axis):
     Returns:
         B.Tensor: The reshaped tensor.
     """
-    #pdb.set_trace()
     # If the axis is negative, adjust it to be positive
     if axis < 0:
         axis = len(B.shape(tensor)) + axis
