@@ -131,7 +131,52 @@ class MLPCoder:
         return x, self.mlp2(B.mean(self.mlp1(B.concat(xz, z, dims=1)), dims=0))
     
     
+
+def calc_cat_acc_onehot(y_true,y_pred,cat_axis_y_true=-1,cat_axis_y_pred=-1):
+    """
+    Calculate the categorical accuracy of one-hot encoded predictions and true
+    labels using linear algebra backend.
+
+    Parameters
+    ----------
+    y_true : array-like
+        True labels, one-hot encoded.
+    y_pred : array-like
+        Predicted labels, one-hot encoded.
+    cat_axis_y_true : int, optional
+        The axis that represents categories in y_true, by default -1.
+    cat_axis_y_pred : int, optional
+        The axis that represents categories in y_pred, by default -1.
+
+    Returns
+    -------
+    float
+        The categorical accuracy of the predictions.
+
+    Raises
+    ------
+    ValueError
+        If y_true and y_pred are not valid data types for the linear algebra
+        backend (lab) library.
+        If y_true and y_pred do not have the same shape.
+    """
     
+    try:
+        B.dtype(y_true)
+        B.dtype(y_pred)
+    except:
+        raise ValueError("y_true and y_pred must both be valid data types for the linear algebra backend (lab) library.")
+    
+    if B.shape(y_true) != B.shape(y_pred):
+        raise ValueError("y_true and y_pred do not have the same shape.")
+    
+    y_true_cat = B.argmax(y_true,cat_axis_y_true)
+    y_pred_cat = B.argmax(y_pred,cat_axis_y_pred)
+    
+    accuracy = B.sum(B.eq(y_true_cat,y_pred_cat)) / B.length(y_true_cat)
+    return accuracy
+
+
 def calc_cat_confidence(y_pred_onehot, cat_axis):
     """
     Calculate the mean confidence of the most likely prediction of a categorical.
