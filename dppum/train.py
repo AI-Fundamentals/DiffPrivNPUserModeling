@@ -204,8 +204,7 @@ def train_model_dp(
             mean, _, _, _ = nps.predict(
                 model,xc, yc_t, xt, num_samples=num_samples
                 )
-            #a = model(xc,yc_t,xt,num_samples=num_samples,training=True)
-                        
+           
             mean_cat = B.argmax(mean,1)
             yt_cat = B.argmax(yt,2)
             accuracy_per_epoch.update_state(yt_cat, mean_cat)
