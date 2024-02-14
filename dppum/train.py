@@ -1,11 +1,14 @@
-from dppum.privacy_oracle import get_sigma_from_privacy_loss_distribution as get_sigma
-from dppum.util import calc_cat_confidence
-
 import tensorflow as tf
 from tensorflow_privacy import DPKerasAdamOptimizer
 import numpy as np
+import os
 import lab as B
 import neuralprocesses.tensorflow as nps
+
+from dppum.privacy_oracle import get_sigma_from_privacy_loss_distribution as get_sigma
+from dppum.util import calc_cat_confidence
+
+
 
 
 def train_model_dp(
@@ -157,8 +160,6 @@ def train_model_dp(
                 yt_t = B.transpose(yt,perm=[0,2,1])
             
            
-            import pdb
-            pdb.set_trace()
             with tf.GradientTape() as encoder_tape, tf.GradientTape() as decoder_tape:
                 # Compute the loss value for this minibatch.
                 state = B.global_random_state(B.dtype(xc))
@@ -203,13 +204,14 @@ def train_model_dp(
             mean, _, _, _ = nps.predict(
                 model,xc, yc_t, xt, num_samples=num_samples
                 )
+            #a = model(xc,yc_t,xt,num_samples=num_samples,training=True)
                         
             mean_cat = B.argmax(mean,1)
             yt_cat = B.argmax(yt,2)
             accuracy_per_epoch.update_state(yt_cat, mean_cat)
             
             # Keep track of confidence in model predictions
-            mean_confidence_per_epoch(calc_cat_confidence(mean, cat_axis=-1))
+            mean_confidence_per_epoch(calc_cat_confidence(mean, cat_axis=-2))
 
 
 
@@ -224,7 +226,19 @@ def train_model_dp(
         print(f"Loss: {np.round(float(loss_all_epochs[-1]),5)}")
         print(f"Accuracy of mean predictions: {np.round(float(accuracy_all_epochs[-1]),3)}")
         print(f"Confidence of mean predictions: {np.round(float(mean_confidence_all_epochs[-1]),3)}")
-    
+        
+        if model_save_dir:
+            # Check if the directory exists
+            if not os.path.exists(model_save_dir):
+                # If not, create the directory
+                os.makedirs(model_save_dir)
+            
+            print("Need to save hyperparameters too")
+            
+            # Save the model
+            model_name = f"weights_epoch{epoch}.tf"
+            #tf.saved_model.save(model,os.path.join(model_save_dir, model_name))
+            model.save_weights(os.path.join(model_save_dir, model_name))
     
     ##### End of training loop #####
     
