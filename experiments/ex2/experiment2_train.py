@@ -54,17 +54,20 @@ parser.add_argument("--num_epochs",
                     type=int,
                     default=5)
 
-parser.add_argument("--eps", 
+parser.add_argument("--epsilon",
+                    "--eps",
                     help="Epsilon parameter in differential privacy.", 
                     type=float,
                     default=1.0)
 
-parser.add_argument("--cbound", 
+parser.add_argument("--clipping_bound",
+                    "--cbound", 
                     help="L2 clipping bound parameter in differential privacy.", 
                     type=float,
                     default=2.0)
 
-parser.add_argument("--lr", 
+parser.add_argument("--learning_rate",
+                    "--lr",
                     help="Learning rate for model training.", 
                     type=float,
                     default=5e-4)
@@ -136,10 +139,10 @@ history = train_model_dp_tf(
     dataset_metadata,
     loss_fn=np_elbo_tf_cat,
     num_epochs=args['num_epochs'],
-    epsilon=args['eps'],
-    clipping_bound=args['cbound'],
+    epsilon=args['epsilon'],
+    clipping_bound=args['clipping_bound'],
     optimizer_name='Adam',
-    learning_rate=args['lr'],
+    learning_rate=args['learning_rate'],
     dp_enc=True,
     dp_dec=False,
     num_samples=args['num_samples'],
