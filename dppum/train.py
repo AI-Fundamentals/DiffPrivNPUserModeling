@@ -145,14 +145,14 @@ def train_model_dp(
         # Reset epoch metrics
         accuracy_per_epoch.reset_states()
         loss_per_epoch.reset_states()
+        mean_confidence_per_epoch.reset_states()
 
 
         # Iterate over the batches of the dataset.
         for step, (xc, yc, xt, yt) in enumerate(dataset):
-                                
             # Transpose the y data so they go into the model
-            # This should only happen if the data are re-batched
             if(tf.rank(yc)==4):
+                # This should only happen if the data are re-batched
                 yc_t = B.transpose(yc,perm=[0,1,3,2])
                 yt_t = B.transpose(yt,perm=[0,1,3,2])
             elif(tf.rank(yc)==3):
