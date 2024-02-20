@@ -1,6 +1,7 @@
 import tensorflow as tf
 from tensorflow_privacy import DPKerasAdamOptimizer
 import numpy as np
+import json
 import os
 import lab as B
 import neuralprocesses.tensorflow as nps
@@ -84,6 +85,36 @@ def train_model_dp(
     -----
     The model is modified in-place so it is not returned.
     """
+        
+    # Before training, make a dictionary with the training arguments in and save it
+    if model_save_dir:
+        # Check if the directory exists
+        if not os.path.exists(model_save_dir):
+            # If not, create the directory
+            os.makedirs(model_save_dir)
+        
+        # Make a dictionary of training arguments    
+        training_args = {}
+        training_args['model_name'] = model._name
+        training_args['dataset_metadata'] = dataset_metadata
+        training_args['loss_fn_name'] = loss_fn.__name__
+        training_args['num_epochs'] = num_epochs
+        training_args['epsilon'] = epsilon
+        training_args['delta'] = delta
+        training_args['clipping_bound'] = clipping_bound
+        training_args['optimizer_name'] = optimizer_name
+        training_args['learning_rate'] = learning_rate
+        training_args['dp_enc'] = dp_enc
+        training_args['dp_dec'] = dp_dec
+        training_args['num_samples'] = num_samples
+        training_args['warmup_epoch'] = warmup_epoch
+        training_args['shuffle'] = shuffle
+        training_args['model_save_dir'] = model_save_dir
+
+        # Write to JSON file
+        with open(os.path.join(model_save_dir, "training_metadata.json"), 'w') as json_file:
+            json.dump(training_args, json_file,indent=4)
+    
 
     # Calculate privacy sigma
     if not delta:
@@ -120,8 +151,7 @@ def train_model_dp(
     # Define lists to store the metrics for all epochs
     accuracy_all_epochs = []
     loss_all_epochs = []
-    mean_confidence_all_epochs = []
-    
+    mean_confidence_all_epochs = []    
     
     # Use warmup epoch (or not)
     warmup_epoch = False
@@ -214,7 +244,7 @@ def train_model_dp(
 
 
 
-        ##### End of the epoch #####
+        ##### End of epoch calculations #####
 
         # Append to epoch metrics
         loss_all_epochs.append(loss_per_epoch.result())
@@ -235,9 +265,9 @@ def train_model_dp(
             print("Need to save hyperparameters too")
             
             # Save the model
-            model_name = f"weights_epoch{epoch}.tf"
-            #tf.saved_model.save(model,os.path.join(model_save_dir, model_name))
+            model_name = f"weights_epoch_{epoch}.tf"
             model.save_weights(os.path.join(model_save_dir, model_name))
+
     
     ##### End of training loop #####
     
