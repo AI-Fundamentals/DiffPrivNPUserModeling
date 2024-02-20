@@ -112,7 +112,7 @@ def train_model_dp_tf(
         training_args['model_save_dir'] = model_save_dir
 
         # Write to JSON file
-        with open(os.path.join(model_save_dir, "training_metadata.json"), 'w') as json_file:
+        with open(os.path.join(model_save_dir, "training_loop_args.json"), 'w') as json_file:
             json.dump(training_args, json_file,indent=4)
     
 
