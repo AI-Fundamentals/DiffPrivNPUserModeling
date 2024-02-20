@@ -6,7 +6,7 @@ These come from the DP user modelling Julia code
 import neuralprocesses as nps
 import lab as B
 
-def calc_cat_acc_onehot(y_true,y_pred,cat_axis_y_true=-1,cat_axis_y_pred=-1):
+def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1):
     """
     Calculate the categorical accuracy of one-hot encoded predictions and true
     labels using linear algebra backend.
@@ -17,10 +17,8 @@ def calc_cat_acc_onehot(y_true,y_pred,cat_axis_y_true=-1,cat_axis_y_pred=-1):
         True labels, one-hot encoded.
     y_pred : array-like
         Predicted labels, one-hot encoded.
-    cat_axis_y_true : int, optional
-        The axis that represents categories in y_true, by default -1.
-    cat_axis_y_pred : int, optional
-        The axis that represents categories in y_pred, by default -1.
+    cat_axis : int, optional
+        The axis that represents categories, by default -1.
 
     Returns
     -------
@@ -44,8 +42,8 @@ def calc_cat_acc_onehot(y_true,y_pred,cat_axis_y_true=-1,cat_axis_y_pred=-1):
     if B.shape(y_true) != B.shape(y_pred):
         raise ValueError("y_true and y_pred do not have the same shape.")
     
-    y_true_cat = B.argmax(y_true,cat_axis_y_true)
-    y_pred_cat = B.argmax(y_pred,cat_axis_y_pred)
+    y_true_cat = B.argmax(y_true,cat_axis)
+    y_pred_cat = B.argmax(y_pred,cat_axis)
     
     accuracy = B.sum(B.where(B.eq(y_true_cat,y_pred_cat),1,0)) / B.length(y_true_cat)
     
