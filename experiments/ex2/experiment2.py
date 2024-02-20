@@ -86,7 +86,7 @@ if args['models_dir']:
         os.makedirs(args['models_dir'])
     
     # Write command line arguments to JSON file
-    with open(os.path.join(args['models_dir'], "command_line_args.json"), 'w') as json_file:
+    with open(os.path.join(args['models_dir'], "train_command_line_args.json"), 'w') as json_file:
         json.dump(args, json_file,indent=4)
 
 print("Finished parsing command line arguments.")
