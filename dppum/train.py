@@ -12,7 +12,7 @@ from dppum.util import calc_cat_confidence
 
 
 
-def train_model_dp(
+def train_model_dp_tf(
     model,
     dataset,
     dataset_metadata,
