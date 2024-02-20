@@ -3,9 +3,16 @@ Differentially Private Probabilistic User Modelling (in python)
 
 
 ## Installation instructions
-python environment:
-conda create --name dp-priv
-conda activate dp-priv
-pip install -r requirements.txt
-pip install git+https://github.com/wesselb/neuralprocesses.git
-pip install tfp-nightly
+1. Create and activate a python 3.11 environment
+2. Install packages from pip:  
+    ```pip install -r requirements.txt
+    ```  
+or on Mac:  
+    ```pip install -r requirements_mac.txt
+    ```   
+3. Install `neuralprocesses` from github:    
+    ```pip install git+https://github.com/wesselb/neuralprocesses.git
+    ```   
+4. Install nightly version of tensorflow probability:   
+    ```pip install tfp-nightly
+    ```
