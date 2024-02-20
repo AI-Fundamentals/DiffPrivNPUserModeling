@@ -28,24 +28,29 @@ parser = argparse.ArgumentParser()
 # Adding arguments to the parser
 
 parser.add_argument("--num_batches", 
-                    help="Number of batches to use from the training data hdf.", 
+                    help="Number of batches to load from the training data hdf.", 
                     type=int, 
-                    default=4)
+                    default=16)
 
 parser.add_argument("--hdf", 
-                    help="Directly specify the file to load the training from.", 
+                    help="The file to load the training from.", 
                     type=str,
                     default="data/ex2/experiment2_training_data.hdf")
 
 parser.add_argument("--models_dir", 
-                    help="Directly specify the folder to load the trained models from.", 
+                    help="The folder to save the trained models.", 
                     type=str,
                     default="models/ex2/")
 
 parser.add_argument("--fig", 
-                    help="Directly specify the folder for output figures.", 
+                    help="The folder for output figures.", 
                     type=str,
                     default="figures/ex2/")
+
+parser.add_argument("--num_samples", 
+                    help="Number of samples to take for model evaluation.", 
+                    type=int,
+                    default=5)
 
 # Flag for a warmup epoch (i.e. testing the untrained model)
 parser.add_argument("--warmup_epoch", 
