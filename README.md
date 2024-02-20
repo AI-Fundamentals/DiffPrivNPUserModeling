@@ -27,3 +27,10 @@ Differentially Private Probabilistic User Modelling (in python)
     ```
     pip install tfp-nightly
     ```
+
+## Example usage
+For training with 6400 users
+
+```python -m experiments.ex2.experiment2_train --num_batches 1600
+```
+
