@@ -47,8 +47,9 @@ parser.add_argument("--fig",
                     type=str,
                     default="figures/ex2/")
 
+# Flag for a warmup epoch (i.e. testing the untrained model)
 parser.add_argument("--warmup_epoch", 
-                    help="Use a warmup epoch (True/False)", 
+                    help="Use a warmup epoch 0 (True/False)", 
                     type=bool,
                     default=False)
 
@@ -99,9 +100,6 @@ print("Running with dim_embedding = 16 for speed but it should be 128")
 # Number of samples taken to assess sample accuracy/confidence
 num_samples=5
 
-# Flag for a warmup epoch (i.e. testing the untrained model)
-# This will be epoch 0
-warmup_epoch = False
 
 # %% 
 # Train model using train_model_dp function
@@ -119,7 +117,7 @@ history = train_model_dp_tf(
     dp_enc=False,
     dp_dec=False,
     num_samples=5,
-    warmup_epoch=False,
+    warmup_epoch=args.warmup_epoch,
     shuffle=True,
     model_save_dir = args.models_dir
     )
