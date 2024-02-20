@@ -1,0 +1,3 @@
+-r requirements.txt
+tensorflow_metal
+tensorflow_macos==2.14.0
