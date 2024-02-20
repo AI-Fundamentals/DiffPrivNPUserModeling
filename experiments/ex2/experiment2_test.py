@@ -55,3 +55,20 @@ if args['models_dir']:
         json.dump(args, json_file,indent=4)
 
 print("Finished parsing command line arguments.")
+
+
+# %%
+# Load training metadata
+training_args_path = os.path.join(args['models_dir'],'train_command_line_args.json')
+training_loop_args_path = os.path.join(args['models_dir'],'training_loop_args.json')
+
+
+with open(training_args_path, 'r') as f:
+    # Load JSON data from file
+    training_args = json.load(f)
+
+with open(training_loop_args_path, 'r') as f:
+    # Load JSON data from file
+    training_loop_args = json.load(f)
+
+
