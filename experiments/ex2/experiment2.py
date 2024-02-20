@@ -1,38 +1,35 @@
-#Load local copy of neuralprocesses if present
-#import sys
-#sys.path.insert(0,'/Users/user/github/neuralprocesses')
+# Load packages
 
 import neuralprocesses.tensorflow as nps
 import argparse
 import os
 import tensorflow as tf
 import tensorflow.keras.backend as K
-import pdb
-import lab as B
 import numpy as np
+import json
 import matplotlib.pyplot as plt
 
 
 from dppum.data import hdf_to_tf_dataset
 from dppum.loss import np_elbo_tf_cat
-from dppum.util import print_dictionary, calc_cat_acc_onehot
+from dppum.util import print_dictionary
 from dppum.train import train_model_dp_tf
 
-# %%
+print("Finished importing packages.")
 
-# First, parse any command line arguments
+# %%
+# Parse any command line arguments
 
 # Creating the ArgumentParser instance
 parser = argparse.ArgumentParser()
 
 # Adding arguments to the parser
-
 parser.add_argument("--num_batches", 
                     help="Number of batches to load from the training data hdf.", 
                     type=int, 
                     default=16)
 
-parser.add_argument("--hdf", 
+parser.add_argument("--train_hdf", 
                     help="The file to load the training from.", 
                     type=str,
                     default="data/ex2/experiment2_training_data.hdf")
@@ -42,7 +39,7 @@ parser.add_argument("--models_dir",
                     type=str,
                     default="models/ex2/")
 
-parser.add_argument("--fig", 
+parser.add_argument("--figs_dir", 
                     help="The folder for output figures.", 
                     type=str,
                     default="figures/ex2/")
@@ -52,88 +49,114 @@ parser.add_argument("--num_samples",
                     type=int,
                     default=5)
 
+parser.add_argument("--num_epochs", 
+                    help="Number of training epochs.", 
+                    type=int,
+                    default=5)
+
+parser.add_argument("--eps", 
+                    help="Epsilon parameter in differential privacy.", 
+                    type=float,
+                    default=1.0)
+
+parser.add_argument("--cbound", 
+                    help="L2 clipping bound parameter in differential privacy.", 
+                    type=float,
+                    default=2.0)
+
+parser.add_argument("--lr", 
+                    help="Learning rate for model training.", 
+                    type=float,
+                    default=5e-4)
+
 # Flag for a warmup epoch (i.e. testing the untrained model)
 parser.add_argument("--warmup_epoch", 
                     help="Use a warmup epoch 0 (True/False)", 
                     type=bool,
                     default=False)
 
-# Parsing the arguments
-args = parser.parse_args()
+# Parsing the arguments to a dictionary
+args = vars(parser.parse_args())
 
+# Save the command line args to a json in model save folder
+if args['models_dir']:
+    # Check if the directory exists
+    if not os.path.exists(args['models_dir']):
+        # If not, create the directory
+        os.makedirs(args['models_dir'])
+    
+    # Write command line arguments to JSON file
+    with open(os.path.join(args['models_dir'], "command_line_args.json"), 'w') as json_file:
+        json.dump(args, json_file,indent=4)
 
+print("Finished parsing command line arguments.")
 # %%
 
 # Load and prepare the data
-dataset, dataset_metadata = hdf_to_tf_dataset(args.hdf,dtype=tf.float32)
-print(f"\nOriginal metadata for file '{args.hdf}':")
+dataset, dataset_metadata = hdf_to_tf_dataset(args['train_hdf'],dtype=tf.float32)
+print(f"\nOriginal metadata for file '{args['train_hdf']}':")
 print_dictionary(dataset_metadata)
 
 
-dataset = dataset.shuffle(dataset_metadata['n_minibatches']).take(args.num_batches)
-dataset_metadata['n_minibatches'] = args.num_batches
+dataset = dataset.shuffle(dataset_metadata['n_minibatches']).take(args['num_batches'])
+dataset_metadata['n_minibatches'] = args['num_batches']
 num_users = len(list(dataset)) * dataset_metadata['batch_size']
 dataset_metadata['n_users'] = num_users
-print(f"Dataset prepared for {num_users} users, in {args.num_batches} (mini)batches of size {dataset_metadata['batch_size']}.")
-print(f"\nUpdated metadata for file '{args.hdf}':")
+print(f"Dataset prepared for {num_users} users, in {args['num_batches']} (mini)batches of size {dataset_metadata['batch_size']}.")
+print(f"\nUpdated metadata for file '{args['train_hdf']}':")
 print_dictionary(dataset_metadata)
 
 # Prefetch the data to make training more efficient
 dataset = dataset.prefetch(tf.data.AUTOTUNE)
 
-
+print("Finished generating dataset.")
 
 # %%
+# Clear any previous models from memory
 K.clear_session()
 
-# For experiment 2:
-# Data dimensions come from the data
-# dim_embedding is specified in appendix as hidden dimensions
-# num_enc_layers and num_dec_layers are specified in appendix as number of layers
-# Nonlinearity specified in appendix
-# likelihood- the anp for ex2 in Julia has a line HeterogeneousGaussianLikelihood()
-# so I think that means het rather than lowrank
-# dim_lv is about a latent variable for non-Gaussianity (LNP), so set to 0
+# Construct the model
+model_ex2 = nps.construct_agnp(
+    dim_x=17, # From the data dimensions
+    dim_y=9, # From the data dimensions
+    dim_embedding=128, # Specified in appendix as hidden dimensions
+    num_enc_layers=6, # Specified in appendix as number of layers
+    num_dec_layers=6, # Specified in appendix as number of layers
+    likelihood="het", # Similar to the Julia HeterogeneousGaussianLikelihood()
+    nonlinearity='LeakyReLU' # Specified in appendix
+    )
 
-model_ex2 = nps.construct_agnp(dim_x=17, dim_y=9, dim_lv=0, dim_embedding=128,
-                        num_enc_layers=6,num_dec_layers=6,
-                        likelihood="het",
-                        nonlinearity='LeakyReLU')
-
-# Number of samples taken to assess sample accuracy/confidence
-num_samples=5
-
+print("Finished constructing the model.")
 
 # %% 
-# Train model using train_model_dp function
-
+# Train model using train_model_dp_tf function
 history = train_model_dp_tf(
     model_ex2,
     dataset,
     dataset_metadata,
     loss_fn=np_elbo_tf_cat,
-    num_epochs=5,
-    epsilon=1,
-    clipping_bound=2,
+    num_epochs=args['num_epochs'],
+    epsilon=args['eps'],
+    clipping_bound=args['cbound'],
     optimizer_name='Adam',
-    learning_rate=5e-4,
-    dp_enc=False,
+    learning_rate=args['lr'],
+    dp_enc=True,
     dp_dec=False,
-    num_samples=5,
-    warmup_epoch=args.warmup_epoch,
+    num_samples=args['num_samples'],
+    warmup_epoch=args['warmup_epoch'],
     shuffle=True,
-    model_save_dir = args.models_dir
+    model_save_dir = args['models_dir']
     )
 
+print("Finished training the model.")
 
+# %%
+# Plot training metrics
 
-# %% Plot training metrics
 # Make output folders
-figures_path = args.fig
-
 fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8, 6), sharex=True)
 
-if warmup_epoch:
+if args['warmup_epoch']:
     epochs_list = np.arange(len(history['loss']))
 else:
     epochs_list = np.arange(len(history['loss'])) + 1
@@ -154,51 +177,23 @@ ax[0].legend()
 ax[1].legend()
 
 # Make loss y axis logscale
-ax[0].set_yscale('symlog')
+#ax[0].set_yscale('symlog')
 
 # Display the plot when running in Spyder
 plt.tight_layout()
 plt.show()
 
 # Check if the directory exists
-if not os.path.exists(figures_path):
+if not os.path.exists(args['figs_dir']):
     # If not, create the directory
-    os.makedirs(figures_path)
+    os.makedirs(args['figs_dir'])
 
 # Save the figure
-fig.savefig(figures_path+'experiment2_training_metrics.png')
+fig.savefig(os.path.join(args['figs_dir'],'experiment2_training_metrics.png'))
 
+print("Finished plotting training metrics.")
 
 # %%
-#testing loading a model from saved weights
-
-iterator = iter(dataset)
-xc,yc,xt,yt = next(iterator)
-yc_t = B.transpose(yc,perm=[0,2,1])
-yt_t = B.transpose(yt,perm=[0,2,1])
-
-
-
-model2 = nps.construct_agnp(dim_x=17, dim_y=9, dim_lv=0, dim_embedding=16,
-                        num_enc_layers=6,num_dec_layers=6,
-                        likelihood="het",
-                        nonlinearity='LeakyReLU')
-
-mean, _, _, _ = nps.predict(
-    model2,xc, yc_t, xt, num_samples=1
-    )
-
-acc = calc_cat_acc_onehot(yt_t,mean,cat_axis=-2)
-print(f"Accuracy of untrained model: {acc}")
-
-
-model2.load_weights('models/ex2/weights_epoch_5.tf')
-
-mean, _, _, _ = nps.predict(
-    model2,xc, yc_t, xt, num_samples=1
-    )
-
-acc = calc_cat_acc_onehot(yt_t,mean,cat_axis=-2)
-print(f"Accuracy of loaded model: {acc}")
+print("Finished training experiment2.py training script.")
 
 
