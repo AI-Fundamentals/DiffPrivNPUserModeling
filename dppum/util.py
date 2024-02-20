@@ -3,7 +3,6 @@ Several additional definitions for working with NP-based models.
 These come from the DP user modelling Julia code
 """
 
-import neuralprocesses as nps
 import lab as B
 
 def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1):
