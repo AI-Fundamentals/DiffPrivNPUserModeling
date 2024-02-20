@@ -262,8 +262,6 @@ def train_model_dp_tf(
                 # If not, create the directory
                 os.makedirs(model_save_dir)
             
-            print("Need to save hyperparameters too")
-            
             # Save the model
             model_name = f"weights_epoch_{epoch}.tf"
             model.save_weights(os.path.join(model_save_dir, model_name))
