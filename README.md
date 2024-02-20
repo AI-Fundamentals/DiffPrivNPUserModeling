@@ -31,6 +31,11 @@ Differentially Private Probabilistic User Modelling (in python)
 ## Example usage
 For training with 6400 users
 
-```python -m experiments.ex2.experiment2_train --num_batches 1600
+```
+python -m experiments.ex2.experiment2_train --num_batches 1600
 ```
 
+## Workflow
+1. Run training script. Load training data from data folder. Save model weights and metadata parameters in models folder. Save training metrics plot to figures folder.
+2. Run test script. Load test data from model folder. Load models weights from model folder and save test performance data to model folder.
+3. Load test performance data and plot. Save to figures folder.
