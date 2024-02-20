@@ -6,6 +6,7 @@ Currently implemented in tensorflow. Ideally these would be implemented in lab?
 import h5py
 import tensorflow as tf
 import pdb
+import numpy
 
 
 def print_hdf_structure(file_name):
@@ -81,6 +82,13 @@ def hdf_get_metadata(filepath):
         # Add all items from the 'metadata' group to the dictionary
         if 'metadata' in hf:
             for name, item in hf['metadata'].attrs.items():
+                # Convert numpy data types to native Python types
+                if isinstance(item, (numpy.int64,numpy.uint8,numpy.float64)):
+                    item = item.item()
+                # Convert byte strings to Python strings
+                elif isinstance(item, numpy.bytes_):
+                    item = item.decode('utf-8')
+                
                 metadata_dict[name] = item
     return metadata_dict
 
