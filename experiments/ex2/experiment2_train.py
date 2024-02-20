@@ -112,7 +112,7 @@ print_dictionary(dataset_metadata)
 # Prefetch the data to make training more efficient
 dataset = dataset.prefetch(tf.data.AUTOTUNE)
 
-print("Finished generating dataset.")
+print("Finished loading training dataset.")
 
 # %%
 # Clear any previous models from memory
