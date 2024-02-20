@@ -90,12 +90,10 @@ K.clear_session()
 # so I think that means het rather than lowrank
 # dim_lv is about a latent variable for non-Gaussianity (LNP), so set to 0
 
-model_ex2 = nps.construct_agnp(dim_x=17, dim_y=9, dim_lv=0, dim_embedding=16,
+model_ex2 = nps.construct_agnp(dim_x=17, dim_y=9, dim_lv=0, dim_embedding=128,
                         num_enc_layers=6,num_dec_layers=6,
                         likelihood="het",
                         nonlinearity='LeakyReLU')
-
-print("Running with dim_embedding = 16 for speed but it should be 128")
 
 # Number of samples taken to assess sample accuracy/confidence
 num_samples=5
