@@ -1,0 +1,5 @@
+-r requirements.txt
+tensorflow==2.15.0
+nvidia-cudnn-cu11
+nvidia-pyindex==1.0.9
+nvidia-tensorrt
