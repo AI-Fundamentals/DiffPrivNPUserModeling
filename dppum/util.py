@@ -49,7 +49,7 @@ def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1):
     return accuracy
 
 
-def calc_cat_confidence(y_pred_onehot, cat_axis):
+def calc_cat_confidence(y_pred_onehot, cat_axis=-1):
     """
     Calculate the mean confidence of the most likely prediction of a categorical.
 
@@ -62,7 +62,7 @@ def calc_cat_confidence(y_pred_onehot, cat_axis):
     y_pred_onehot : array_like
         One-hot encoded predicted values.
     cat_axis : int
-        The categorical axis.
+        The categorical axis. Default value is -1.
 
     Returns
     -------
