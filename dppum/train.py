@@ -11,7 +11,7 @@ from dppum.util import calc_cat_confidence, flatten_first_two_dims
 
 
 
-
+@tf.function
 def train_model_dp_tf(
     model,
     dataset_train,
@@ -239,9 +239,6 @@ def train_model_dp_tf(
             loss_per_epoch(scalar_loss)            
             
             # Assess accuracy after updating model gradients
-            
-            import pdb
-            pdb.set_trace()
             mean, _, _, _ = nps.predict(
                 model,xc, yc_t, xt, num_samples=num_samples
                 )
