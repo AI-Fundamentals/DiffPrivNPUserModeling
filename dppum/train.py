@@ -18,6 +18,7 @@ def train_model_dp_tf(
     dataset_train_metadata,
     loss_fn,
     num_epochs,
+    dataset_test=None,
     epsilon=1,
     delta=None,
     clipping_bound=2,
@@ -238,6 +239,9 @@ def train_model_dp_tf(
             loss_per_epoch(scalar_loss)            
             
             # Assess accuracy after updating model gradients
+            
+            import pdb
+            pdb.set_trace()
             mean, _, _, _ = nps.predict(
                 model,xc, yc_t, xt, num_samples=num_samples
                 )
@@ -262,6 +266,20 @@ def train_model_dp_tf(
         print(f"Loss: {np.round(float(loss_all_epochs[-1]),5)}")
         print(f"Accuracy of mean predictions: {np.round(float(accuracy_all_epochs[-1]),3)}")
         print(f"Confidence of mean predictions: {np.round(float(mean_confidence_all_epochs[-1]),3)}")
+        
+        
+        if dataset_test:
+            print("Running though test dataset")
+            # Loop through test dataset
+            for xc,yc,xt,yt in dataset_test:
+                yc_t = B.transpose(yc,perm=[0,2,1])
+                yt_t = B.transpose(yt,perm=[0,2,1])
+            
+            mean, _, _, _ = nps.predict(
+                model,xc, yc_t, xt, num_samples=num_samples
+                )
+            accuracy_all_epochs.append(accuracy_per_epoch.result())
+        
         
         if model_save_dir:
             # Check if the directory exists
