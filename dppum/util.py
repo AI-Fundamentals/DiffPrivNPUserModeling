@@ -102,7 +102,7 @@ def flatten_first_two_dims(tensor):
     
     # Get the shape of the tensor
     shape = B.shape(tensor)
-    new_shape = ([shape[0] * shape[1]] + shape[2:]).as_list()
+    new_shape = list( (shape[0]*shape[1],) + shape[2:] )
 
     # Flatten the first two dimensions and keep the remaining dimensions the same
     flattened_tensor = B.reshape(tensor, *new_shape)

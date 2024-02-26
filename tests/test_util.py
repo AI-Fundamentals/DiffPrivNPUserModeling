@@ -8,7 +8,7 @@ import lab as B
 import neuralprocesses.tensorflow as nps
 
 
-from dppum.util import calc_cat_acc_onehot, calc_cat_confidence
+from dppum.util import calc_cat_acc_onehot, calc_cat_confidence, flatten_first_two_dims
 
 
 
@@ -67,6 +67,14 @@ def test_calc_cat_confidence():
     # Double check default axis
     assert calc_cat_confidence(logits_2D) == pytest.approx(1.0, 0.01)
     
+    
+    
+def test_flatten_first_two_dims():
+    starting_shape = (4,3,2,1)
+    data = np.random.rand(*starting_shape)    
+    
+    data_flat = flatten_first_two_dims(data)
+    assert data_flat.shape == (12,2,1)
     
     
 
