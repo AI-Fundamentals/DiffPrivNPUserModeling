@@ -7,15 +7,15 @@ import lab as B
 import neuralprocesses.tensorflow as nps
 
 from dppum.privacy_oracle import get_sigma_from_privacy_loss_distribution as get_sigma
-from dppum.util import calc_cat_confidence
+from dppum.util import calc_cat_confidence, flatten_first_two_dims
 
 
 
 
 def train_model_dp_tf(
     model,
-    dataset,
-    dataset_metadata,
+    dataset_train,
+    dataset_train_metadata,
     loss_fn,
     num_epochs,
     epsilon=1,
@@ -39,11 +39,11 @@ def train_model_dp_tf(
     ----------
     model : neuralprocesses.tensorflow.Model
         The model to be trained.
-    dataset : tensorflow dataset
+    dataset_train : tensorflow training dataset
         The dataset to be used for training.
-    dataset_metadata : dict
+    dataset_train_metadata : dict
         A dictionary with keys 'n_users', 'n_minibatches' representing the
-        metadata of the dataset.
+        metadata of dataset_train.
     loss_fn : callable
         The loss function to be used for training. Must be from the file
         dppum.loss
@@ -72,7 +72,7 @@ def train_model_dp_tf(
         one epoch (0) where model performance is assessed but the model is not
         trained.
     shuffle : bool, optional
-        Whether to shuffle the dataset before each epoch, by default True.
+        Whether to shuffle dataset_train before each epoch, by default True.
     model_save_dir : str, optional
         The directory where the trained model should be saved, by default None.
 
@@ -96,7 +96,7 @@ def train_model_dp_tf(
         # Make a dictionary of training arguments    
         training_args = {}
         training_args['model_name'] = model._name
-        training_args['dataset_metadata'] = dataset_metadata
+        training_args['dataset_train_metadata'] = dataset_train_metadata
         training_args['loss_fn_name'] = loss_fn.__name__
         training_args['num_epochs'] = num_epochs
         training_args['epsilon'] = epsilon
@@ -119,12 +119,12 @@ def train_model_dp_tf(
     # Calculate privacy sigma
     if not delta:
         # If delta is not specified, the default is 1/(num_users^2)
-        delta = 1 / (dataset_metadata['n_users'])**2
+        delta = 1 / (dataset_train_metadata['n_users'])**2
     
     # The number of times the gradients will be updated during training
-    num_repeats = dataset_metadata['n_minibatches'] * num_epochs
+    num_repeats = dataset_train_metadata['n_minibatches'] * num_epochs
     # The fraction of the data that is used in each minibatch
-    subsampling_rate = 1/dataset_metadata['n_minibatches']
+    subsampling_rate = 1/dataset_train_metadata['n_minibatches']
     # Calculate sigma
     sigma = get_sigma(epsilon, delta, num_repeats, subsampling_rate)
 
@@ -165,12 +165,12 @@ def train_model_dp_tf(
     for epoch in range(first_epoch,num_epochs+1):
         print(f"""######## Start of epoch {epoch} ########""")
         
-        # Shuffle the dataset. Again note that it is pre-batched so one
+        # Shuffle the training dataset. Again note that it is pre-batched so one
         # "sample" from the dataset is actually a minibatch.
         # If you have used a subset of the whole dataset, this still works
         # even though the number of batches will then be less than n_minibatches.
         if shuffle:
-            dataset = dataset.shuffle(buffer_size=dataset_metadata['n_minibatches'])
+            dataset_train = dataset_train.shuffle(buffer_size=dataset_train_metadata['n_minibatches'])
         
         # Reset epoch metrics
         accuracy_per_epoch.reset_states()
@@ -178,8 +178,15 @@ def train_model_dp_tf(
         mean_confidence_per_epoch.reset_states()
 
 
-        # Iterate over the batches of the dataset.
-        for step, (xc, yc, xt, yt) in enumerate(dataset):
+        # Iterate over the batches of the training dataset.
+        for step, (xc, yc, xt, yt) in enumerate(dataset_train):
+            # Data are in a padded batch with a batch size of 1
+            if tf.shape(xc)[0] == 1:
+                xc = flatten_first_two_dims(xc)
+                yc = flatten_first_two_dims(yc)
+                xt = flatten_first_two_dims(xt)
+                yt = flatten_first_two_dims(yt)
+            
             # Transpose the y data so they go into the model
             if(tf.rank(yc)==4):
                 # This should only happen if the data are re-batched
