@@ -8,7 +8,7 @@ import lab as B
 import neuralprocesses.tensorflow as nps
 
 
-from dppum.util import calc_cat_acc_onehot, calc_cat_confidence, flatten_first_two_dims
+from dppum.util import calc_cat_acc_onehot, calc_cat_confidence, flatten_first_two_dims, reshape_to_last
 
 
 
@@ -72,9 +72,12 @@ def test_calc_cat_confidence():
 def test_flatten_first_two_dims():
     starting_shape = (4,3,2,1)
     data = np.random.rand(*starting_shape)    
-    
     data_flat = flatten_first_two_dims(data)
     assert data_flat.shape == (12,2,1)
     
     
-
+def test_reshape_to_last():
+    starting_shape = (4,3,2,1)
+    data = np.random.rand(*starting_shape)
+    data_reshaped = reshape_to_last(data,1)
+    assert data_reshaped.shape == (4,2,1,3)
