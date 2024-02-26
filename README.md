@@ -3,14 +3,14 @@ Differentially Private Probabilistic User Modelling (in python)
 
 
 ## Installation instructions
-1. Create and activate a python 3.11 environment
-2. Install packages from pip:
+1. Create and activate a python 3.9 environment
+2. Install packages from pip. On a system with an Nvidia GPU:
 
     ```
-    pip install -r requirements.txt
+    pip install -r requirements_nvidia.txt
     ```
 
-    or on Mac:
+    or on M1/M2 Mac:
 
     ```
     pip install -r requirements_mac.txt
@@ -28,8 +28,17 @@ Differentially Private Probabilistic User Modelling (in python)
     pip install tfp-nightly
     ```
 
+5. Test the environment installation:
+
+    ```
+    pytest tests/test_nps_tf.py
+    ```
+    
+
 ## Example usage
-For training with 6400 users
+### Note about needing the training data
+
+For training with 6400 users (4 per batch)
 
 ```
 python -m experiments.ex2.experiment2_train --num_batches 1600
