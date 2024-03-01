@@ -139,6 +139,7 @@ def np_elbo_tf_cat(
     subsume_context=False,
     fix_noise=None,
     dtype_lik=None,
+    padding_value=None,
     **kw_args,
 ):
     """ELBO objective, with the log-likelihood part calculated using 
@@ -163,6 +164,7 @@ def np_elbo_tf_cat(
         fix_noise (float, optional): Fix the likelihood variance to this value.
         dtype_lik (dtype, optional): Data type to use for the likelihood computation.
             Defaults to the 64-bit variant of the data type of `yt`.
+        padding_value (float, optional): Padding value which will be discarded during the loss calculation.
 
     Returns:
         random state, optional: Random state.
@@ -221,26 +223,30 @@ def np_elbo_tf_cat(
     )
     d = nps.util.fix_noise(d, fix_noise)
     
-
     # d.mean is the mean of our samples from the latent distribution through 
     # the decoder
     # Transpose y_true and y_pred to shape [minibatch, num_data_points, num_categories]
-    # So they can go into softmax_cross_entropy_with_logits correctly 
+    # so they can go into softmax_cross_entropy_with_logits correctly 
     yt_true_transposed = reshape_to_last(yt,cat_axis)
-    
-    
     yt_pred_transposed = reshape_to_last(d.mean[0], cat_axis)
     yt_pred_transposed = B.cast(dtype_lik,yt_pred_transposed)
 
-    #Reconstruction loss
-    #Categorical crossentropy
+    
+    # Calculate the softmax cross-entropy reconstruction loss
     recon_loss = tf.nn.softmax_cross_entropy_with_logits(labels=yt_true_transposed, logits=yt_pred_transposed)
     
-    # Average loss over the data samples/tasks
-    dims = tf.range(1, tf.rank(recon_loss))
-    recon_loss = tf.reduce_mean(recon_loss,axis=dims)
+    # If there is padding, make sure we set the reconstruction loss to zero
+    if padding_value:
+        # Identify the padding
+        # Take the max and min along the categorical axis and find parts where either one is not equal to padding_value
+        not_padding_mask = (B.max(yt,cat_axis) != padding_value) | (B.min(yt,cat_axis) != padding_value)
+        recon_loss = B.where(not_padding_mask, recon_loss, 0.)    
+    
+    # Average loss over the number of target data points to match shape of _kl
+    recon_loss = tf.reduce_mean(recon_loss,axis=-1)
     
     # Calculate the ELBO loss
+    # The KL loss is still useful for the parts that are padding
     elbos = -recon_loss - _kl(qz, pz)
 
     if normalise:
