@@ -139,7 +139,7 @@ def np_elbo_tf_cat(
     subsume_context=False,
     fix_noise=None,
     dtype_lik=None,
-    padding_value=None,
+    padding_values=None,
     **kw_args,
 ):
     """ELBO objective, with the log-likelihood part calculated using 
@@ -164,7 +164,7 @@ def np_elbo_tf_cat(
         fix_noise (float, optional): Fix the likelihood variance to this value.
         dtype_lik (dtype, optional): Data type to use for the likelihood computation.
             Defaults to the 64-bit variant of the data type of `yt`.
-        padding_value (float, optional): Padding value which will be discarded during the loss calculation.
+        padding_values (float, optional): Padding value which will be discarded during the loss calculation.
 
     Returns:
         random state, optional: Random state.
@@ -236,7 +236,7 @@ def np_elbo_tf_cat(
     recon_loss = tf.nn.softmax_cross_entropy_with_logits(labels=yt_true_transposed, logits=yt_pred_transposed)
     
     # If there is padding, make sure we set the reconstruction loss to zero
-    if padding_value:
+    if padding_values:
         # Identify the padding
         # Take the max and min along the categorical axis and find parts where either one is not equal to padding_value
         not_padding_mask = (B.max(yt,cat_axis) != padding_value) | (B.min(yt,cat_axis) != padding_value)
