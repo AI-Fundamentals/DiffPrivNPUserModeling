@@ -41,6 +41,7 @@ def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1):
     if B.shape(y_true) != B.shape(y_pred):
         raise ValueError("y_true and y_pred do not have the same shape.")
     
+    
     y_true_cat = B.argmax(y_true,cat_axis)
     y_pred_cat = B.argmax(y_pred,cat_axis)
     
@@ -70,6 +71,7 @@ def calc_cat_confidence(y_pred_onehot, cat_axis=-1):
         The mean confidence of the most likely prediction.
 
     """
+    
     # Normalise y_pred_onehot with a softmax
     y_pred_onehot = B.softmax(y_pred_onehot,axis=cat_axis)
     
@@ -121,6 +123,7 @@ def reshape_to_last(tensor, axis):
     Returns:
         B.Tensor: The reshaped tensor.
     """
+    
     # If the axis is negative, adjust it to be positive
     if axis < 0:
         axis = len(B.shape(tensor)) + axis
@@ -158,6 +161,7 @@ def logpdf_explicit(d, x, axis=-1):
         A tensor representing the natural logarithm of the maximum product along each row.
 
     """
+    
     return B.log(B.max(x * d, axis=axis))
 
 
@@ -177,6 +181,7 @@ def print_dictionary(dictionary):
     None.
 
     """
+    
     print("{")
     for key, value in dictionary.items():
         print(f"{key}: {value}")
