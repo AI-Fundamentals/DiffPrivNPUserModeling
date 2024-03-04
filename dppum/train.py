@@ -28,7 +28,8 @@ def train_model_dp_tf(
     num_samples=5,
     warmup_epoch = False,
     shuffle = True,
-    model_save_dir = None
+    model_save_dir = None,
+    padding_values = None
 ):
     
     """
@@ -75,6 +76,8 @@ def train_model_dp_tf(
         Whether to shuffle dataset_train before each epoch, by default True.
     model_save_dir : str, optional
         The directory where the trained model should be saved, by default None.
+    padding_values : float, optional
+        Padding value which will be discarded during the loss/accuracy calculations.
 
     Returns
     -------
