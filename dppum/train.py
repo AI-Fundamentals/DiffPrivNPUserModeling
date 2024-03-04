@@ -11,7 +11,6 @@ from dppum.util import calc_cat_confidence, flatten_first_two_dims
 
 
 
-@tf.function
 def train_model_dp_tf(
     model,
     dataset_train,
