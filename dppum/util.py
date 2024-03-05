@@ -50,7 +50,7 @@ def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1):
     return accuracy
 
 
-def calc_cat_confidence(y_pred_onehot, cat_axis=-1):
+def calc_cat_confidence(y_pred_onehot, cat_axis=-1, padding_mask=None):
     """
     Calculate the mean confidence of the most likely prediction of a categorical.
 
@@ -64,6 +64,10 @@ def calc_cat_confidence(y_pred_onehot, cat_axis=-1):
         One-hot encoded predicted values.
     cat_axis : int
         The categorical axis. Default value is -1.
+    padding_values : Union[float, tf.Tensor], optional
+        Padding mask which will be discarded during the loss calculations.
+        Must be either a boolean tensor  either the same shape as 
+        `y_pred_onehot` or as 'y_pred_onehot' collapsed along 'cat_axis'.
 
     Returns
     -------
@@ -77,9 +81,22 @@ def calc_cat_confidence(y_pred_onehot, cat_axis=-1):
     
     # Calculate confidence of y_pred
     y_pred_confidence = B.max(y_pred_onehot, axis=cat_axis)
-
+    
     # Calculate the mean confidence
-    mean_confidence = B.mean(y_pred_confidence)
+    if padding_mask != None:
+        # Need to deal with padding
+        # If the padding is the same shape as 
+        if B.shape(padding_mask) == B.shape(y_pred_onehot):
+            collapsed_mask = B.any(padding_mask, axis=cat_axis)
+        elif B.shape(padding_mask) == B.shape(y_pred_confidence):
+            collapsed_mask = padding_mask
+        else:
+            raise ValueError("'padding_mask' must be a bool array either the same shape as 'y_pred_onehot' or the shape of 'y_pred_onehot' collapsed along 'cat axis'.")
+            
+        mean_confidence = B.mean(y_pred_confidence[~collapsed_mask])
+    else:
+        # Calculate the mean confidence, ignoring padding
+        mean_confidence = B.mean(y_pred_confidence)
     
     return mean_confidence
 
