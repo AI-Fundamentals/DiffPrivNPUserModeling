@@ -67,6 +67,13 @@ def test_calc_cat_confidence():
     # Double check default axis
     assert calc_cat_confidence(logits_2D) == pytest.approx(1.0, 0.01)
     
+    # Now test with padding_mask
+    padding_mask = np.array([[False,False,False],[True,True,True]])
+    assert calc_cat_confidence(logits_2D,padding_mask=padding_mask) == pytest.approx(1.0, 0.01)
+    padding_mask = B.any(padding_mask,1)
+    assert calc_cat_confidence(logits_2D,1,padding_mask=padding_mask) == pytest.approx(1.0, 0.01)
+    
+    
     
     
 def test_flatten_first_two_dims():
