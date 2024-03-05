@@ -125,9 +125,9 @@ def train_model_dp_tf(
         delta = 1 / (dataset_train_metadata['n_users'])**2
     
     # The number of times the gradients will be updated during training
-    num_repeats = dataset_train_metadata['n_minibatches'] * num_epochs
+    num_repeats = dataset_train_metadata['n_users'] * num_epochs
     # The fraction of the data that is used in each minibatch
-    subsampling_rate = 1/dataset_train_metadata['n_minibatches']
+    subsampling_rate = 1/dataset_train_metadata['n_users']
     # Calculate sigma
     sigma = get_sigma(epsilon, delta, num_repeats, subsampling_rate)
 
