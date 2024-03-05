@@ -164,7 +164,9 @@ def np_elbo_tf_cat(
         fix_noise (float, optional): Fix the likelihood variance to this value.
         dtype_lik (dtype, optional): Data type to use for the likelihood computation.
             Defaults to the 64-bit variant of the data type of `yt`.
-        padding_values (float, optional): Padding value which will be discarded during the loss calculation.
+        padding_values : Union[float, tf.Tensor], optional
+            Padding value which will be discarded during the loss calculations.
+            Must be either a float or a boolean tensor of the same shape as `yt`.
 
     Returns:
         random state, optional: Random state.
@@ -237,10 +239,19 @@ def np_elbo_tf_cat(
     
     # If there is padding, make sure we set the reconstruction loss to zero
     if padding_values:
-        # Identify the padding
-        # Take the max and min along the categorical axis and find parts where either one is not equal to padding_value
-        not_padding_mask = (B.max(yt,cat_axis) != padding_value) | (B.min(yt,cat_axis) != padding_value)
-        recon_loss = B.where(not_padding_mask, recon_loss, 0.)    
+        # If padding is a single value
+        if B.shape(padding_values) == ():
+            # Identify the padding
+            not_padding_mask = (yt != padding_values)
+            collapsed_mask = tf.reduce_all(not_padding_mask, axis=cat_axis)
+        elif B.shape(padding_values) == B.shape(yt):
+            # padding is already a mask
+            collapsed_mask = tf.reduce_all(padding_values, axis=cat_axis)
+        else:
+            raise ValueError("padding_values must be either a single value or a bool array the same shape as yt")
+            
+        # Calculate the loss for just the non-padding parts
+        recon_loss = B.where(collapsed_mask, recon_loss, 0.)    
     
     # Average loss over the number of target data points to match shape of _kl
     recon_loss = tf.reduce_mean(recon_loss,axis=-1)
