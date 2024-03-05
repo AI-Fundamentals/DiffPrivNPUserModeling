@@ -72,6 +72,12 @@ def test_calc_cat_acc_onehot():
     ])
     assert calc_cat_acc_onehot(y_true,y_pred,cat_axis=-2,padding_values=padding_values) == pytest.approx(0.833, 0.02)
     
+    # Check shapes without averaging
+    accuracy_not_averaged = calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,avg=False)
+    assert B.shape(accuracy_not_averaged) == B.shape(y_true)[0:2]
+    assert B.mean(accuracy_not_averaged) == calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,avg=True)
+    
+    #output = calc_cat_acc_onehot(y_true,y_pred,cat_axis=-2,padding_values=padding_values,avg=False)
     
     # Check it raises an exception if you try use a list
     with pytest.raises(ValueError):
