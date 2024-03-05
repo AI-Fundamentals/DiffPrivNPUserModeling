@@ -243,10 +243,10 @@ def np_elbo_tf_cat(
         if B.shape(padding_values) == ():
             # Identify the padding
             padding_mask = (yt == padding_values)
-            collapsed_mask = tf.reduce_all(padding_mask, axis=cat_axis)
+            collapsed_mask = B.any(padding_mask, axis=cat_axis)
         elif B.shape(padding_values) == B.shape(yt):
             # padding is already a mask
-            collapsed_mask = tf.reduce_all(padding_values, axis=cat_axis)
+            collapsed_mask = B.any(padding_values, axis=cat_axis)
         else:
             raise ValueError("padding_values must be either a single value or a bool array the same shape as yt")
             
