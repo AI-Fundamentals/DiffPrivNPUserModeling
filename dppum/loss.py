@@ -238,26 +238,23 @@ def np_elbo_tf_cat(
     # Calculate the softmax cross-entropy reconstruction loss
     recon_loss = tf.nn.softmax_cross_entropy_with_logits(labels=yt_true_transposed, logits=yt_pred_transposed)
     
-    # import pdb
-    # pdb.set_trace()
-    
     # If there is padding, make sure we set the reconstruction loss to zero
-    if padding_values != None:  # It gives an error if you do "if padding_values:"
+    if padding_values is not None:  # It gives an error if you do "if padding_values:"
         # If padding is a single value
         if B.size(padding_values) == 1:
             # Identify the padding
             padding_mask = (yt == padding_values)
-            collapsed_mask = B.any(padding_mask, axis=cat_axis)
+            padding_mask = B.any(padding_mask, axis=cat_axis)
         elif B.shape(padding_values) == B.shape(yt):
             # padding is already a mask
-            collapsed_mask = B.any(padding_values, axis=cat_axis)
+            padding_mask = B.any(padding_values, axis=cat_axis)
         elif B.shape(padding_values) == B.shape(recon_loss):
-            collapsed_mask = padding_values
+            padding_mask = padding_values
         else:
             raise ValueError("'padding_values' must be either a single value or a bool array either the same shape as 'yt' or the shape of 'yt' collapsed along the categorical axis.")
             
         # For the padding parts, assign the loss to zero
-        recon_loss = B.where(collapsed_mask, 0., recon_loss)    
+        recon_loss = B.where(padding_mask, 0., recon_loss)    
     
     # Average loss over the number of target data points to match shape of _kl
     recon_loss = tf.reduce_mean(recon_loss,axis=-1)
