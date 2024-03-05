@@ -102,24 +102,34 @@ if args['models_dir']:
         json.dump(args, json_file,indent=4)
 
 print("Finished parsing command line arguments.")
+
+# %%
+# Load the train and test data
+
+padding_values = -1.
+dataset_train,metadata_train = hdf_to_dataset_pad_tf(args['train_hdf'],
+                                            n_users=args['n_users'],
+                                            batch_size=args['batch_size'],
+                                            padding_values=padding_values
+                                            )
+print(f"\nMetadata for file '{args['train_hdf']}':")
+print_dictionary(metadata_train)
+
+
+dataset_test,metadata_test = hdf_to_dataset_pad_tf(args['test_hdf'],
+                                            n_users=1600,
+                                            batch_size=args['batch_size'],
+                                            padding_values=padding_values
+                                            )
+print(f"\nMetadata for file '{args['test_hdf']}':")
+print_dictionary(metadata_test)
+
+
 # %%
 
-# Load and prepare the data
-dataset, dataset_metadata = hdf_to_tf_dataset(args['train_hdf'],dtype=tf.float32)
-print(f"\nOriginal metadata for file '{args['train_hdf']}':")
-print_dictionary(dataset_metadata)
-
-
-dataset = dataset.shuffle(dataset_metadata['n_minibatches']).take(args['num_batches'])
-dataset_metadata['n_minibatches'] = args['num_batches']
-num_users = len(list(dataset)) * dataset_metadata['batch_size']
-dataset_metadata['n_users'] = num_users
-print(f"Dataset prepared for {num_users} users, in {args['num_batches']} (mini)batches of size {dataset_metadata['batch_size']}.")
-print(f"\nUpdated metadata for file '{args['train_hdf']}':")
-print_dictionary(dataset_metadata)
-
 # Prefetch the data to make training more efficient
-dataset = dataset.prefetch(tf.data.AUTOTUNE)
+dataset_train = dataset_train.prefetch(tf.data.AUTOTUNE)
+dataset_test = dataset_test.prefetch(tf.data.AUTOTUNE)
 
 print("Finished loading training dataset.")
 
@@ -140,12 +150,16 @@ model_ex2 = nps.construct_agnp(
 
 print("Finished constructing the model.")
 
+
+
 # %% 
 # Train model using train_model_dp_tf function
+
 history = train_model_dp_tf(
     model_ex2,
-    dataset,
-    dataset_metadata,
+    dataset_train,
+    metadata_train,
+    dataset_test = dataset_test,
     loss_fn=np_elbo_tf_cat,
     num_epochs=args['num_epochs'],
     epsilon=args['epsilon'],
@@ -156,8 +170,9 @@ history = train_model_dp_tf(
     dp_dec=False,
     num_samples=args['num_samples'],
     warmup_epoch=args['warmup_epoch'],
-    shuffle=True,
-    model_save_dir = args['models_dir']
+    shuffle=False,
+    model_save_dir = args['models_dir'],
+    padding_values=padding_values
     )
 
 print("Finished training the model.")
@@ -207,5 +222,3 @@ print("Finished plotting training metrics.")
 
 # %%
 print("Finished training experiment2.py training script.")
-
-
