@@ -5,7 +5,7 @@ These come from the DP user modelling Julia code
 
 import lab as B
 
-def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,padding_values=None):
+def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,padding_values=None,avg=True):
     """
     Calculate the categorical accuracy of one-hot encoded predictions and true
     labels using linear algebra backend.
@@ -18,6 +18,9 @@ def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,padding_values=None):
         Predicted labels, one-hot encoded.
     cat_axis : int, optional
         The axis that represents categories, by default -1.
+    avg : bool, optional
+        If true this will return one value. If false, the average will be the
+        shape of 'y_true' collapsed over 'cat_axis'.
 
     Returns
     -------
@@ -43,8 +46,7 @@ def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,padding_values=None):
     
     
     y_true_cat = B.argmax(y_true,cat_axis)
-    y_pred_cat = B.argmax(y_pred,cat_axis)
-    
+    y_pred_cat = B.argmax(y_pred,cat_axis)    
     
     # If there is padding, make sure we set the reconstruction loss to zero
     if padding_values is not None:  # It gives an error if you do "if padding_values:"
@@ -60,15 +62,20 @@ def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,padding_values=None):
             padding_mask = padding_values
         else:
             raise ValueError("'padding_values' must be either a single value or a bool array either the same shape as 'yt' or the shape of 'yt' collapsed along the categorical axis.")
-            
+        
         # Calculate the accuracy only for the non-padding parts
-        accuracy = B.mean(B.cast(B.dtype(y_true),y_true_cat[~padding_mask] == y_pred_cat[~padding_mask]))  
+        accuracy = B.cast(B.dtype(y_true),y_true_cat[~padding_mask] == y_pred_cat[~padding_mask])
     
     else:
-        accuracy = B.sum(B.where(B.eq(y_true_cat,y_pred_cat),1,0)) / B.length(y_true_cat)
+        accuracy = B.cast(B.dtype(y_true),y_true_cat == y_pred_cat)
     
+    # At this stage accuracy is of the shape as y_true, but collapsed over the
+    # categorical dimension
     
-    return accuracy
+    if avg:
+        return B.mean(accuracy)
+    else:
+        return accuracy
 
 
 def calc_cat_confidence(y_pred_onehot, cat_axis=-1, padding_mask=None):
