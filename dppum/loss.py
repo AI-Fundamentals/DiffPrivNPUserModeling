@@ -240,7 +240,7 @@ def np_elbo_tf_cat(
     # If there is padding, make sure we set the reconstruction loss to zero
     if padding_values:
         # If padding is a single value
-        if B.shape(padding_values) == ():
+        if B.size(padding_values) == 1:
             # Identify the padding
             padding_mask = (yt == padding_values)
             collapsed_mask = B.any(padding_mask, axis=cat_axis)
