@@ -1,21 +1,20 @@
 # Load packages
-
+import tensorflow as tf
 import neuralprocesses.tensorflow as nps
 import argparse
 import os
-import tensorflow as tf
 import tensorflow.keras.backend as K
 import numpy as np
 import json
 import matplotlib.pyplot as plt
 
-
-from dppum.data import hdf_to_tf_dataset
+from dppum.data import hdf_to_dataset_pad_tf
 from dppum.loss import np_elbo_tf_cat
 from dppum.util import print_dictionary
 from dppum.train import train_model_dp_tf
 
 print("Finished importing packages.")
+
 
 # %%
 # Parse any command line arguments
@@ -24,15 +23,25 @@ print("Finished importing packages.")
 parser = argparse.ArgumentParser()
 
 # Adding arguments to the parser
-parser.add_argument("--num_batches", 
-                    help="Number of batches to load from the training data hdf.", 
+parser.add_argument("--num_users", 
+                    help="Number of users to load from the training data hdf.", 
                     type=int, 
-                    default=16)
+                    default=128)
+
+parser.add_argument("--batch_size", 
+                    help="Number of users to put into each batch.", 
+                    type=int, 
+                    default=32)
 
 parser.add_argument("--train_hdf", 
                     help="The file to load the training from.", 
                     type=str,
                     default="data/ex2/experiment2_training_data.hdf")
+
+parser.add_argument("--test_hdf", 
+                    help="The file to load the training from.", 
+                    type=str,
+                    default="data/ex2/experiment2_test_data.hdf")
 
 parser.add_argument("--models_dir", 
                     help="The folder to save the trained models.", 
