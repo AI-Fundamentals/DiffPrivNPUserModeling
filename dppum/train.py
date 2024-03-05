@@ -7,7 +7,7 @@ import lab as B
 import neuralprocesses.tensorflow as nps
 
 from dppum.privacy_oracle import get_sigma_from_privacy_loss_distribution as get_sigma
-from dppum.util import calc_cat_confidence, flatten_first_two_dims
+from dppum.util import calc_cat_confidence, flatten_first_two_dims, calc_cat_acc_onehot
 
 
 
@@ -147,7 +147,8 @@ def train_model_dp_tf(
     
     # Define training metrics: loss, accuracy, and confidence of mean model category
     # These metrics are for within epochs, and are reset after each epoch
-    accuracy_per_epoch = tf.keras.metrics.Accuracy()
+    #accuracy_per_epoch = tf.keras.metrics.Accuracy()
+    accuracy_per_epoch = tf.keras.metrics.Mean(name='train_accuracy')
     loss_per_epoch = tf.keras.metrics.Mean(name='elbo_loss')
     mean_confidence_per_epoch = tf.keras.metrics.Mean(name='mean_confidence')
     
@@ -174,6 +175,9 @@ def train_model_dp_tf(
         # even though the number of batches will then be less than n_minibatches.
         if shuffle:
             dataset_train = dataset_train.shuffle(buffer_size=dataset_train_metadata['n_minibatches'])
+            # Prefetch the dataset for quicker training
+            dataset_train.prefetch(tf.data.AUTOTUNE)
+        
         
         # Reset epoch metrics
         accuracy_per_epoch.reset_states()
@@ -181,42 +185,39 @@ def train_model_dp_tf(
         mean_confidence_per_epoch.reset_states()
 
 
+
         # Iterate over the batches of the training dataset.
         for step, (xc, yc, xt, yt) in enumerate(dataset_train):
-            # Data are in a padded batch with a batch size of 1
-            if tf.shape(xc)[0] == 1:
-                xc = flatten_first_two_dims(xc)
-                yc = flatten_first_two_dims(yc)
-                xt = flatten_first_two_dims(xt)
-                yt = flatten_first_two_dims(yt)
+
             
-            # Transpose the y data so they go into the model
-            if(tf.rank(yc)==4):
-                # This should only happen if the data are re-batched
-                yc_t = B.transpose(yc,perm=[0,1,3,2])
-                yt_t = B.transpose(yt,perm=[0,1,3,2])
-            elif(tf.rank(yc)==3):
-                yc_t = B.transpose(yc,perm=[0,2,1])
-                yt_t = B.transpose(yt,perm=[0,2,1])
-            
-           
+            if padding_values:
+                # A mask for where the padding is. This is the same shape as the batch
+                padding_mask = (yt == padding_values)
+                # This is collapsed along the categorical dimension
+                padding_mask = B.any(padding_mask,axis=-2)
+            else:
+                padding_mask = None
+
             with tf.GradientTape() as encoder_tape, tf.GradientTape() as decoder_tape:
                 # Compute the loss value for this minibatch.
                 state = B.global_random_state(B.dtype(xc))
+                # The vector loss will have dimensions of [users_per_batch,trajectory_permutations_per_user]
                 vector_loss = -loss_fn(
                         state=state,
                         model=model,
-                        contexts=[(xc,yc_t)],
-                        subsume_context=True,
+                        contexts=[(xc,yc)],
+                        subsume_context=False,
                         xt=xt,
-                        yt=yt_t,
+                        yt=yt,
                         normalise=False,
                         dtype_lik=tf.float32,
                         num_samples=num_samples,
+                        padding_values=padding_mask
                         )
-                scalar_loss = tf.reduce_mean(vector_loss)
                 
-
+                scalar_loss = tf.reduce_mean(vector_loss)
+            
+            
             # On the 0th epoch, do not train the model just run metrics for
             # untrained model. On other epochs, calculate and apply the gradients
             if epoch> 0 :
@@ -241,18 +242,17 @@ def train_model_dp_tf(
             loss_per_epoch(scalar_loss)            
             
             # Assess accuracy after updating model gradients
-            mean, _, _, _ = nps.predict(
-                model,xc, yc_t, xt, num_samples=num_samples
-                )
-           
-            mean_cat = B.argmax(mean,1)
-            yt_cat = B.argmax(yt,2)
-            accuracy_per_epoch.update_state(yt_cat, mean_cat)
+            yt_pred, _, _, _ = nps.predict(
+                model,xc, yc, xt, num_samples=num_samples
+                )           
+            # Accuracy of the non-padding values
+            accuracy=calc_cat_acc_onehot(yt,yt_pred,cat_axis=-2,padding_values=padding_mask)
+            # Mean confidence of the non-padding values
+            confidence = calc_cat_confidence(yt_pred,-2,padding_mask)
             
-            # Keep track of confidence in model predictions
-            mean_confidence_per_epoch(calc_cat_confidence(mean, cat_axis=-2))
-
-
+            # Update accuracy and confidence metrics
+            accuracy_per_epoch.update_state(accuracy)
+            mean_confidence_per_epoch(confidence)
 
         ##### End of epoch calculations #####
 
@@ -268,14 +268,11 @@ def train_model_dp_tf(
         
         
         if dataset_test:
-            print("Running though test dataset")
-            # Loop through test dataset
-            for xc,yc,xt,yt in dataset_test:
-                yc_t = B.transpose(yc,perm=[0,2,1])
-                yt_t = B.transpose(yt,perm=[0,2,1])
-            
+            print("Running though test dataset") 
+            print("Note this code is not complete")
+            # Use a nps.mask
             mean, _, _, _ = nps.predict(
-                model,xc, yc_t, xt, num_samples=num_samples
+                model,xc, yc, xt, num_samples=num_samples
                 )
             accuracy_all_epochs.append(accuracy_per_epoch.result())
         
