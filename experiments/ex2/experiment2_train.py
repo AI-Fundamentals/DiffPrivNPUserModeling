@@ -108,7 +108,7 @@ print("Finished parsing command line arguments.")
 
 padding_values = -1.
 dataset_train,metadata_train = hdf_to_dataset_pad_tf(args['train_hdf'],
-                                            n_users=args['n_users'],
+                                            n_users=args['num_users'],
                                             batch_size=args['batch_size'],
                                             padding_values=padding_values
                                             )
