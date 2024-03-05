@@ -75,7 +75,7 @@ def calc_cat_confidence(y_pred_onehot, cat_axis=-1, padding_mask=None):
         The mean confidence of the most likely prediction.
 
     """
-    
+
     # Normalise y_pred_onehot with a softmax
     y_pred_onehot = B.softmax(y_pred_onehot,axis=cat_axis)
     
@@ -83,7 +83,7 @@ def calc_cat_confidence(y_pred_onehot, cat_axis=-1, padding_mask=None):
     y_pred_confidence = B.max(y_pred_onehot, axis=cat_axis)
     
     # Calculate the mean confidence
-    if padding_mask != None:
+    if padding_mask is not None:
         # Need to deal with padding
         # If the padding is the same shape as 
         if B.shape(padding_mask) == B.shape(y_pred_onehot):
