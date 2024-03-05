@@ -45,7 +45,32 @@ def test_calc_cat_acc_onehot():
     y_pred = B.transpose(y_pred,perm=[0,2,1])
     assert calc_cat_acc_onehot(y_true,y_pred,cat_axis=-2) == pytest.approx(2/3, 0.001)
     
-
+    # Add padding
+    y_true =  np.array([
+        [[0, 1, 0], [0, 1, 0], [0, 1, 0]],
+        [[0, 1, 0], [0, 1, 0], [0, 1, 0]],
+        [[-1, -1, -1], [-1, -1, -1], [-1, -1, -1]]
+    ])
+    y_pred =  np.array([
+        [[0, 1, 0], [0, 1, 0], [0, 0, 1]],
+        [[0, 1, 0], [0, 1, 0], [0, 1, 0]],
+        [[1, 0, 0], [0, 1, 0], [0, 1, 0]]
+    ])
+    
+    padding_values = -1
+    assert calc_cat_acc_onehot(y_true,y_pred,cat_axis=-2,padding_values=padding_values) == pytest.approx(0.833, 0.02)
+    padding_values = np.array([
+        [[False, False, False], [False, False, False], [False, False, False]],
+        [[False, False, False], [False, False, False], [False, False, False]],
+        [[True, True, True], [True, True, True], [True, True, True]]
+    ])
+    assert calc_cat_acc_onehot(y_true,y_pred,cat_axis=-2,padding_values=padding_values) == pytest.approx(0.833, 0.02)
+    padding_values = np.array([
+        [False, False, False],
+        [False, False, False],
+        [True, True,True]
+    ])
+    assert calc_cat_acc_onehot(y_true,y_pred,cat_axis=-2,padding_values=padding_values) == pytest.approx(0.833, 0.02)
     
     
     # Check it raises an exception if you try use a list
@@ -55,6 +80,10 @@ def test_calc_cat_acc_onehot():
     # Check it raises an exception if y_pred and y_true are not the same shapes
     with pytest.raises(ValueError):
         calc_cat_acc_onehot([1,0,0],[1,0])
+        
+    # Check it raises an exception if padding is the wrong shape
+    with pytest.raises(ValueError):
+        calc_cat_acc_onehot(y_true,y_pred,-1,np.array([True,False]))
     
 
 def test_calc_cat_confidence():

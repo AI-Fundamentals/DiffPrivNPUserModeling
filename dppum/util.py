@@ -5,7 +5,7 @@ These come from the DP user modelling Julia code
 
 import lab as B
 
-def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1):
+def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,padding_values=None):
     """
     Calculate the categorical accuracy of one-hot encoded predictions and true
     labels using linear algebra backend.
@@ -45,7 +45,29 @@ def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1):
     y_true_cat = B.argmax(y_true,cat_axis)
     y_pred_cat = B.argmax(y_pred,cat_axis)
     
-    accuracy = B.sum(B.where(B.eq(y_true_cat,y_pred_cat),1,0)) / B.length(y_true_cat)
+    
+    
+    # If there is padding, make sure we set the reconstruction loss to zero
+    if padding_values is not None:  # It gives an error if you do "if padding_values:"
+        # If padding is a single value
+        if B.size(padding_values) == 1:
+            # Identify the padding
+            padding_mask = (y_true == padding_values)
+            padding_mask = B.any(padding_mask, axis=cat_axis)
+        elif B.shape(padding_values) == B.shape(y_true):
+            # padding is already a mask
+            padding_mask = B.any(padding_values, axis=cat_axis)
+        elif B.shape(padding_values) == B.shape(y_true_cat):
+            padding_mask = padding_values
+        else:
+            raise ValueError("'padding_values' must be either a single value or a bool array either the same shape as 'yt' or the shape of 'yt' collapsed along the categorical axis.")
+            
+        # Calculate the accuracy only for the non-padding parts
+        accuracy = B.mean(B.cast(B.dtype(y_true_cat),y_true_cat[~padding_mask] == y_pred_cat[~padding_mask]))  
+    
+    else:
+        accuracy = B.sum(B.where(B.eq(y_true_cat,y_pred_cat),1,0)) / B.length(y_true_cat)
+    
     
     return accuracy
 
