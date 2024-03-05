@@ -242,16 +242,16 @@ def np_elbo_tf_cat(
         # If padding is a single value
         if B.shape(padding_values) == ():
             # Identify the padding
-            not_padding_mask = (yt != padding_values)
-            collapsed_mask = tf.reduce_all(not_padding_mask, axis=cat_axis)
+            padding_mask = (yt == padding_values)
+            collapsed_mask = tf.reduce_all(padding_mask, axis=cat_axis)
         elif B.shape(padding_values) == B.shape(yt):
             # padding is already a mask
             collapsed_mask = tf.reduce_all(padding_values, axis=cat_axis)
         else:
             raise ValueError("padding_values must be either a single value or a bool array the same shape as yt")
             
-        # Calculate the loss for just the non-padding parts
-        recon_loss = B.where(collapsed_mask, recon_loss, 0.)    
+        # For the padding parts, assign the loss to zero
+        recon_loss = B.where(collapsed_mask, 0., recon_loss)    
     
     # Average loss over the number of target data points to match shape of _kl
     recon_loss = tf.reduce_mean(recon_loss,axis=-1)
