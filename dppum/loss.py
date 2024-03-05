@@ -166,7 +166,8 @@ def np_elbo_tf_cat(
             Defaults to the 64-bit variant of the data type of `yt`.
         padding_values : Union[float, tf.Tensor], optional
             Padding value which will be discarded during the loss calculations.
-            Must be either a float or a boolean tensor of the same shape as `yt`.
+            Must be either a float or a boolean tensor  either the same shape 
+            as `yt` or as 'yt' collapsed along 'cat_axis'.
 
     Returns:
         random state, optional: Random state.
