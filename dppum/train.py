@@ -217,25 +217,59 @@ def train_model_dp_tf(
                 
                 scalar_loss = tf.reduce_mean(vector_loss)
             
+            # TF PRIV VERSION
+            # # On the 0th epoch, do not train the model just run metrics for
+            # # untrained model. On other epochs, calculate and apply the gradients
+            # if epoch> 0 :
+            #     if dp_enc:
+            #         # DP encoder gradients        
+            #         optimizer_priv.minimize(vector_loss, model.encoder.trainable_variables, tape=encoder_tape)
+            #     else:
+            #         # Standard (non-private) gradients
+            #         encoder_gradients = encoder_tape.gradient(scalar_loss, model.encoder.trainable_variables)
+            #         optimizer.apply_gradients(zip(encoder_gradients, model.encoder.trainable_variables))
+                
+            #     if dp_dec:
+            #         # DP decoder gradients        
+            #         optimizer_priv.minimize(vector_loss, model.decoder.trainable_variables, tape=decoder_tape)
+            #     else:
+            #         #Standard decoder gradients
+            #         decoder_gradients = decoder_tape.gradient(scalar_loss, model.decoder.trainable_variables)
+            #         optimizer.apply_gradients(zip(decoder_gradients, model.decoder.trainable_variables))
             
             # On the 0th epoch, do not train the model just run metrics for
             # untrained model. On other epochs, calculate and apply the gradients
+            #import pdb
+            #pdb.set_trace()
+
             if epoch> 0 :
-                if dp_enc:
-                    # DP encoder gradients        
-                    optimizer_priv.minimize(vector_loss, model.encoder.trainable_variables, tape=encoder_tape)
-                else:
-                    # Standard (non-private) gradients
-                    encoder_gradients = encoder_tape.gradient(scalar_loss, model.encoder.trainable_variables)
-                    optimizer.apply_gradients(zip(encoder_gradients, model.encoder.trainable_variables))
+                # Get the gradients
+                encoder_gradients = encoder_tape.gradient(scalar_loss, model.encoder.trainable_variables)           
+                decoder_gradients = decoder_tape.gradient(scalar_loss, model.decoder.trainable_variables)
                 
+                # Apply privacy (or not)
+                if dp_enc:
+                    # DP encoder gradients
+                    # Add Gaussian noise
+                    for i, grad in enumerate(encoder_gradients):
+                        # L2 clipping
+                        g_normalized = tf.norm(grad)
+                        encoder_gradients[i] = grad * tf.minimum(1.0,(clipping_bound/g_normalized))                        
+                        # Add Gaussian noise
+                        encoder_gradients[i] = grad + tf.random.normal(grad.shape, mean=0.0, stddev=tf.sqrt(sigma**2 * clipping_bound**2))
+                    
                 if dp_dec:
-                    # DP decoder gradients        
-                    optimizer_priv.minimize(vector_loss, model.decoder.trainable_variables, tape=decoder_tape)
-                else:
-                    #Standard decoder gradients
-                    decoder_gradients = decoder_tape.gradient(scalar_loss, model.decoder.trainable_variables)
-                    optimizer.apply_gradients(zip(decoder_gradients, model.decoder.trainable_variables))
+                    # DP decoder gradients
+                    for i, grad in enumerate(encoder_gradients):
+                        # L2 clipping
+                        g_normalized = tf.norm(grad)
+                        decoder_gradients[i] = grad * tf.minimum(1.0,(clipping_bound/g_normalized))                        
+                        # Add Gaussian noise
+                        decoder_gradients[i] = grad + tf.random.normal(grad.shape, mean=0.0, stddev=tf.sqrt(sigma**2 * clipping_bound**2))
+                    
+                # Apply gradients to update model weights
+                optimizer.apply_gradients(zip(encoder_gradients, model.encoder.trainable_variables))    
+                optimizer.apply_gradients(zip(decoder_gradients, model.decoder.trainable_variables))
            
 
             # Update loss metric
