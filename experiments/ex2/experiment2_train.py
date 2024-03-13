@@ -87,6 +87,13 @@ parser.add_argument("--warmup_epoch",
                     type=bool,
                     default=False)
 
+# Cache/prefetch the data for faster training. However this will cause problems
+# If the dataset is too large to fit in memory
+parser.add_argument("--cache", 
+                    help="Cache/Prefetch the data for faster training (True/False)", 
+                    type=bool,
+                    default=False)
+
 # Parsing the arguments to a dictionary
 args = vars(parser.parse_args())
 
@@ -117,7 +124,7 @@ print_dictionary(metadata_train)
 
 
 dataset_test,metadata_test = hdf_to_dataset_pad_tf(args['test_hdf'],
-                                            n_users=1600,
+                                            n_users=128,
                                             batch_size=args['batch_size'],
                                             padding_values=padding_values
                                             )
@@ -125,11 +132,13 @@ print(f"\nMetadata for file '{args['test_hdf']}':")
 print_dictionary(metadata_test)
 
 
-# %%
-
-# Prefetch the data to make training more efficient
-dataset_train = dataset_train.prefetch(tf.data.AUTOTUNE)
-dataset_test = dataset_test.prefetch(tf.data.AUTOTUNE)
+if args['cache']:
+    # Cache and prefetch the data to make training more efficient
+    dataset_train = dataset_train.cache()
+    dataset_train = dataset_train.prefetch(tf.data.AUTOTUNE)
+    
+    dataset_test = dataset_test.cache()
+    dataset_test = dataset_test.prefetch(tf.data.AUTOTUNE)
 
 print("Finished loading training dataset.")
 
