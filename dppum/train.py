@@ -172,14 +172,9 @@ def train_model_dp_tf(
     for epoch in range(first_epoch,num_epochs+1):
         print(f"""######## Start of epoch {epoch} ########""")
         
-        # Shuffle the training dataset. Again note that it is pre-batched so one
-        # "sample" from the dataset is actually a minibatch.
-        # If you have used a subset of the whole dataset, this still works
-        # even though the number of batches will then be less than n_minibatches.
+        # Shuffle the training dataset
         if shuffle:
-            dataset_train = dataset_train.shuffle(buffer_size=dataset_train_metadata['n_minibatches'])
-            # Prefetch the dataset for quicker training
-            dataset_train.prefetch(tf.data.AUTOTUNE)
+            dataset_train = dataset_train.shuffle(buffer_size=dataset_train_metadata['n_batches'])
         
         
         # Reset epoch metrics
