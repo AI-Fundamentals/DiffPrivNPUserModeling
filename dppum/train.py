@@ -147,15 +147,18 @@ def train_model_dp_tf(
     
     # Define training metrics: loss, accuracy, and confidence of mean model category
     # These metrics are for within epochs, and are reset after each epoch
-    #accuracy_per_epoch = tf.keras.metrics.Accuracy()
-    accuracy_per_epoch = tf.keras.metrics.Mean(name='train_accuracy')
+    train_accuracy_per_epoch = tf.keras.metrics.Mean(name='train_accuracy')
     loss_per_epoch = tf.keras.metrics.Mean(name='elbo_loss')
     mean_confidence_per_epoch = tf.keras.metrics.Mean(name='mean_confidence')
+    if dataset_test:
+        test_accuracy_per_epoch = tf.keras.metrics.Mean(name='test_accuracy')
     
     # Define lists to store the metrics for all epochs
-    accuracy_all_epochs = []
+    train_accuracy_all_epochs = []
     loss_all_epochs = []
     mean_confidence_all_epochs = []    
+    if dataset_test:
+        test_accuracy_all_epochs = []
     
     # Use warmup epoch (or not)
     warmup_epoch = False
@@ -180,9 +183,11 @@ def train_model_dp_tf(
         
         
         # Reset epoch metrics
-        accuracy_per_epoch.reset_states()
+        train_accuracy_per_epoch.reset_states()
         loss_per_epoch.reset_states()
         mean_confidence_per_epoch.reset_states()
+        if dataset_test:
+            test_accuracy_per_epoch.reset_states()
 
 
 
@@ -251,31 +256,45 @@ def train_model_dp_tf(
             confidence = calc_cat_confidence(yt_pred,-2,padding_mask)
             
             # Update accuracy and confidence metrics
-            accuracy_per_epoch.update_state(accuracy)
+            train_accuracy_per_epoch.update_state(accuracy)
             mean_confidence_per_epoch(confidence)
 
         ##### End of epoch calculations #####
 
         # Append to epoch metrics
         loss_all_epochs.append(loss_per_epoch.result())
-        accuracy_all_epochs.append(accuracy_per_epoch.result())
+        train_accuracy_all_epochs.append(train_accuracy_per_epoch.result())
         mean_confidence_all_epochs.append(mean_confidence_per_epoch.result())
         
         # Print epoch metrics
         print(f"Loss: {np.round(float(loss_all_epochs[-1]),5)}")
-        print(f"Accuracy of mean predictions: {np.round(float(accuracy_all_epochs[-1]),3)}")
-        print(f"Confidence of mean predictions: {np.round(float(mean_confidence_all_epochs[-1]),3)}")
+        print(f"Mean training accuracy: {np.round(float(train_accuracy_all_epochs[-1]),3)}")
+        print(f"Mean confidence of predictions: {np.round(float(mean_confidence_all_epochs[-1]),3)}")
         
         
-        if dataset_test:
-            print("Running though test dataset") 
-            print("Note this code is not complete")
-            # Use a nps.mask
-            mean, _, _, _ = nps.predict(
-                model,xc, yc, xt, num_samples=num_samples
-                )
-            accuracy_all_epochs.append(accuracy_per_epoch.result())
-        
+        if dataset_test:            
+            for step, (xc, yc, xt, yt) in enumerate(dataset_test):
+            
+                if padding_values:
+                    # A mask for where the padding is. This is the same shape as the batch
+                    padding_mask = (yt == padding_values)
+                    # This is collapsed along the categorical dimension
+                    padding_mask = B.any(padding_mask,axis=-2)
+                else:
+                    padding_mask = None
+                
+                # Forward pass
+                yt_pred, _, _, _ = nps.predict(
+                    model,xc, yc, xt, num_samples=num_samples
+                    ) 
+                
+                # Accuracy of the non-padding values for the test data
+                accuracy=calc_cat_acc_onehot(yt,yt_pred,cat_axis=-2,padding_values=padding_mask)
+                test_accuracy_per_epoch.update_state(accuracy)
+            
+            # Append to epoch metric
+            test_accuracy_all_epochs.append(test_accuracy_per_epoch.result())
+            print(f"Mean test accuracy: {np.round(float(test_accuracy_all_epochs[-1]),3)}")
         
         if model_save_dir:
             # Check if the directory exists
@@ -293,8 +312,11 @@ def train_model_dp_tf(
     # Return the history data (training metrics)
     history = {
         'loss' : loss_all_epochs,
-        'cat_accuracy' : accuracy_all_epochs,
+        'train_accuracy' : train_accuracy_all_epochs,
         'cat_confidence' : mean_confidence_all_epochs
         }
+    if dataset_test:
+        history['test_accuracy'] = test_accuracy_all_epochs,
+        
     return history
 
