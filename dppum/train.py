@@ -1,5 +1,4 @@
 import tensorflow as tf
-from tensorflow_privacy import DPKerasAdamOptimizer
 import numpy as np
 import json
 import os
@@ -136,10 +135,6 @@ def train_model_dp_tf(
     valid_optimizers = ['Adam']
     if optimizer_name == 'Adam':
         optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=learning_rate)
-        optimizer_priv = DPKerasAdamOptimizer(l2_norm_clip=clipping_bound,
-                                          noise_multiplier=sigma,
-                                         num_microbatches=1,
-                                         learning_rate=learning_rate)
     else:
         raise ValueError(f"Invalid optimizer name. Expected one of: {valid_optimizers}")
         
@@ -189,15 +184,6 @@ def train_model_dp_tf(
         # Iterate over the batches of the training dataset.
         for step, (xc, yc, xt, yt) in enumerate(dataset_train):
 
-            
-            if padding_values:
-                # A mask for where the padding is. This is the same shape as the batch
-                padding_mask = (yt == padding_values)
-                # This is collapsed along the categorical dimension
-                padding_mask = B.any(padding_mask,axis=-2)
-            else:
-                padding_mask = None
-
             with tf.GradientTape() as encoder_tape, tf.GradientTape() as decoder_tape:
                 # Compute the loss value for this minibatch.
                 state = B.global_random_state(B.dtype(xc))
@@ -206,41 +192,16 @@ def train_model_dp_tf(
                         state=state,
                         model=model,
                         contexts=[(xc,yc)],
-                        subsume_context=False,
+                        subsume_context=True,
                         xt=xt,
                         yt=yt,
                         normalise=False,
                         dtype_lik=tf.float32,
                         num_samples=num_samples,
-                        padding_values=padding_mask
+                        padding_values=padding_values
                         )
                 
                 scalar_loss = tf.reduce_mean(vector_loss)
-            
-            # TF PRIV VERSION
-            # # On the 0th epoch, do not train the model just run metrics for
-            # # untrained model. On other epochs, calculate and apply the gradients
-            # if epoch> 0 :
-            #     if dp_enc:
-            #         # DP encoder gradients        
-            #         optimizer_priv.minimize(vector_loss, model.encoder.trainable_variables, tape=encoder_tape)
-            #     else:
-            #         # Standard (non-private) gradients
-            #         encoder_gradients = encoder_tape.gradient(scalar_loss, model.encoder.trainable_variables)
-            #         optimizer.apply_gradients(zip(encoder_gradients, model.encoder.trainable_variables))
-                
-            #     if dp_dec:
-            #         # DP decoder gradients        
-            #         optimizer_priv.minimize(vector_loss, model.decoder.trainable_variables, tape=decoder_tape)
-            #     else:
-            #         #Standard decoder gradients
-            #         decoder_gradients = decoder_tape.gradient(scalar_loss, model.decoder.trainable_variables)
-            #         optimizer.apply_gradients(zip(decoder_gradients, model.decoder.trainable_variables))
-            
-            # On the 0th epoch, do not train the model just run metrics for
-            # untrained model. On other epochs, calculate and apply the gradients
-            #import pdb
-            #pdb.set_trace()
 
             if epoch> 0 :
                 # Get the gradients
