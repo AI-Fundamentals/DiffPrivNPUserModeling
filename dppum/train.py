@@ -233,13 +233,25 @@ def train_model_dp_tf(
                 optimizer.apply_gradients(zip(decoder_gradients, model.decoder.trainable_variables))
            
 
+
+            
             # Update loss metric
             loss_per_epoch(scalar_loss)            
             
             # Assess accuracy after updating model gradients
             yt_pred, _, _, _ = nps.predict(
                 model,xc, yc, xt, num_samples=num_samples
-                )           
+                )
+            
+            # Create mask for the padding
+            if padding_values:
+                # A mask for where the padding is. This is the same shape as the batch
+                padding_mask = (yt == padding_values)
+                # This is collapsed along the categorical dimension
+                padding_mask = B.any(padding_mask,axis=-2)
+            else:
+                padding_mask = None
+            
             # Accuracy of the non-padding values
             accuracy=calc_cat_acc_onehot(yt,yt_pred,cat_axis=-2,padding_values=padding_mask)
             # Mean confidence of the non-padding values

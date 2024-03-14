@@ -164,10 +164,8 @@ def np_elbo_tf_cat(
         fix_noise (float, optional): Fix the likelihood variance to this value.
         dtype_lik (dtype, optional): Data type to use for the likelihood computation.
             Defaults to the 64-bit variant of the data type of `yt`.
-        padding_values : Union[float, tf.Tensor], optional
-            Padding value which will be discarded during the loss calculations.
-            Must be either a float or a boolean tensor  either the same shape 
-            as `yt` or as 'yt' collapsed along 'cat_axis'.
+        padding_values : float, optional
+            Padding value for yt which will be discarded during the loss calculations.
 
     Returns:
         random state, optional: Random state.
@@ -245,13 +243,8 @@ def np_elbo_tf_cat(
             # Identify the padding
             padding_mask = (yt == padding_values)
             padding_mask = B.any(padding_mask, axis=cat_axis)
-        elif B.shape(padding_values) == B.shape(yt):
-            # padding is already a mask
-            padding_mask = B.any(padding_values, axis=cat_axis)
-        elif B.shape(padding_values) == B.shape(recon_loss):
-            padding_mask = padding_values
         else:
-            raise ValueError("'padding_values' must be either a single value or a bool array either the same shape as 'yt' or the shape of 'yt' collapsed along the categorical axis.")
+            raise ValueError("'padding_values' must be a single value")
             
         # For the padding parts, assign the loss to zero
         recon_loss = B.where(padding_mask, 0., recon_loss)    
