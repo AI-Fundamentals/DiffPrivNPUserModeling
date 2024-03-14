@@ -274,6 +274,7 @@ def train_model_dp_tf(
         print(f"Mean confidence of predictions: {np.round(float(mean_confidence_all_epochs[-1]),3)}")
         
         
+        # Calculate accuracy using test dataset
         if dataset_test:            
             for step, (xc, yc, xt, yt) in enumerate(dataset_test):
             
