@@ -189,7 +189,8 @@ history = train_model_dp_tf(
     warmup_epoch=args['warmup_epoch'],
     shuffle=False,
     model_save_dir = args['models_dir'],
-    padding_values=padding_values
+    padding_values=padding_values,
+    clip_grads_per_user=args['clip_user']
     )
 
 time_end = dt.datetime.now()
