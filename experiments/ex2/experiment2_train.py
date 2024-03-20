@@ -32,7 +32,7 @@ parser.add_argument("--num_users",
 parser.add_argument("--batch_size", 
                     help="Number of users to put into each batch.", 
                     type=int, 
-                    default=32)
+                    default=4)
 
 parser.add_argument("--train_hdf", 
                     help="The file to load the training from.", 
