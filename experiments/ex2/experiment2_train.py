@@ -88,11 +88,16 @@ parser.add_argument("--warmup_epoch",
                     default=False)
 
 # Cache/prefetch the data for faster training. However this will cause problems
-# If the dataset is too large to fit in memory
+# if the dataset is too large to fit in memory
 parser.add_argument("--cache", 
                     help="Cache/Prefetch the data for faster training (True/False)", 
                     type=bool,
                     default=False)
+
+parser.add_argument("--clip_user", 
+                    help="Method to clip gradients per user. ('loop'/'vectorize'/'false')", 
+                    type=str,
+                    default='loop')
 
 # Parsing the arguments to a dictionary
 args = vars(parser.parse_args())
