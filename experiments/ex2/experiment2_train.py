@@ -7,6 +7,7 @@ import tensorflow.keras.backend as K
 import numpy as np
 import json
 import matplotlib.pyplot as plt
+import datetime as dt
 
 from dppum.data import hdf_to_dataset_pad_tf
 from dppum.loss import np_elbo_tf_cat
@@ -169,6 +170,8 @@ print("Finished constructing the model.")
 # %% 
 # Train model using train_model_dp_tf function
 
+time_start = dt.datetime.now()
+
 history = train_model_dp_tf(
     model_ex2,
     dataset_train,
@@ -189,7 +192,10 @@ history = train_model_dp_tf(
     padding_values=padding_values
     )
 
+time_end = dt.datetime.now()
+training_time = time_end-time_start
 print("Finished training the model.")
+print(f"Training time: {'{:.2f}'.format(training_time.total_seconds()/60)} minutes")
 
 # %%
 # Plot training metrics
