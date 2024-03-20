@@ -211,7 +211,7 @@ else:
 
 # Plotting the data
 ax[0].plot(epochs_list, history['loss'], label='Loss')
-ax[1].plot(epochs_list, history['cat_accuracy'], label='Mean Accuracy')
+ax[1].plot(epochs_list, history['train_accuracy'], label='Mean Accuracy')
 ax[1].plot(epochs_list, history['cat_confidence'], label='Mean Confidence')
 
 # Adding labels and title
