@@ -47,10 +47,10 @@ def np_elbo_explicit(
         random state, optional: Random state.
         tensor: ELBOs.
     """
-    
+
     float = B.dtype_float(yt)
     float64 = B.promote_dtypes(float, np.float64)
-
+    
     # For the likelihood computation, default to using a 64-bit version of the data
     # type of `yt`.
     if not dtype_lik:
@@ -174,7 +174,7 @@ def np_elbo_tf_cat(
     
     float = B.dtype_float(yt)
     float64 = B.promote_dtypes(float, np.float64)
-
+    
     # For the likelihood computation, default to using a 64-bit version of the data
     # type of `yt`.
     if not dtype_lik:
