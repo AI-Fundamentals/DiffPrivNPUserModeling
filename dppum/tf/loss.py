@@ -4,9 +4,10 @@ import neuralprocesses.tensorflow as nps
 import numpy as np
 import tensorflow as tf
 
-from dppum.util import logpdf_explicit
+from dppum.util import reshape_to_last
 
-def np_elbo_explicit(
+
+def np_elbo_tf_cat(
     state: B.RandomState,
     model: nps.Model,
     contexts: list,
@@ -19,12 +20,14 @@ def np_elbo_explicit(
     subsume_context=False,
     fix_noise=None,
     dtype_lik=None,
-
+    padding_values=None,
     **kw_args,
 ):
-    """ELBO objective, with the log-likelihood part calculated explicitly by
-    calculating the log of the probability of the correct category. Based on
-    nps.elbo. Try this if nps.elbo doesn't train the model.
+    """ELBO objective, with the log-likelihood part calculated using 
+    tf.nn.softmax_cross_entropy_with_logits. Based on nps.elbo.
+    As such it will only work with tensorflow tensors as the input data, with
+    categorical y data. The output of this function should be the same as
+    np_elbo_explicit, but this version is normally faster.
 
     Args:
         state (random state, optional): Random state.
@@ -42,12 +45,14 @@ def np_elbo_explicit(
         fix_noise (float, optional): Fix the likelihood variance to this value.
         dtype_lik (dtype, optional): Data type to use for the likelihood computation.
             Defaults to the 64-bit variant of the data type of `yt`.
+        padding_values : float, optional
+            Padding value for yt which will be discarded during the loss calculations.
 
     Returns:
         random state, optional: Random state.
         tensor: ELBOs.
     """
-
+    
     float = B.dtype_float(yt)
     float64 = B.promote_dtypes(float, np.float64)
     
@@ -102,20 +107,35 @@ def np_elbo_explicit(
     
     # d.mean is the mean of our samples from the latent distribution through 
     # the decoder
-    yt_pred = d.mean[0]
-    yt_pred = B.cast(dtype_lik,yt_pred)
+    # Transpose y_true and y_pred to shape [minibatch, num_data_points, num_categories]
+    # so they can go into softmax_cross_entropy_with_logits correctly 
+    yt_true_transposed = reshape_to_last(yt,cat_axis)
+    yt_pred_transposed = reshape_to_last(d.mean[0], cat_axis)
+    yt_pred_transposed = B.cast(dtype_lik,yt_pred_transposed)
 
-    # Compute the loglik using Alex's method
-    # Calculate the probabilities of the different categories by applying a softmax
-    yt_pred_prob = B.softmax(yt_pred,axis=cat_axis)
-
-    # Calculate the log probability of the correct category    
-    log_loss = logpdf_explicit(yt_pred_prob, yt,axis=cat_axis)
-
-    # Average loss over the data samples/tasks
-    log_loss = tf.reduce_mean(log_loss,axis=[-1])
     
-    elbos = log_loss - _kl(qz, pz)
+    # Calculate the softmax cross-entropy reconstruction loss
+    recon_loss = tf.nn.softmax_cross_entropy_with_logits(labels=yt_true_transposed, logits=yt_pred_transposed)
+    
+    # If there is padding, make sure we set the reconstruction loss to zero
+    if padding_values is not None:  # It gives an error if you do "if padding_values:"
+        # If padding is a single value
+        if B.size(padding_values) == 1:
+            # Identify the padding
+            padding_mask = (yt == padding_values)
+            padding_mask = B.any(padding_mask, axis=cat_axis)
+        else:
+            raise ValueError("'padding_values' must be a single value")
+            
+        # For the padding parts, assign the loss to zero
+        recon_loss = B.where(padding_mask, 0., recon_loss)    
+    
+    # Average loss over the number of target data points to match shape of _kl
+    recon_loss = tf.reduce_mean(recon_loss,axis=-1)
+    
+    # Calculate the ELBO loss
+    # The KL loss is still useful for the parts that are padding
+    elbos = -recon_loss - _kl(qz, pz)
 
     if normalise:
         # Normalise by the number of targets.
