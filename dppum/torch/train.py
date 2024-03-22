@@ -144,7 +144,7 @@ def train_model_dp_torch(
     # Setup optimizer
     valid_optimizers = ['Adam']
     if optimizer_name == 'Adam':
-        optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=learning_rate)
+        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     else:
         raise ValueError(f"Invalid optimizer name. Expected one of: {valid_optimizers}")
         
