@@ -1,8 +1,7 @@
 from neuralprocesses.model.elbo import _merge_context_target, _kl
 import lab as B
-import neuralprocesses.tensorflow as nps
+import neuralprocesses as nps
 import numpy as np
-import tensorflow as tf
 
 from dppum.util import logpdf_explicit
 
@@ -113,7 +112,7 @@ def np_elbo_explicit(
     log_loss = logpdf_explicit(yt_pred_prob, yt,axis=cat_axis)
 
     # Average loss over the data samples/tasks
-    log_loss = tf.reduce_mean(log_loss,axis=[-1])
+    log_loss = B.mean(log_loss,axis=[-1])
     
     elbos = log_loss - _kl(qz, pz)
 
