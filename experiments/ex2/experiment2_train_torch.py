@@ -16,10 +16,10 @@ import datetime as dt
 import pdb
 
 
-from dppum.data import hdf_to_dataset_pad_torch
-from dppum.loss import np_elbo_tf_cat
+from dppum.torch.data import hdf_to_dataset_pad_torch
+from dppum.loss import np_elbo_explicit
 from dppum.util import print_dictionary
-from dppum.train import train_model_dp_tf
+from dppum.torch.train import train_model_dp_torch
 
 # %%
 # Parse any command line arguments
@@ -138,4 +138,50 @@ dataset_test,metadata_test = hdf_to_dataset_pad_torch(args['test_hdf'],
                                             )
 print(f"\nMetadata for dataset from file '{args['test_hdf']}':")
 print_dictionary(metadata_test)
-    
+
+# %%
+
+# Construct the model
+model_ex2 = nps.construct_agnp(
+    dim_x=17, # From the data dimensions
+    dim_y=9, # From the data dimensions
+    dim_embedding=128, # Specified in appendix as hidden dimensions
+    num_enc_layers=6, # Specified in appendix as number of layers
+    num_dec_layers=6, # Specified in appendix as number of layers
+    likelihood="het", # Similar to the Julia HeterogeneousGaussianLikelihood()
+    nonlinearity='LeakyReLU' # Specified in appendix
+    )
+
+model_ex2.to()
+
+print("Finished constructing the model.")
+
+# %%
+# Train model using train_model_dp_tf function
+time_start = dt.datetime.now()
+
+history = train_model_dp_torch(
+    model_ex2,
+    dataset_train,
+    metadata_train,
+    dataset_test = dataset_test,
+    loss_fn=np_elbo_explicit,
+    num_epochs=args['num_epochs'],
+    epsilon=args['epsilon'],
+    clipping_bound=args['clipping_bound'],
+    optimizer_name='Adam',
+    learning_rate=args['learning_rate'],
+    dp_enc=True,
+    dp_dec=False,
+    num_samples=args['num_samples'],
+    warmup_epoch=args['warmup_epoch'],
+    shuffle=False,
+    model_save_dir = args['models_dir'],
+    padding_values=padding_values,
+    clip_grads_per_user=args['clip_user']
+    )
+
+time_end = dt.datetime.now()
+training_time = time_end-time_start
+print("Finished training the model.")
+print(f"Training time: {'{:.2f}'.format(training_time.total_seconds()/60)} minutes")
