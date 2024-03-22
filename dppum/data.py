@@ -314,6 +314,14 @@ def hdf_to_dataset_pad_torch(filepath, n_users=16, batch_size=1, padding_values=
         return xc, yc, xt, yt
     
     dataloader = DataLoader(dataset, batch_size=batch_size, collate_fn=collate_fn)
-    return dataloader
+    
+    # Load metadata from the HDF file
+    metadata = hdf_get_metadata(filepath)
+    # Augment the metadata
+    metadata['n_users'] = n_users
+    metadata['batch_size'] = batch_size
+    metadata['n_batches'] = int(np.ceil(n_users/batch_size))
+    
+    return dataloader, metadata
 
 
