@@ -3,6 +3,8 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 
+from dppum.data import hdf_get_metadata
+
 class HDFDataset_torch(Dataset):
     """
     A PyTorch Dataset for reading data from an HDF5 file.
