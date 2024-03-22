@@ -169,11 +169,11 @@ def train_model_dp_torch(
     
     # Define training metrics: loss, accuracy, and confidence of mean model category
     # These metrics are for within epochs, and are reset after each epoch
-    train_accuracy_per_epoch = tf.keras.metrics.Mean(name='train_accuracy')
-    loss_per_epoch = tf.keras.metrics.Mean(name='elbo_loss')
-    mean_confidence_per_epoch = tf.keras.metrics.Mean(name='mean_confidence')
+    train_accuracy_per_epoch = AverageMeter()
+    loss_per_epoch = AverageMeter()
+    mean_confidence_per_epoch = AverageMeter()
     if dataset_test:
-        test_accuracy_per_epoch = tf.keras.metrics.Mean(name='test_accuracy')
+        test_accuracy_per_epoch = AverageMeter()
     
     # Define lists to store the metrics for all epochs
     train_accuracy_all_epochs = []
@@ -192,61 +192,71 @@ def train_model_dp_torch(
         
     def loss_wrapper(args_tuple):
         # This is a wrapper function to calculate the loss
-        # It is written in a way so it can be used in tf.vectorized_map to 
+        # It is written in a way so it can be used in a vectorized_map to 
         # calculate and clip the gradients on a per-user basis efficiently
         
         # Unwrap the input data into a batch size of 1
         xc,yc,xt,yt = args_tuple
-        xc = tf.expand_dims(xc, 0)
-        yc = tf.expand_dims(yc, 0)
-        xt = tf.expand_dims(xt, 0)
-        yt = tf.expand_dims(yt, 0)
+        xc = B.expand_dims(xc, 0)
+        yc = B.expand_dims(yc, 0)
+        xt = B.expand_dims(xt, 0)
+        yt = B.expand_dims(yt, 0)
         
-        # We use one gradient tape for the encoder and one for the decoder to separate out the gradients
-        with tf.GradientTape() as encoder_tape, tf.GradientTape() as decoder_tape:
-            # Compute the loss value for this minibatch.
-            state = B.global_random_state(B.dtype(xc))
-        
-            vector_loss = -loss_fn(
-                    state=state,
-                    model=model,
-                    contexts=[(xc,yc)],
-                    subsume_context=True,
-                    xt=xt,
-                    yt=yt,
-                    normalise=False,
-                    dtype_lik=tf.float32,
-                    num_samples=num_samples,
-                    padding_values=padding_values
-                    )
-            scalar_loss = B.mean(vector_loss)
+        # Compute the loss value for this minibatch.
+        state = B.global_random_state(B.dtype(xc))
+    
+        vector_loss = -loss_fn(
+                state=state,
+                model=model,
+                contexts=[(xc,yc)],
+                subsume_context=True,
+                xt=xt,
+                yt=yt,
+                normalise=False,
+                dtype_lik=torch.float32,
+                num_samples=num_samples,
+                padding_values=padding_values
+                )
+        scalar_loss = B.mean(vector_loss)
         
         # Update loss metric
-        loss_per_epoch(scalar_loss)
+        loss_per_epoch.update(scalar_loss)
+
+        # Backward pass
+        scalar_loss.backward()
         
-        encoder_gradients = encoder_tape.gradient(scalar_loss, model.encoder.trainable_variables)           
-        decoder_gradients = decoder_tape.gradient(scalar_loss, model.decoder.trainable_variables)
+        # Get the gradients
+        encoder_gradients = [p.grad for p in model.encoder.parameters() if p.requires_grad]
+        decoder_gradients = [p.grad for p in model.decoder.parameters() if p.requires_grad]
         
-        # Perform L2 clipping
-        if dp_enc:                               
-            # Clip encoder gradients per user
+        if dp_enc:
+                # Clip encoder gradients per user
             for i, grad in enumerate(encoder_gradients):
-                # L2 clipping
-                grad_normalized = tf.norm(grad)
-                encoder_gradients[i] = grad * tf.minimum(1.0,(clipping_bound/grad_normalized))
-        if dp_dec:                               
-            # Clip encoder gradients per user
-            for i, grad in enumerate(decoder_gradients):
-                # L2 clipping
-                grad_normalized = tf.norm(grad)
-                decoder_gradients[i] = grad * tf.minimum(1.0,(clipping_bound/grad_normalized))
+                if grad is not None:
+                    # L2 clipping
+                    grad_norm = torch.norm(grad)
+                    grad_normalized = grad / grad_norm
+                    grad_clipped = grad_normalized * min(1.0, clipping_bound / grad_norm)
+                    
+                    # Store the clipped gradient
+                    encoder_gradients[i] = grad_clipped.clone()
+        if dp_dec:
+                # Clip decoder gradients per user
+                for i, grad in enumerate(decoder_gradients):
+                    if grad is not None:
+                        # L2 clipping
+                        grad_norm = torch.norm(grad)
+                        grad_normalized = grad / grad_norm
+                        grad_clipped = grad_normalized * min(1.0, clipping_bound / grad_norm)
+                        
+                        # Store the clipped gradient
+                        decoder_gradients[i] = grad_clipped.clone()
         
         return encoder_gradients, decoder_gradients
     
-    def loss_wrapper_wrapper(loss_wrapper,args):
-        return tf.vectorized_map(loss_wrapper, args)
         
     print("Starting training loop")
+    model.train()
     # Run the training loop
     for epoch in range(first_epoch,num_epochs+1):
         print(f"""######## Start of epoch {epoch} ########""")
@@ -257,29 +267,30 @@ def train_model_dp_torch(
         
         
         # Reset epoch metrics
-        train_accuracy_per_epoch.reset_states()
-        loss_per_epoch.reset_states()
-        mean_confidence_per_epoch.reset_states()
+        train_accuracy_per_epoch.reset()
+        loss_per_epoch.reset()
+        mean_confidence_per_epoch.reset()
         if dataset_test:
-            test_accuracy_per_epoch.reset_states()
+            test_accuracy_per_epoch.reset()
 
 
-
+        
         # Iterate over the batches of the training dataset.
         for step, (xc, yc, xt, yt) in enumerate(dataset_train):
-            
+            # Reset optimizer
+            optimizer.zero_grad()
             # First, calculate the loss/gradients
             # (the loss metric is updated within loss_wrapper so we don't need to see it explicitly here)
             
-            if clip_grads_per_user == 'vectorize':
-                # Use tf.vectorized_map to calculate and clip (if appropriate) gradients on a per-user basis
-                encoder_gradients_batch, decoder_gradients_batch = tf.vectorized_map(
-                    loss_wrapper, (xc, yc, xt, yt))
+            # if clip_grads_per_user == 'vectorize':
+            #     # Use tf.vectorized_map to calculate and clip (if appropriate) gradients on a per-user basis
+            #     encoder_gradients_batch, decoder_gradients_batch = tf.vectorized_map(
+            #         loss_wrapper, (xc, yc, xt, yt))
                 
-                encoder_gradients = [B.mean(B.stack(*gradients_list), axis=0) for gradients_list in encoder_gradients_batch]
-                decoder_gradients = [B.mean(B.stack(*gradients_list), axis=0) for gradients_list in decoder_gradients_batch]
+            #     encoder_gradients = [B.mean(B.stack(*gradients_list), axis=0) for gradients_list in encoder_gradients_batch]
+            #     decoder_gradients = [B.mean(B.stack(*gradients_list), axis=0) for gradients_list in decoder_gradients_batch]
                 
-            elif clip_grads_per_user == 'loop':
+            if clip_grads_per_user == 'loop':
                 # Loop through users to calculate loss and clip (if appropriate) gradients on a per-user basis
                 batch_size = B.shape(yt)[0]
                 encoder_gradients_batch = []
@@ -289,6 +300,8 @@ def train_model_dp_torch(
                     xt_user = xt[i]
                     yc_user = yc[i]
                     yt_user = yt[i]
+                    
+                    
                     gradients_batch = loss_wrapper((xc_user, yc_user, xt_user, yt_user))
                     encoder_gradients_batch.append(gradients_batch[0])
                     decoder_gradients_batch.append(gradients_batch[1])
@@ -298,18 +311,21 @@ def train_model_dp_torch(
                 decoder_gradients = []
                 for i in range(len(encoder_gradients_batch[0])):
                     tensors = [lst[i] for lst in encoder_gradients_batch]
-                    mean_tensor = tf.reduce_mean(tensors, axis=0)
+                    mean_tensor = B.mean(tensors, axis=0)
                     encoder_gradients.append(mean_tensor)
                 for i in range(len(decoder_gradients_batch[0])):
                     tensors = [lst[i] for lst in decoder_gradients_batch]
-                    mean_tensor = tf.reduce_mean(tensors, axis=0)
+                    mean_tensor = B.mean(tensors, axis=0)
                     decoder_gradients.append(mean_tensor)
+                    
+                avg_encoder_gradients = [torch.stack([sample_grads[i] for sample_grads in encoder_gradients_list]).mean(dim=0)
+                                 for i in range(len(encoder_gradients_list[0]))]
                 
             else:
                 # Calculate and clip (if appropriate) gradients on a per-batch basis
                 encoder_gradients, decoder_gradients = loss_wrapper((xc, yc, xt, yt))
             
-            
+            print("Need to add noise to gradients here")
             # We have now calculated the loss/gradients
             
             # Apply gradients to update model weights
