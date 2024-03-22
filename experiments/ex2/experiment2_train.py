@@ -9,10 +9,10 @@ import json
 import matplotlib.pyplot as plt
 import datetime as dt
 
-from dppum.data import hdf_to_dataset_pad_tf
-from dppum.loss import np_elbo_tf_cat
+from dppum.tf.data import hdf_to_dataset_pad_tf
+from dppum.tf.loss import np_elbo_tf_cat
 from dppum.util import print_dictionary
-from dppum.train import train_model_dp_tf
+from dppum.tf.train import train_model_dp_tf
 
 print("Finished importing packages.")
 
