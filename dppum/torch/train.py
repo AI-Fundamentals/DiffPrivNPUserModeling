@@ -26,6 +26,9 @@ class AverageMeter(object):
         self.sum += val * n
         self.count += n
         self.avg = self.sum / self.count
+        
+    def result(self):
+        return self.avg
 
 
 
@@ -124,7 +127,8 @@ def train_model_dp_torch(
         
         # Make a dictionary of training arguments    
         training_args = {}
-        training_args['model_name'] = model._name
+        #training_args['model_name'] = model._name
+        print("not using model name in metadata")
         training_args['dataset_train_metadata'] = dataset_train_metadata
         training_args['loss_fn_name'] = loss_fn.__name__
         training_args['num_epochs'] = num_epochs
@@ -218,7 +222,8 @@ def train_model_dp_torch(
                 padding_values=padding_values
                 )
         scalar_loss = B.mean(vector_loss)
-        
+        import pdb
+        pdb.set_trace()
         # Update loss metric
         loss_per_epoch.update(scalar_loss)
 
@@ -306,33 +311,36 @@ def train_model_dp_torch(
                     encoder_gradients_batch.append(gradients_batch[0])
                     decoder_gradients_batch.append(gradients_batch[1])
 
-                # Average the gradients             
-                encoder_gradients = []
-                decoder_gradients = []
-                for i in range(len(encoder_gradients_batch[0])):
-                    tensors = [lst[i] for lst in encoder_gradients_batch]
-                    mean_tensor = B.mean(tensors, axis=0)
-                    encoder_gradients.append(mean_tensor)
-                for i in range(len(decoder_gradients_batch[0])):
-                    tensors = [lst[i] for lst in decoder_gradients_batch]
-                    mean_tensor = B.mean(tensors, axis=0)
-                    decoder_gradients.append(mean_tensor)
-                    
-                avg_encoder_gradients = [torch.stack([sample_grads[i] for sample_grads in encoder_gradients_list]).mean(dim=0)
-                                 for i in range(len(encoder_gradients_list[0]))]
+                # Average the gradients over the batch            
+                encoder_gradients = average_grads_batch_torch(encoder_gradients_batch)
+                decoder_gradients = average_grads_batch_torch(decoder_gradients_batch)
                 
             else:
                 # Calculate and clip (if appropriate) gradients on a per-batch basis
                 encoder_gradients, decoder_gradients = loss_wrapper((xc, yc, xt, yt))
             
-            print("Need to add noise to gradients here")
+            # Add gaussian noise
+            if dp_enc:
+                encoder_gradients = [tensor + torch.randn_like(tensor) * (clipping_bound**2 * sigma**2) for tensor in encoder_gradients]
+            if dp_dec:
+                decoder_gradients = [tensor + torch.randn_like(tensor) * (clipping_bound**2 * sigma**2) for tensor in decoder_gradients]
+            
+            
             # We have now calculated the loss/gradients
+            # Apply gradients to update model
+            # Update encoder parameters
+            for param, grad in zip(model.encoder.parameters(), encoder_gradients):
+                param.data.sub_(optimizer.param_groups[0]['lr'] * grad)
             
-            # Apply gradients to update model weights
-            optimizer.apply_gradients(zip(encoder_gradients, model.encoder.trainable_variables))    
-            optimizer.apply_gradients(zip(decoder_gradients, model.decoder.trainable_variables))
+            # Update decoder parameters
+            for param, grad in zip(model.decoder.parameters(), decoder_gradients):
+                param.data.sub_(optimizer.param_groups[0]['lr'] * grad)
+
+                
+            optimizer.step()
             
-            # Assess accuracy after updating model gradients
+            
+            # Assess accuracy after updating model weights
             yt_pred, _, _, _ = nps.predict(
                 model,xc, yc, xt, num_samples=num_samples
                 )
@@ -352,8 +360,8 @@ def train_model_dp_torch(
             confidence = calc_cat_confidence(yt_pred,-2,padding_mask)
             
             # Update accuracy and confidence metrics
-            train_accuracy_per_epoch.update_state(accuracy)
-            mean_confidence_per_epoch(confidence)
+            train_accuracy_per_epoch.update(accuracy)
+            mean_confidence_per_epoch.update(confidence)
 
         ##### End of epoch calculations #####
 
@@ -387,7 +395,7 @@ def train_model_dp_torch(
                 
                 # Accuracy of the non-padding values for the test data
                 accuracy=calc_cat_acc_onehot(yt,yt_pred,cat_axis=-2,padding_values=padding_mask)
-                test_accuracy_per_epoch.update_state(accuracy)
+                test_accuracy_per_epoch.update(accuracy)
             
             # Append to epoch metric
             test_accuracy_all_epochs.append(test_accuracy_per_epoch.result())
@@ -431,3 +439,47 @@ def get_device_type_torch():
         return "cuda"
     else:
         return "cpu"
+    
+    
+
+def average_grads_batch_torch(tensor_list):
+    """
+    Compute the average of tensors over the batch dimension. This is designed
+    to average a list of lists of gradients into one single list of gradients.
+
+    Parameters
+    ----------
+    tensor_list : list of list of torch.Tensor
+        The input list of lists of tensors. The dimensions of this list of
+        lists are [batch,num_tensors,tensor_sizes].
+
+    Returns
+    -------
+    list of torch.Tensor
+        The output list of averaged tensors. The dimensions of this list are
+        [num_tensors,tensor_sizes].
+
+    """
+    # Initialize a list to store the averaged tensors
+    averaged_tensors = []
+
+    # Iterate over the number of tensors
+    for i in range(len(tensor_list[0])):
+        # Initialize a list to store the tensors of the current index from each batch
+        tensors = []
+
+        # Iterate over the batches
+        for j in range(len(tensor_list)):
+            # Append the tensor of the current index from the current batch to the list
+            tensors.append(tensor_list[j][i])
+
+        # Convert the list of tensors to a 3D tensor
+        tensors = torch.stack(tensors)
+
+        # Calculate the mean over the batch dimension (0th dimension) and
+        # append the result to the averaged tensors list
+        averaged_tensors.append(torch.mean(tensors, dim=0))
+
+    # Return the list of averaged tensors
+    return averaged_tensors
+
