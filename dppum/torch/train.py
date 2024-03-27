@@ -351,9 +351,10 @@ def train_model_dp_torch(
             optimizer.step()
 
             # Assess accuracy after updating model weights
-            yt_pred, _, _, _ = nps.predict(
-                model,xc, yc, xt, num_samples=num_samples, dtype_lik=torch.float32
-                )
+            with torch.no_grad():
+                yt_pred, _, _, _ = nps.predict(
+                    model,xc, yc, xt, num_samples=num_samples, dtype_lik=torch.float32
+                    )
             
             # Create mask for the padding
             if padding_values:
@@ -404,9 +405,10 @@ def train_model_dp_torch(
                     padding_mask = None
                 
                 # Forward pass
-                yt_pred, _, _, _ = nps.predict(
-                    model,xc, yc, xt, num_samples=num_samples, dtype_lik=torch.float32
-                    ) 
+                with torch.no_grad():
+                    yt_pred, _, _, _ = nps.predict(
+                        model,xc, yc, xt, num_samples=num_samples, dtype_lik=torch.float32
+                        ) 
                 
                 # Accuracy of the non-padding values for the test data
                 accuracy=calc_cat_acc_onehot(yt,yt_pred,cat_axis=-2,padding_values=padding_mask)
