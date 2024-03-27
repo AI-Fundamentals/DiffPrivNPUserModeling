@@ -1,6 +1,7 @@
 import h5py
 import numpy as np
 import tensorflow as tf
+import random
 
 from dppum.data import hdf_get_metadata
 
