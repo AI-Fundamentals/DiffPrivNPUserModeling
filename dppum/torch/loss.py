@@ -25,8 +25,8 @@ def np_elbo_cat_torch(
     **kw_args,
 ):
     """ELBO objective, with the log-likelihood part calculated using 
-    tf.nn.softmax_cross_entropy_with_logits. Based on nps.elbo.
-    As such it will only work with tensorflow tensors as the input data, with
+    torch.nn.CrossEntropyLoss. Based on nps.elbo.
+    As such it will only work with torch tensors as the input data, with
     categorical y data. The output of this function should be the same as
     np_elbo_explicit, but this version is normally faster.
 
