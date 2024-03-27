@@ -289,7 +289,8 @@ def train_model_dp_tf(
                 # Calculate and clip (if appropriate) gradients on a per-batch basis
                 encoder_gradients, decoder_gradients = loss_wrapper((xc, yc, xt, yt))
             
-            
+            if dp_enc or dp_dec:
+                print("Need to add noise to gradients here")
             # We have now calculated the loss/gradients
             
             # Apply gradients to update model weights
