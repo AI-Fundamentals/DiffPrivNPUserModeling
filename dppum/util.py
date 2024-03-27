@@ -182,8 +182,40 @@ def reshape_to_last(tensor, axis):
     # Append the specified axis at the end
     dims.append(axis)
 
-    # Use tf.transpose to reshape the tensor
+    # Reshape the tensor
     return B.transpose(tensor, dims)
+
+
+
+def swap_axes(tensor, axis1, axis2):
+    """
+    Swap two specified axes of a tensor.
+
+    Args:
+        tensor (tf.Tensor): The input tensor.
+        axis1 (int): The first axis to swap. Can be negative.
+        axis2 (int): The second axis to swap. Can be negative.
+
+    Returns:
+        tf.Tensor: The tensor with swapped axes.
+    """
+    
+    # If the axes are negative, adjust them to be positive
+    if axis1 < 0:
+        axis1 = len(B.shape(tensor)) + axis1
+    if axis2 < 0:
+        axis2 = len(B.shape(tensor)) + axis2
+
+    # Get the list of dimensions
+    dims = list(range(len(B.shape(tensor))))
+
+    # Swap the specified axes
+    dims[axis1], dims[axis2] = dims[axis2], dims[axis1]
+
+    # Reshape the tensor
+    return B.transpose(tensor, dims)
+
+
 
 
 def logpdf_explicit(d, x, axis=-1):
