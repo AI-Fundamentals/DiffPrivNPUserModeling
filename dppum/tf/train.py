@@ -164,7 +164,6 @@ def train_model_dp_tf(
         test_accuracy_all_epochs = []
     
     # Use warmup epoch (or not)
-    warmup_epoch = False
     if warmup_epoch:
         first_epoch = 0
     else:
