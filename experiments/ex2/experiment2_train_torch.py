@@ -12,6 +12,7 @@ import numpy as np
 import json
 import matplotlib.pyplot as plt
 import datetime as dt
+import lab as B
 
 import pdb
 
@@ -19,7 +20,15 @@ import pdb
 from dppum.torch.data import hdf_to_dataset_pad_torch
 from dppum.loss import np_elbo_explicit
 from dppum.util import print_dictionary
-from dppum.torch.train import train_model_dp_torch
+from dppum.torch.train import train_model_dp_torch, get_device_type_torch
+
+
+# %%
+# Get GPU type
+device = get_device_type_torch()
+B.set_global_device(device)
+nps.lab.set_global_device(device)
+
 
 # %%
 # Parse any command line arguments
@@ -152,7 +161,7 @@ model_ex2 = nps.construct_agnp(
     nonlinearity='LeakyReLU' # Specified in appendix
     )
 
-model_ex2.to()
+model_ex2 = model_ex2.to(device)
 
 print("Finished constructing the model.")
 

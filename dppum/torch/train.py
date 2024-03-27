@@ -192,22 +192,29 @@ def train_model_dp_torch(
     else:
         first_epoch = 1        
         
-        
+    # Get the training device (normally GPU)
+    training_device = get_device_type_torch()
+    
     def loss_wrapper(args_tuple):
         # This is a wrapper function to calculate the loss
         # It is written in a way so it can be used in a vectorized_map to 
         # calculate and clip the gradients on a per-user basis efficiently
         
-        # Unwrap the input data into a batch size of 1
+        # Unwrap the input data
         xc,yc,xt,yt = args_tuple
-        xc = B.expand_dims(xc, 0)
-        yc = B.expand_dims(yc, 0)
-        xt = B.expand_dims(xt, 0)
-        yt = B.expand_dims(yt, 0)
+
+        # If there's no batch dimension, add a batch dimension of 1
+        if len(xc.shape) == 3:
+            xc = B.expand_dims(xc, 0)
+            yc = B.expand_dims(yc, 0)
+            xt = B.expand_dims(xt, 0)
+            yt = B.expand_dims(yt, 0)
+        
+        # Reset optimizer
+        optimizer.zero_grad()        
         
         # Compute the loss value for this minibatch.
         state = B.global_random_state(B.dtype(xc))
-    
         vector_loss = -loss_fn(
                 state=state,
                 model=model,
@@ -221,11 +228,10 @@ def train_model_dp_torch(
                 padding_values=padding_values
                 )
         scalar_loss = B.mean(vector_loss)
-        import pdb
-        pdb.set_trace()
+
         # Update loss metric
         loss_per_epoch.update(scalar_loss)
-
+        
         # Backward pass
         scalar_loss.backward()
         
@@ -281,8 +287,12 @@ def train_model_dp_torch(
         
         # Iterate over the batches of the training dataset.
         for step, (xc, yc, xt, yt) in enumerate(dataset_train):
-            # Reset optimizer
-            optimizer.zero_grad()
+
+            xc = xc.to(training_device)
+            yc = yc.to(training_device)
+            xt = xt.to(training_device)
+            yt = yt.to(training_device)
+
             # First, calculate the loss/gradients
             # (the loss metric is updated within loss_wrapper so we don't need to see it explicitly here)
             
@@ -329,19 +339,20 @@ def train_model_dp_torch(
             # Apply gradients to update model
             # Update encoder parameters
             for param, grad in zip(model.encoder.parameters(), encoder_gradients):
-                param.data.sub_(optimizer.param_groups[0]['lr'] * grad)
-            
+                #param.data.sub_(optimizer.param_groups[0]['lr'] * grad)
+                param.grad = grad
+                
             # Update decoder parameters
             for param, grad in zip(model.decoder.parameters(), decoder_gradients):
-                param.data.sub_(optimizer.param_groups[0]['lr'] * grad)
+                #param.data.sub_(optimizer.param_groups[0]['lr'] * grad)
+                param.grad = grad
 
                 
             optimizer.step()
-            
-            
+
             # Assess accuracy after updating model weights
             yt_pred, _, _, _ = nps.predict(
-                model,xc, yc, xt, num_samples=num_samples
+                model,xc, yc, xt, num_samples=num_samples, dtype_lik=torch.float32
                 )
             
             # Create mask for the padding
@@ -378,7 +389,12 @@ def train_model_dp_torch(
         # Calculate accuracy using test dataset
         if dataset_test:            
             for step, (xc, yc, xt, yt) in enumerate(dataset_test):
-            
+                # Move tensors to training device (GPU)
+                xc = xc.to(training_device)
+                yc = yc.to(training_device)
+                xt = xt.to(training_device)
+                yt = yt.to(training_device)
+                
                 if padding_values:
                     # A mask for where the padding is. This is the same shape as the batch
                     padding_mask = (yt == padding_values)
@@ -389,7 +405,7 @@ def train_model_dp_torch(
                 
                 # Forward pass
                 yt_pred, _, _, _ = nps.predict(
-                    model,xc, yc, xt, num_samples=num_samples
+                    model,xc, yc, xt, num_samples=num_samples, dtype_lik=torch.float32
                     ) 
                 
                 # Accuracy of the non-padding values for the test data
