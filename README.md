@@ -4,31 +4,25 @@ Differentially Private Probabilistic User Modelling (in python)
 
 ## Installation instructions
 1. Create and activate a python 3.9 environment
-2. Install packages from pip. On a system with an Nvidia GPU:
+2. Install packages from pip:
 
     ```
-    pip install -r requirements_nvidia.txt
+    pip install -r requirements.txt
     ```
 
-    or on M1/M2 Mac:
+3. On M1/M2 Mac only, install PyTorch nightly:
 
     ```
-    pip install -r requirements_mac.txt
+    pip install --pre torch --extra-index-url https://download.pytorch.org/whl/nightly/cpu
     ```
 
-3. Install `neuralprocesses` from github:
+4. Install `neuralprocesses` from github:
 
     ```
     pip install git+https://github.com/wesselb/neuralprocesses.git
     ```
 
-4. Install nightly version of tensorflow probability:
-
-    ```
-    pip install tfp-nightly
-    ```
-
-5. Test the environment installation:
+6. (Not currently implemented) Test the environment installation:
 
     ```
     pytest tests/test_nps_tf.py
@@ -41,7 +35,7 @@ Differentially Private Probabilistic User Modelling (in python)
 For training with 6400 users (4 per batch)
 
 ```
-python -m experiments.ex2.experiment2_train --num_batches 1600
+python -m experiments.ex2.experiment2_train --num_users 6400
 ```
 
 ## Workflow
