@@ -18,6 +18,7 @@ def np_elbo_explicit(
     subsume_context=False,
     fix_noise=None,
     dtype_lik=None,
+    padding_values=None,
 
     **kw_args,
 ):
@@ -41,6 +42,8 @@ def np_elbo_explicit(
         fix_noise (float, optional): Fix the likelihood variance to this value.
         dtype_lik (dtype, optional): Data type to use for the likelihood computation.
             Defaults to the 64-bit variant of the data type of `yt`.
+        padding_values : float, optional
+            Padding value for yt which will be discarded during the loss calculations.
 
     Returns:
         random state, optional: Random state.
@@ -109,12 +112,25 @@ def np_elbo_explicit(
     yt_pred_prob = B.softmax(yt_pred,axis=cat_axis)
 
     # Calculate the log probability of the correct category    
-    log_loss = logpdf_explicit(yt_pred_prob, yt,axis=cat_axis)
+    recon_loss = logpdf_explicit(yt_pred_prob, yt,axis=cat_axis)
+
+    # If there is padding, make sure we set the reconstruction loss to zero
+    if padding_values is not None:  # It gives an error if you do "if padding_values:"
+        # If padding is a single value
+        if B.size(padding_values) == 1:
+            # Identify the padding
+            padding_mask = (yt == padding_values)
+            padding_mask = B.any(padding_mask, axis=cat_axis)
+        else:
+            raise ValueError("'padding_values' must be a single value")
+            
+        # For the padding parts, assign the loss to zero
+        recon_loss = B.where(padding_mask, 0., recon_loss)    
 
     # Average loss over the data samples/tasks
-    log_loss = B.mean(log_loss,axis=[-1])
+    recon_loss = B.mean(recon_loss,axis=[-1])
     
-    elbos = log_loss - _kl(qz, pz)
+    elbos = recon_loss - _kl(qz, pz)
 
     if normalise:
         # Normalise by the number of targets.
