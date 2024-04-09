@@ -113,7 +113,7 @@ def np_elbo_tf_cat(
     yt_pred_transposed = reshape_to_last(d.mean[0], cat_axis)
     yt_pred_transposed = B.cast(dtype_lik,yt_pred_transposed)
 
-    
+
     # Calculate the softmax cross-entropy reconstruction loss
     recon_loss = tf.nn.softmax_cross_entropy_with_logits(labels=yt_true_transposed, logits=yt_pred_transposed)
     

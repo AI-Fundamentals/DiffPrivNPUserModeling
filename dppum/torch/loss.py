@@ -115,7 +115,6 @@ def np_elbo_cat_torch(
     yt_pred_transposed = swap_axes(d.mean[0], cat_axis,1)
     yt_pred_transposed = B.cast(dtype_lik,yt_pred_transposed)
 
-    
     # Calculate the softmax cross-entropy reconstruction loss
     loss_function = torch.nn.CrossEntropyLoss(reduction='none')
     recon_loss = loss_function(yt_pred_transposed, yt_true_transposed)
@@ -131,8 +130,8 @@ def np_elbo_cat_torch(
             raise ValueError("'padding_values' must be a single value")
             
         # For the padding parts, assign the loss to zero
-        recon_loss = B.where(padding_mask, 0., recon_loss)    
-    
+        recon_loss = B.where(padding_mask, 0., recon_loss)
+
     # Average loss over the number of target data points to match shape of _kl
     recon_loss = B.mean(recon_loss,axis=-1)
     
