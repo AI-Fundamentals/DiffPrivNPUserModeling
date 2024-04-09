@@ -267,7 +267,7 @@ def train_model_dp_torch(
     print("Starting training loop")
     model.train()
     # Run the training loop
-    for epoch in range(first_epoch,num_epochs+1):
+    for epoch in range(first_epoch, max(num_epochs, first_epoch) + 1):
         print(f"""######## Start of epoch {epoch} ########""")
         
         # Shuffle the training dataset
