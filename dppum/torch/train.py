@@ -443,19 +443,21 @@ def train_model_dp_torch(
     return history
 
 
-def get_device_type_torch():
+def get_device_type():
     """
     Returns the type of available GPU device:
     - "mps" (Metal Performance Shaders) for M1 GPUs
     - "cuda" for other NVIDIA GPUs
     - "cpu" if no GPU is available
     """
-    if torch.backends.mps.is_available():
-        return "mps"
-    elif torch.cuda.is_available():
-        return "cuda"
-    else:
-        return "cpu"
+    try:
+        if torch.backends.mps.is_available():
+            return "mps"
+    except:
+        if torch.cuda.is_available():
+            return "cuda"
+        else:
+            return "cpu"
     
     
 
