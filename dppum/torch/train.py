@@ -193,8 +193,7 @@ def train_model_dp_torch(
         first_epoch = 1        
         
     # Get the training device (normally GPU)
-    training_device = get_device_type_torch()
-    
+    training_device = get_device_type()
     def loss_wrapper(args_tuple):
         # This is a wrapper function to calculate the loss
         # It is written in a way so it can be used in a vectorized_map to 
