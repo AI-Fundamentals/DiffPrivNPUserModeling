@@ -194,11 +194,12 @@ def train_model_dp_torch(
         
     # Get the training device (normally GPU)
     training_device = get_device_type()
+
     def loss_wrapper(args_tuple):
         # This is a wrapper function to calculate the loss
         # It is written in a way so it can be used in a vectorized_map to 
         # calculate and clip the gradients on a per-user basis efficiently
-        
+
         # Unwrap the input data
         xc,yc,xt,yt = args_tuple
 
@@ -291,7 +292,7 @@ def train_model_dp_torch(
             yc = yc.to(training_device)
             xt = xt.to(training_device)
             yt = yt.to(training_device)
-
+            
             # First, calculate the loss/gradients
             # (the loss metric is updated within loss_wrapper so we don't need to see it explicitly here)
             
@@ -314,7 +315,6 @@ def train_model_dp_torch(
                     yc_user = yc[i]
                     yt_user = yt[i]
                     
-                    
                     gradients_batch = loss_wrapper((xc_user, yc_user, xt_user, yt_user))
                     encoder_gradients_batch.append(gradients_batch[0])
                     decoder_gradients_batch.append(gradients_batch[1])
@@ -322,7 +322,6 @@ def train_model_dp_torch(
                 # Average the gradients over the batch            
                 encoder_gradients = average_grads_batch_torch(encoder_gradients_batch)
                 decoder_gradients = average_grads_batch_torch(decoder_gradients_batch)
-                
             else:
                 # Calculate and clip (if appropriate) gradients on a per-batch basis
                 encoder_gradients, decoder_gradients = loss_wrapper((xc, yc, xt, yt))
@@ -336,7 +335,7 @@ def train_model_dp_torch(
             
             # We have now calculated the loss/gradients
             # Apply gradients to update model
-            # Update encoder parameters
+            # Update encoder parameters           
             for param, grad in zip(model.encoder.parameters(), encoder_gradients):
                 #param.data.sub_(optimizer.param_groups[0]['lr'] * grad)
                 param.grad = grad
@@ -419,6 +418,7 @@ def train_model_dp_torch(
             test_accuracy_all_epochs.append(test_accuracy_per_epoch.result())
             print(f"Mean test accuracy: {np.round(float(test_accuracy_all_epochs[-1]),3)}")
         
+        
         if model_save_dir:
             # Check if the directory exists
             if not os.path.exists(model_save_dir):
@@ -440,7 +440,8 @@ def train_model_dp_torch(
         }
     if dataset_test:
         history['test_accuracy'] = test_accuracy_all_epochs,
-        
+    
+    
     return history
 
 
