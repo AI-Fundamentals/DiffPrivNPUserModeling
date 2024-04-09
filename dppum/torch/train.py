@@ -167,8 +167,7 @@ def train_model_dp_torch(
     else:
         raise ValueError(f"Invalid optimizer name. Expected one of: {valid_optimizers}")
         
-    
-    
+        
     # Define training metrics: loss, accuracy, and confidence of mean model category
     # These metrics are for within epochs, and are reset after each epoch
     train_accuracy_per_epoch = AverageMeter()
@@ -193,10 +192,27 @@ def train_model_dp_torch(
     # Get the training device (normally GPU)
     training_device = get_device_type()
 
+
     def loss_wrapper(args_tuple):
-        # This is a wrapper function to calculate the loss
-        # It is written in a way so it can be used in a vectorized_map to 
-        # calculate and clip the gradients on a per-user basis efficiently
+        """
+        A wrapper function to calculate the loss and gradients, clip the
+        gradients (if required), and return the gradients.
+        It is written in a way so it can be used in a vectorized map to 
+        calculate and clip the gradients on a per-user basis efficiently
+        
+        args_tuple : tuple
+        A tuple containing four PyTorch tensors (xc,yc,xt,yt) for the context
+        and target data.
+        
+        Returns
+        -------
+        encoder_gradients : list
+            List of the encoder gradients.
+        decoder_gradients : list
+            List of the decoder gradients.
+        
+        """
+
 
         # Unwrap the input data
         xc,yc,xt,yt = args_tuple
