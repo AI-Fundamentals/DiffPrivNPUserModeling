@@ -127,8 +127,6 @@ def train_model_dp_torch(
         
         # Make a dictionary of training arguments    
         training_args = {}
-        #training_args['model_name'] = model._name
-        print("not using model name in metadata")
         training_args['dataset_train_metadata'] = dataset_train_metadata
         training_args['loss_fn_name'] = loss_fn.__name__
         training_args['num_epochs'] = num_epochs
