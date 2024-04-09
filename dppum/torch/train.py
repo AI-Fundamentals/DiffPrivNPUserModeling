@@ -423,9 +423,9 @@ def train_model_dp_torch(
                 # If not, create the directory
                 os.makedirs(model_save_dir)
             
-            # Save the model
-            model_name = f"weights_epoch_{epoch}.tf"
-            model.save_weights(os.path.join(model_save_dir, model_name))
+            # Save the model weights            
+            model_name = f"weights_epoch_{epoch}.pt"
+            torch.save(model.state_dict(), os.path.join(model_save_dir, model_name))
 
     
     ##### End of training loop #####
