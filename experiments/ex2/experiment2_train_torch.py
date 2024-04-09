@@ -1,10 +1,4 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Mar 22 10:10:38 2024
 
-@author: mbcx5jt5
-"""
 import neuralprocesses.torch as nps
 import argparse
 import os
