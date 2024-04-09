@@ -346,8 +346,10 @@ def train_model_dp_torch(
                 #param.data.sub_(optimizer.param_groups[0]['lr'] * grad)
                 param.grad = grad
 
-                
-            optimizer.step()
+            # If epoch is 0, that means we are doing a warmup and don't want
+            # to apply the gradients
+            if epoch > 0:
+                optimizer.step()
 
             # Assess accuracy after updating model weights
             with torch.no_grad():
