@@ -64,7 +64,7 @@ parser.add_argument("--figs_dir",
 parser.add_argument("--num_samples", 
                     help="Number of samples to take for model evaluation.", 
                     type=int,
-                    default=5)
+                    default=1)
 
 parser.add_argument("--num_epochs", 
                     help="Number of training epochs.", 
