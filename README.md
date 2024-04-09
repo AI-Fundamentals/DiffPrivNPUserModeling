@@ -9,12 +9,17 @@ Differentially Private Probabilistic User Modelling (in python)
     ```
     pip install -r requirements.txt
     ```
-
-3. On M1/M2 Mac only, install PyTorch nightly:
+2. Install PyTorch:
+   1. On a "standard" system with Nvidia GPU:
+   ```
+    pip install torch
+    ```
+   2. On Mac with Silicon GPU:
 
     ```
     pip install --pre torch --extra-index-url https://download.pytorch.org/whl/nightly/cpu
     ```
+   3. On high-performance computing systems, refer to the relevant documentation.
 
 4. Install `neuralprocesses` from github:
 
