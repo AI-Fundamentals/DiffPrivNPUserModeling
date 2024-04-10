@@ -463,7 +463,7 @@ def get_device_type():
     """
     Returns the type of available GPU device:
     - "mps" (Metal Performance Shaders) for M1 GPUs
-    - "cuda" for other NVIDIA GPUs
+    - "cuda:x" for NVIDIA GPUs, where x is the index of the GPU
     - "cpu" if no GPU is available
     """
     try:
@@ -471,9 +471,11 @@ def get_device_type():
             return "mps"
     except:
         if torch.cuda.is_available():
-            return "cuda"
+            current_device = torch.cuda.current_device()
+            return f"cuda:{current_device}"
         else:
             return "cpu"
+
     
     
 
