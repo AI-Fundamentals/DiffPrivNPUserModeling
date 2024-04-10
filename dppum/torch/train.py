@@ -11,17 +11,23 @@ from dppum.util import calc_cat_confidence, flatten_first_two_dims, calc_cat_acc
 
 class AverageMeter(object):
     """Computes and stores the average and current value. This is used as a 
-    training metric."""
+    training metric.
+    """
+    
     def __init__(self):
         self.reset()
 
     def reset(self):
+        """Reset to zero"""
         self.val = 0
         self.avg = 0
         self.sum = 0
         self.count = 0
 
     def update(self, val, n=1):
+        """Add a value to the list. Values are detached from the graph and
+        are all moved to the CPU."""
+        val = val.detach().to("cpu")
         self.val = val
         self.sum += val * n
         self.count += n
