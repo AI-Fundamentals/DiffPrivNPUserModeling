@@ -8,8 +8,8 @@ import neuralprocesses.torch as nps
 
 from dppum.privacy_oracle import get_sigma_from_privacy_loss_distribution as get_sigma
 from dppum.util import calc_cat_confidence, flatten_first_two_dims, calc_cat_acc_onehot
-
-
+  
+    
 class AverageMeter(object):
     """Computes and stores the average and current value. This is used as a 
     training metric.
@@ -19,27 +19,22 @@ class AverageMeter(object):
         self.reset()
 
     def reset(self):
-        """Reset to zero"""
-        self.val = 0
-        self.avg = 0
-        self.sum = 0
+        """Reset to zero."""
+        self.avg = 0.0
+        self.sum = 0.0
         self.count = 0
 
-    def update(self, val, n=1):
-        """Add a value to the list. Values are detached from the graph and
-        are all moved to the CPU."""
-        try:
-            val = val.detach().to("cpu")
-        except:
-            pass
-        self.val = val
-        self.sum += val * n
-        self.count += n
-        self.avg = self.sum / self.count
+    def update(self, val):
+        """Add a value."""
+        self.sum += float(val)
+        self.count += 1
         
     def result(self):
-        """Return the average as just a float, not a tensor."""
-        return self.avg.item()
+        """Return the average."""
+        if self.count > 0:
+            return self.sum / self.count
+        else:
+            return 0
 
 
 
