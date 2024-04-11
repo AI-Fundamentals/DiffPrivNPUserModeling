@@ -34,7 +34,8 @@ class AverageMeter(object):
         self.avg = self.sum / self.count
         
     def result(self):
-        return self.avg
+        """Return the average as just a float, not a tensor."""
+        return self.avg.item()
 
 
 
