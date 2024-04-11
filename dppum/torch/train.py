@@ -3,6 +3,7 @@ import numpy as np
 import json
 import os
 import lab as B
+import pandas as pd
 import neuralprocesses.torch as nps
 
 from dppum.privacy_oracle import get_sigma_from_privacy_loss_distribution as get_sigma
@@ -288,8 +289,9 @@ def train_model_dp_torch(
         
     print("Starting training loop")
     model.train()
+    epochs = list(range(first_epoch, max(num_epochs, first_epoch) + 1))
     # Run the training loop
-    for epoch in range(first_epoch, max(num_epochs, first_epoch) + 1):
+    for epoch in epochs:
         print(f"""######## Start of epoch {epoch} ########""")
         
         # Shuffle the training dataset
@@ -457,11 +459,20 @@ def train_model_dp_torch(
     history = {
         'loss' : loss_all_epochs,
         'train_accuracy' : train_accuracy_all_epochs,
-        'cat_confidence' : mean_confidence_all_epochs
+        'cat_confidence' : mean_confidence_all_epochs,
+        'epoch' : epochs
         }
     if dataset_test:
-        history['test_accuracy'] = test_accuracy_all_epochs,
+        history['test_accuracy'] = test_accuracy_all_epochs
     
+    
+    # Save the history to CSV
+    if model_save_dir:
+        # Convert the dictionary to a pandas DataFrame        
+        csv_name = 'training_metrics.csv'
+        csv_path = os.path.join(model_save_dir, csv_name)
+        pd.DataFrame(history).set_index('epoch').to_csv(csv_path)
+        
     
     return history
 
