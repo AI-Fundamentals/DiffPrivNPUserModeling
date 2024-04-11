@@ -1,11 +1,11 @@
 import numpy as np
 import pytest
-import tensorflow as tf
+import torch
 import lab as B
 
 # Some tests fail if you don't import neuralprocesses.
 # It's something to do with dispatch in Plum?
-import neuralprocesses.tensorflow as nps
+import neuralprocesses.torch as nps
 
 
 from dppum.util import calc_cat_acc_onehot, calc_cat_confidence, flatten_first_two_dims, reshape_to_last
@@ -16,8 +16,8 @@ from dppum.util import calc_cat_acc_onehot, calc_cat_confidence, flatten_first_t
 
 def test_calc_cat_acc_onehot():
     # 1D tensorflow tensors
-    y_pred = tf.convert_to_tensor([0,0,1],dtype=tf.float32)
-    y_true = tf.convert_to_tensor([0,0,1],dtype=tf.float32)
+    y_pred = torch.tensor([0, 0, 1], dtype=torch.float32)
+    y_true = torch.tensor([0, 0, 1], dtype=torch.float32)
     assert calc_cat_acc_onehot(y_true,y_pred) == 1.0
     
     # 2D numpy arrays
@@ -76,8 +76,6 @@ def test_calc_cat_acc_onehot():
     accuracy_not_averaged = calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,avg=False)
     assert B.shape(accuracy_not_averaged) == B.shape(y_true)[0:2]
     assert B.mean(accuracy_not_averaged) == calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,avg=True)
-    
-    #output = calc_cat_acc_onehot(y_true,y_pred,cat_axis=-2,padding_values=padding_values,avg=False)
     
     # Check it raises an exception if you try use a list
     with pytest.raises(ValueError):
