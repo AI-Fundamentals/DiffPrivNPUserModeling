@@ -7,9 +7,15 @@ def test_get_device_type():
 def test_AverageMeter():
     averagemeter = AverageMeter()
     
-    averagemeter.update(2)
-    averagemeter.update(4)
-    
+    averagemeter.update(torch.tensor(2))
+    averagemeter.update(torch.tensor(4))
     assert averagemeter.result() == 3
+    
+    averagemeter.reset()
+    assert averagemeter.result() == 0
+    
+    averagemeter.update(1.5)
+    averagemeter.update(torch.tensor(2.5))
+    assert averagemeter.result() == 2
     
     
