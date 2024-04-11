@@ -28,7 +28,10 @@ class AverageMeter(object):
     def update(self, val, n=1):
         """Add a value to the list. Values are detached from the graph and
         are all moved to the CPU."""
-        val = val.detach().to("cpu")
+        try:
+            val = val.detach().to("cpu")
+        except:
+            pass
         self.val = val
         self.sum += val * n
         self.count += n
