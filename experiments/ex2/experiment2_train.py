@@ -14,6 +14,8 @@ from dppum.tf.loss import np_elbo_tf_cat
 from dppum.util import print_dictionary
 from dppum.tf.train import train_model_dp_tf
 
+from dppum.loss import np_elbo_explicit
+
 print("Finished importing packages.")
 
 
@@ -118,7 +120,8 @@ print("Finished parsing command line arguments.")
 
 # %%
 # Load the train and test data
-
+args['batch_size'] = 4
+args['num_users'] = 64
 padding_values = -1.
 dataset_train,metadata_train = hdf_to_dataset_pad_tf(args['train_hdf'],
                                             n_users=args['num_users'],
@@ -165,7 +168,37 @@ model_ex2 = nps.construct_agnp(
 
 print("Finished constructing the model.")
 
-
+# %%
+# Train model using train_model_dp_torch function
+time_start = dt.datetime.now()
+print("Not saving model")
+history = train_model_dp_tf(
+    model_ex2,
+    dataset_train,
+    metadata_train,
+    dataset_test = None,
+    #dataset_test = dataset_test,
+    #loss_fn=np_elbo_cat_torch,
+    loss_fn=np_elbo_tf_cat,
+    #num_epochs=args['num_epochs'],
+    num_epochs=5,
+    epsilon=args['epsilon'],
+    clipping_bound=args['clipping_bound'],
+    optimizer_name='Adam',
+    learning_rate=args['learning_rate'],
+#    dp_enc=True,
+    dp_enc=False,
+    dp_dec=False,
+    num_samples=args['num_samples'],
+    #warmup_epoch=args['warmup_epoch'],
+    warmup_epoch=True,
+    shuffle=False,
+    #model_save_dir = args['models_dir'],
+    model_save_dir = None,
+    padding_values=padding_values,
+    #clip_grads_per_user=args['clip_user']
+    clip_grads_per_user=None
+    )
 
 # %% 
 # Train model using train_model_dp_tf function
@@ -183,14 +216,16 @@ history = train_model_dp_tf(
     clipping_bound=args['clipping_bound'],
     optimizer_name='Adam',
     learning_rate=args['learning_rate'],
-    dp_enc=True,
+    dp_enc=False,
+    #dp_enc=True,
     dp_dec=False,
     num_samples=args['num_samples'],
     warmup_epoch=args['warmup_epoch'],
     shuffle=False,
     model_save_dir = args['models_dir'],
     padding_values=padding_values,
-    clip_grads_per_user=args['clip_user']
+    #clip_grads_per_user=args['clip_user']
+    clip_grads_per_user=None
     )
 
 time_end = dt.datetime.now()

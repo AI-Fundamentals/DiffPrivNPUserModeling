@@ -169,12 +169,13 @@ def train_model_dp_tf(
     else:
         first_epoch = 1        
         
-        
+    counter = 0
     def loss_wrapper(args_tuple):
         # This is a wrapper function to calculate the loss
         # It is written in a way so it can be used in tf.vectorized_map to 
         # calculate and clip the gradients on a per-user basis efficiently
-        
+        nonlocal counter
+        counter = counter + 1
         # Unwrap the input data into a batch size of 1
         xc,yc,xt,yt = args_tuple
         xc = tf.expand_dims(xc, 0)
@@ -228,7 +229,7 @@ def train_model_dp_tf(
         
     print("Starting training loop")
     # Run the training loop
-    for epoch in range(first_epoch,num_epochs+1):
+    for epoch in range(first_epoch, max(num_epochs, first_epoch) + 1):
         print(f"""######## Start of epoch {epoch} ########""")
         
         # Shuffle the training dataset
@@ -293,15 +294,16 @@ def train_model_dp_tf(
                 print("Need to add noise to gradients here")
             # We have now calculated the loss/gradients
             
-            # Apply gradients to update model weights
-            optimizer.apply_gradients(zip(encoder_gradients, model.encoder.trainable_variables))    
-            optimizer.apply_gradients(zip(decoder_gradients, model.decoder.trainable_variables))
+            # Apply gradients to update model weights (but not if warmup epoch)
+            if epoch > 0:
+                optimizer.apply_gradients(zip(encoder_gradients, model.encoder.trainable_variables))    
+                optimizer.apply_gradients(zip(decoder_gradients, model.decoder.trainable_variables))
             
             # Assess accuracy after updating model gradients
             yt_pred, _, _, _ = nps.predict(
                 model,xc, yc, xt, num_samples=num_samples
                 )
-            
+                
             # Create mask for the padding
             if padding_values:
                 # A mask for where the padding is. This is the same shape as the batch
@@ -379,6 +381,6 @@ def train_model_dp_tf(
         }
     if dataset_test:
         history['test_accuracy'] = test_accuracy_all_epochs,
-        
+    print("Counter = ",counter)
     return history
 
