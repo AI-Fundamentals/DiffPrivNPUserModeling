@@ -169,7 +169,6 @@ def train_model_dp_torch(
         
         """
 
-
         # Unwrap the input data
         xc,yc,xt,yt = args_tuple
 
@@ -246,7 +245,6 @@ def train_model_dp_torch(
         if settings['shuffle']:
             dataset_train = dataset_train.shuffle(buffer_size=dataset_train_metadata['n_batches'])
         
-        
         # Reset epoch metrics
         train_accuracy_per_epoch.reset()
         loss_per_epoch.reset()
@@ -254,7 +252,6 @@ def train_model_dp_torch(
         if dataset_test:
             test_accuracy_per_epoch.reset()
 
-        
         # Iterate over the batches of the training dataset.
         for step, (xc, yc, xt, yt) in enumerate(dataset_train):
 
@@ -334,6 +331,7 @@ def train_model_dp_torch(
             # Update accuracy and confidence metrics
             train_accuracy_per_epoch.update(accuracy)
             mean_confidence_per_epoch.update(confidence)
+
 
         ##### End of epoch calculations #####
 
@@ -415,6 +413,7 @@ def train_model_dp_torch(
     return history
 
 
+
 def get_device_type():
     """
     Returns the type of available GPU device:
@@ -432,7 +431,6 @@ def get_device_type():
         else:
             return "cpu"
 
-    
     
 
 def average_grads_batch_torch(tensor_list):
@@ -475,4 +473,3 @@ def average_grads_batch_torch(tensor_list):
 
     # Return the list of averaged tensors
     return averaged_tensors
-
