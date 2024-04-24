@@ -8,10 +8,13 @@ import lab as B
 import neuralprocesses.torch as nps
 
 from dppum.util import (
-    calc_cat_acc_onehot, calc_cat_confidence, flatten_first_two_dims, reshape_to_last,
-    swap_axes
+    calc_cat_acc_onehot,
+    calc_cat_confidence,
+    flatten_first_two_dims,
+    reshape_to_last,
+    swap_axes,
+    logpdf_explicit
     )
-    
 
 
 def test_calc_cat_acc_onehot():
