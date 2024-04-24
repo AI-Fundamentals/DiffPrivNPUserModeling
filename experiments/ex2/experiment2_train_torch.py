@@ -12,7 +12,7 @@ import pdb
 
 
 from dppum.torch.data import hdf_to_dataset_pad_torch
-from dppum.loss import np_elbo_explicit
+from dppum.torch.loss import np_elbo_cat_torch
 from dppum.util import print_dictionary
 from dppum.torch.train import train_model_dp_torch, get_device_type
 
@@ -167,7 +167,7 @@ history = train_model_dp_torch(
     dataset_train,
     metadata_train,
     dataset_test = dataset_test,
-    loss_fn=np_elbo_explicit,
+    loss_fn=np_elbo_cat_torch,
     num_epochs=args['num_epochs'],
     epsilon=args['epsilon'],
     clipping_bound=args['clipping_bound'],
