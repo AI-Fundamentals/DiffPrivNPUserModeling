@@ -265,15 +265,6 @@ def train_model_dp_torch(
             
             # First, calculate the loss/gradients
             # (the loss metric is updated within loss_wrapper so we don't need to see it explicitly here)
-            
-            # if clip_grads_per_user == 'vectorize':
-            #     # Use tf.vectorized_map to calculate and clip (if appropriate) gradients on a per-user basis
-            #     encoder_gradients_batch, decoder_gradients_batch = tf.vectorized_map(
-            #         loss_wrapper, (xc, yc, xt, yt))
-                
-            #     encoder_gradients = [B.mean(B.stack(*gradients_list), axis=0) for gradients_list in encoder_gradients_batch]
-            #     decoder_gradients = [B.mean(B.stack(*gradients_list), axis=0) for gradients_list in decoder_gradients_batch]
-                
             if settings['clip_grads_per_user'] == 'loop':
                 # Loop through users to calculate loss and clip (if appropriate) gradients on a per-user basis
                 batch_size = B.shape(yt)[0]
