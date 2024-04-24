@@ -204,6 +204,9 @@ def swap_axes(tensor, axis1, axis2):
         tf.Tensor: The tensor with swapped axes.
     """
     
+    if axis1 >= len(tensor.shape) or axis2 >= len(tensor.shape):
+        raise IndexError("Axis value is greater than tensor dimensions")
+    
     # If the axes are negative, adjust them to be positive
     if axis1 < 0:
         axis1 = len(B.shape(tensor)) + axis1
