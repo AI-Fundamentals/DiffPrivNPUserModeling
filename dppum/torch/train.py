@@ -96,9 +96,9 @@ def train_model_dp_torch(
             ['Adam'].
         learning_rate : float
             The learning rate for the optimizer.
-        dp_enc : bool, optional
+        dp_enc : bool
             Whether to use differential privacy for the encoder.
-        dp_dec : bool, optional
+        dp_dec : bool
             Whether to use differential privacy for the decoder.
         num_samples : int
             The number of model samples from the latent space.
@@ -125,35 +125,6 @@ def train_model_dp_torch(
     -----
     The model is modified in-place so it is not returned.
     """
-        
-    # # Before training, make a dictionary with the training arguments in and save it
-    # if models_dir:
-    #     # Check if the directory exists
-    #     if not os.path.exists(models_dir):
-    #         # If not, create the directory
-    #         os.makedirs(models_dir)
-        
-    #     # Make a dictionary of training arguments    
-    #     training_args = {}
-    #     training_args['dataset_train_metadata'] = dataset_train_metadata
-    #     training_args['loss_fn_name'] = loss_fn.__name__
-    #     training_args['num_epochs'] = num_epochs
-    #     training_args['epsilon'] = epsilon
-    #     training_args['delta'] = delta
-    #     training_args['clipping_bound'] = clipping_bound
-    #     training_args['optimizer_name'] = optimizer_name
-    #     training_args['learning_rate'] = learning_rate
-    #     training_args['dp_enc'] = dp_enc
-    #     training_args['dp_dec'] = dp_dec
-    #     training_args['num_samples'] = num_samples
-    #     training_args['warmup_epoch'] = warmup_epoch
-    #     training_args['shuffle'] = shuffle
-    #     training_args['models_dir'] = models_dir
-
-    #     # Write to JSON file
-    #     with open(os.path.join(models_dir, "training_loop_args.json"), 'w') as json_file:
-    #         json.dump(training_args, json_file,indent=4)
-    
     
     # The number of times the gradients will be updated during training
     num_repeats = dataset_train_metadata['n_batches'] * settings['num_epochs']
