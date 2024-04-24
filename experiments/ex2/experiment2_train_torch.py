@@ -107,19 +107,6 @@ history = train_model_dp_torch(
     dataset_train,
     metadata_train,
     loss_fn=np_elbo_cat_torch,
-    # num_epochs=settings['num_epochs'],
-    # epsilon=settings['epsilon'],
-    # clipping_bound=settings['clipping_bound'],
-    # optimizer_name=settings['optimizer'],
-    # learning_rate=settings['learning_rate'],
-    # dp_enc=settings['dp_enc'],
-    # dp_dec=settings['dp_dec'],
-    # num_samples=settings['num_samples'],
-    # warmup_epoch=settings['warmup_epoch'],
-    # shuffle=settings['shuffle'],
-    # model_save_dir = settings['models_dir'],
-    # padding_values=settings['padding_values'],
-    # clip_grads_per_user=settings['clip_user']
     settings=settings,
     dataset_test = dataset_test
     )

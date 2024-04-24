@@ -43,22 +43,9 @@ def train_model_dp_torch(
     dataset_train,
     dataset_train_metadata,
     loss_fn,
-    #num_epochs,
     settings,
     dataset_test=None
-    # epsilon=1,
-    # delta=None,
-    # clipping_bound=2,
-    # optimizer_name='Adam',
-    # learning_rate=5e-4,
-    # dp_enc = True,
-    # dp_dec = False,
-    # num_samples=5,
-    # warmup_epoch = False,
-    # shuffle = True,
-    # models_dir = None,
-    # padding_values = None,
-    # clip_grads_per_user = False
+
     
 ):
     
