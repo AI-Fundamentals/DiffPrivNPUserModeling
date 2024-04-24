@@ -57,20 +57,20 @@ def test_calc_cat_acc_onehot():
         [[1, 0, 0], [0, 1, 0], [0, 1, 0]]
     ])
     
-    padding_values = -1
-    assert calc_cat_acc_onehot(y_true,y_pred,cat_axis=-2,padding_values=padding_values) == pytest.approx(0.833, 0.02)
-    padding_values = np.array([
+    padding_value = -1
+    assert calc_cat_acc_onehot(y_true,y_pred,cat_axis=-2,padding_value=padding_value) == pytest.approx(0.833, 0.02)
+    padding_value = np.array([
         [[False, False, False], [False, False, False], [False, False, False]],
         [[False, False, False], [False, False, False], [False, False, False]],
         [[True, True, True], [True, True, True], [True, True, True]]
     ])
-    assert calc_cat_acc_onehot(y_true,y_pred,cat_axis=-2,padding_values=padding_values) == pytest.approx(0.833, 0.02)
-    padding_values = np.array([
+    assert calc_cat_acc_onehot(y_true,y_pred,cat_axis=-2,padding_value=padding_value) == pytest.approx(0.833, 0.02)
+    padding_value = np.array([
         [False, False, False],
         [False, False, False],
         [True, True,True]
     ])
-    assert calc_cat_acc_onehot(y_true,y_pred,cat_axis=-2,padding_values=padding_values) == pytest.approx(0.833, 0.02)
+    assert calc_cat_acc_onehot(y_true,y_pred,cat_axis=-2,padding_value=padding_value) == pytest.approx(0.833, 0.02)
     
     # Check shapes without averaging
     accuracy_not_averaged = calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,avg=False)

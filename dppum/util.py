@@ -96,7 +96,7 @@ def calc_cat_confidence(y_pred_onehot, cat_axis=-1, padding_mask=None):
         One-hot encoded predicted values.
     cat_axis : int
         The categorical axis. Default value is -1.
-    padding_value : Union[float, tf.Tensor], optional
+    padding_value : Union[float, B.Tensor], optional
         Padding mask which will be discarded during the loss calculations.
         Must be either a boolean tensor  either the same shape as 
         `y_pred_onehot` or as 'y_pred_onehot' collapsed along 'cat_axis'.
