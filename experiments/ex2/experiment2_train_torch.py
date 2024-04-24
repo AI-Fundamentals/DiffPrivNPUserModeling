@@ -6,6 +6,7 @@ import json
 import matplotlib.pyplot as plt
 import datetime as dt
 import lab as B
+import torch
 
 import pdb
 
@@ -99,6 +100,14 @@ model_ex2 = model_ex2.to(device)
 print("Finished constructing the model.")
 
 # %%
+# Setup optimizer
+valid_optimizers = ['Adam']
+if settings['optimizer'] == 'Adam':
+    optimizer = torch.optim.Adam(model_ex2.parameters(), lr=settings['learning_rate'])
+else:
+    raise ValueError(f"Invalid optimizer name. Expected one of: {valid_optimizers}")
+
+# %%
 # Train model using train_model_dp_torch function
 time_start = dt.datetime.now()
 
@@ -107,6 +116,7 @@ history = train_model_dp_torch(
     dataset_train,
     metadata_train,
     loss_fn=np_elbo_cat_torch,
+    optimizer=optimizer,
     settings=settings,
     dataset_test = dataset_test
     )

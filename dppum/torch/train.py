@@ -43,6 +43,7 @@ def train_model_dp_torch(
     dataset_train,
     dataset_train_metadata,
     loss_fn,
+    optimizer,
     settings,
     dataset_test=None
 
@@ -65,7 +66,8 @@ def train_model_dp_torch(
     loss_fn : callable
         The loss function to be used for training. Must be from the file
         dppum.loss
-        
+    optimizer : torch.optim.Optimizer
+        The optimizer to use for training.
     args_dict : dict
         A dictionary containing all the arguments for the function.
         The keys and values are as follows:
@@ -120,13 +122,6 @@ def train_model_dp_torch(
     # Calculate sigma
     sigma = get_sigma(settings['epsilon'], settings['delta'], num_repeats, subsampling_rate)
 
-
-    # Setup optimizer
-    valid_optimizers = ['Adam']
-    if settings['optimizer'] == 'Adam':
-        optimizer = torch.optim.Adam(model.parameters(), lr=settings['learning_rate'])
-    else:
-        raise ValueError(f"Invalid optimizer name. Expected one of: {valid_optimizers}")
         
         
     # Define training metrics: loss, accuracy, and confidence of mean model category
