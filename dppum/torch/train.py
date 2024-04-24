@@ -45,10 +45,8 @@ def train_model_dp_torch(
     loss_fn,
     optimizer,
     settings,
-    dataset_test=None
-
-    
-):
+    dataset_test=None    
+    ):
     
     """
     Train a neural process model with differential privacy by streaming data
@@ -122,8 +120,6 @@ def train_model_dp_torch(
     # Calculate sigma
     sigma = get_sigma(settings['epsilon'], settings['delta'], num_repeats, subsampling_rate)
 
-        
-        
     # Define training metrics: loss, accuracy, and confidence of mean model category
     # These metrics are for within epochs, and are reset after each epoch
     train_accuracy_per_epoch = AverageMeter()
