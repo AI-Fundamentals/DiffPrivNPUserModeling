@@ -110,8 +110,6 @@ def test_calc_cat_confidence():
     assert calc_cat_confidence(logits_2D,1,padding_mask=padding_mask) == pytest.approx(1.0, 0.01)
     
     
-    
-    
 def test_flatten_first_two_dims():
     starting_shape = (4,3,2,1)
     data = np.random.rand(*starting_shape)    
@@ -138,6 +136,18 @@ def test_swap_axes():
     # Check it raises an exception if you specify an invalid axis
     with pytest.raises(IndexError):
         swap_axes(data,0,7)
+        
+        
+def test_logpdf_explicit():
+    data1 = torch.tensor([1,2,3,4,5])
+    data2 = torch.tensor([5,4,3,2,1])
+    assert logpdf_explicit(data1,data2,0) == B.log(9)
+    
+    data1 = torch.tensor([[1,2,3,4,5],[1,2,3,4,5]])
+    data2 = torch.tensor([[5,4,3,2,1],[1,2,3,4,5]])
+    assert torch.equal(logpdf_explicit(data1,data2,1),B.log(torch.tensor([9,25])))
+    assert torch.equal(logpdf_explicit(data1,data2,0),B.log(torch.tensor([5,8,9,16,25])))
+    
     
     
     
