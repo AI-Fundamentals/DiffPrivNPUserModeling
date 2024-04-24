@@ -128,3 +128,49 @@ time_end = dt.datetime.now()
 training_time = time_end-time_start
 print("Finished training the model.")
 print(f"Training time: {'{:.2f}'.format(training_time.total_seconds()/60)} minutes")
+
+# %%
+# Plot training metrics
+
+# Make output folders
+fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8, 6), sharex=True)
+
+if settings['warmup_epoch']:
+    epochs_list = np.arange(len(history['loss']))
+else:
+    epochs_list = np.arange(len(history['loss'])) + 1
+
+# Plotting the data
+ax[0].plot(epochs_list, history['loss'], label='Loss')
+ax[1].plot(epochs_list, history['train_accuracy'], label='Mean Accuracy')
+ax[1].plot(epochs_list, history['cat_confidence'], label='Mean Confidence')
+
+# Adding labels and title
+ax[0].set_xlabel('Epochs completed')
+ax[0].set_ylabel('Loss')
+ax[1].set_xlabel('Epochs completed')
+ax[1].set_ylabel('Values')
+
+# Adding legend
+ax[0].legend()
+ax[1].legend()
+
+# Make loss y axis logscale
+#ax[0].set_yscale('symlog')
+
+# Display the plot when running in Spyder
+plt.tight_layout()
+plt.show()
+
+# Check if the directory exists
+if not os.path.exists(settings['figs_dir']):
+    # If not, create the directory
+    os.makedirs(settings['figs_dir'])
+
+# Save the figure
+fig.savefig(os.path.join(settings['figs_dir'],'experiment2_training_metrics.png'))
+
+print("Finished plotting training metrics.")
+
+# %%
+print("Finished training experiment2.py training script.")
