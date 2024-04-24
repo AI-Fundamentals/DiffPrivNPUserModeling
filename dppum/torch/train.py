@@ -46,7 +46,7 @@ def train_model_dp_torch(
     optimizer,
     settings,
     dataset_test=None    
-    ):
+):
     
     """
     Train a neural process model with differential privacy by streaming data
