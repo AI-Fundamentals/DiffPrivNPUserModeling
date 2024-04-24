@@ -2,8 +2,7 @@ import h5py
 import numpy as np
 import torch
 
-from utils.data import Dataset, DataLoader
-from dppum.data import hdf_get_metadata
+from dppum.data import Dataset, DataLoader, hdf_get_metadata
 
 
 class HDFDataset_torch(Dataset):
