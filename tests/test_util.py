@@ -7,11 +7,11 @@ import lab as B
 # It's something to do with dispatch in Plum?
 import neuralprocesses.torch as nps
 
-
-from dppum.util import calc_cat_acc_onehot, calc_cat_confidence, flatten_first_two_dims, reshape_to_last
-
-
-
+from dppum.util import (
+    calc_cat_acc_onehot, calc_cat_confidence, flatten_first_two_dims, reshape_to_last,
+    swap_axes
+    )
+    
 
 
 def test_calc_cat_acc_onehot():
@@ -121,3 +121,20 @@ def test_reshape_to_last():
     data = np.random.rand(*starting_shape)
     data_reshaped = reshape_to_last(data,1)
     assert data_reshaped.shape == (4,2,1,3)
+
+
+def test_swap_axes():
+    # Check it swaps axes correctly
+    starting_shape = (4,3,2,1)
+    data = np.random.rand(*starting_shape)
+    data_reshaped = swap_axes(data,0,2)
+    assert data_reshaped.shape == (2,3,4,1)
+    data_reshaped = swap_axes(data,-2,-1)
+    assert data_reshaped.shape == (4,3,1,2)
+    
+    # Check it raises an exception if you specify an invalid axis
+    with pytest.raises(IndexError):
+        swap_axes(data,0,7)
+    
+    
+    
