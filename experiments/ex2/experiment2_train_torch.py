@@ -24,7 +24,7 @@ nps.lab.set_global_device(device)
 
 
 # %%
-# Parse any command line arguments
+# Parse the settings file from the command line argument
 
 # Creating the ArgumentParser instance
 parser = argparse.ArgumentParser()
