@@ -120,7 +120,7 @@ history = train_model_dp_torch(
     # model_save_dir = settings['models_dir'],
     # padding_values=settings['padding_values'],
     # clip_grads_per_user=settings['clip_user']
-    settings_dict=settings,
+    settings=settings,
     dataset_test = dataset_test
     )
 

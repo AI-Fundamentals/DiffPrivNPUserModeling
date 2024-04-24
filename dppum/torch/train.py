@@ -44,7 +44,7 @@ def train_model_dp_torch(
     dataset_train_metadata,
     loss_fn,
     #num_epochs,
-    settings_dict,
+    settings,
     dataset_test=None
     # epsilon=1,
     # delta=None,
@@ -156,17 +156,17 @@ def train_model_dp_torch(
     
     
     # The number of times the gradients will be updated during training
-    num_repeats = dataset_train_metadata['n_batches'] * settings_dict['num_epochs']
+    num_repeats = dataset_train_metadata['n_batches'] * settings['num_epochs']
     # The fraction of the data that is used in each minibatch
     subsampling_rate = 1/dataset_train_metadata['n_batches']
     # Calculate sigma
-    sigma = get_sigma(settings_dict['epsilon'], settings_dict['delta'], num_repeats, subsampling_rate)
+    sigma = get_sigma(settings['epsilon'], settings['delta'], num_repeats, subsampling_rate)
 
 
     # Setup optimizer
     valid_optimizers = ['Adam']
-    if settings_dict['optimizer'] == 'Adam':
-        optimizer = torch.optim.Adam(model.parameters(), lr=settings_dict['learning_rate'])
+    if settings['optimizer'] == 'Adam':
+        optimizer = torch.optim.Adam(model.parameters(), lr=settings['learning_rate'])
     else:
         raise ValueError(f"Invalid optimizer name. Expected one of: {valid_optimizers}")
         
@@ -187,7 +187,7 @@ def train_model_dp_torch(
         test_accuracy_all_epochs = []
     
     # Use warmup epoch (or not)
-    if settings_dict['warmup_epoch']:
+    if settings['warmup_epoch']:
         first_epoch = 0
     else:
         first_epoch = 1        
@@ -241,8 +241,8 @@ def train_model_dp_torch(
                 yt=yt,
                 normalise=False,
                 dtype_lik=torch.float32,
-                num_samples=settings_dict['num_samples'],
-                padding_values=settings_dict['padding_values']
+                num_samples=settings['num_samples'],
+                padding_values=settings['padding_values']
                 )
         scalar_loss = B.mean(vector_loss)
 
@@ -256,25 +256,25 @@ def train_model_dp_torch(
         encoder_gradients = [p.grad for p in model.encoder.parameters() if p.requires_grad]
         decoder_gradients = [p.grad for p in model.decoder.parameters() if p.requires_grad]
         
-        if settings_dict['dp_enc']:
+        if settings['dp_enc']:
                 # Clip encoder gradients per user
             for i, grad in enumerate(encoder_gradients):
                 if grad is not None:
                     # L2 clipping
                     grad_norm = torch.norm(grad)
                     grad_normalized = grad / grad_norm
-                    grad_clipped = grad_normalized * min(1.0, settings_dict['clipping_bound'] / grad_norm)
+                    grad_clipped = grad_normalized * min(1.0, settings['clipping_bound'] / grad_norm)
                     
                     # Store the clipped gradient
                     encoder_gradients[i] = grad_clipped.clone()
-        if settings_dict['dp_dec']:
+        if settings['dp_dec']:
                 # Clip decoder gradients per user
                 for i, grad in enumerate(decoder_gradients):
                     if grad is not None:
                         # L2 clipping
                         grad_norm = torch.norm(grad)
                         grad_normalized = grad / grad_norm
-                        grad_clipped = grad_normalized * min(1.0, settings_dict['clipping_bound'] / grad_norm)
+                        grad_clipped = grad_normalized * min(1.0, settings['clipping_bound'] / grad_norm)
                         
                         # Store the clipped gradient
                         decoder_gradients[i] = grad_clipped.clone()
@@ -284,13 +284,13 @@ def train_model_dp_torch(
         
     print("Starting training loop")
     model.train()
-    epochs = list(range(first_epoch, max(settings_dict['num_epochs'], first_epoch) + 1))
+    epochs = list(range(first_epoch, max(settings['num_epochs'], first_epoch) + 1))
     # Run the training loop
     for epoch in epochs:
         print(f"""######## Start of epoch {epoch} ########""")
         
         # Shuffle the training dataset
-        if settings_dict['shuffle']:
+        if settings['shuffle']:
             dataset_train = dataset_train.shuffle(buffer_size=dataset_train_metadata['n_batches'])
         
         
@@ -321,7 +321,7 @@ def train_model_dp_torch(
             #     encoder_gradients = [B.mean(B.stack(*gradients_list), axis=0) for gradients_list in encoder_gradients_batch]
             #     decoder_gradients = [B.mean(B.stack(*gradients_list), axis=0) for gradients_list in decoder_gradients_batch]
                 
-            if settings_dict['clip_grads_per_user'] == 'loop':
+            if settings['clip_grads_per_user'] == 'loop':
                 # Loop through users to calculate loss and clip (if appropriate) gradients on a per-user basis
                 batch_size = B.shape(yt)[0]
                 encoder_gradients_batch = []
@@ -344,10 +344,10 @@ def train_model_dp_torch(
                 encoder_gradients, decoder_gradients = loss_wrapper((xc, yc, xt, yt))
             
             # Add gaussian noise
-            if settings_dict['dp_enc']:
-                encoder_gradients = [tensor + torch.randn_like(tensor) * (settings_dict['clipping_bound']**2 * sigma**2) for tensor in encoder_gradients]
-            if settings_dict['dp_dec']:
-                decoder_gradients = [tensor + torch.randn_like(tensor) * (settings_dict['clipping_bound']**2 * sigma**2) for tensor in decoder_gradients]
+            if settings['dp_enc']:
+                encoder_gradients = [tensor + torch.randn_like(tensor) * (settings['clipping_bound']**2 * sigma**2) for tensor in encoder_gradients]
+            if settings['dp_dec']:
+                decoder_gradients = [tensor + torch.randn_like(tensor) * (settings['clipping_bound']**2 * sigma**2) for tensor in decoder_gradients]
             
             
             # We have now calculated the loss/gradients
@@ -370,13 +370,13 @@ def train_model_dp_torch(
             # Assess accuracy after updating model weights
             with torch.no_grad():
                 yt_pred, _, _, _ = nps.predict(
-                    model,xc, yc, xt, num_samples=settings_dict['num_samples'], dtype_lik=torch.float32
+                    model,xc, yc, xt, num_samples=settings['num_samples'], dtype_lik=torch.float32
                     )
             
             # Create mask for the padding
-            if settings_dict['padding_values']:
+            if settings['padding_values']:
                 # A mask for where the padding is. This is the same shape as the batch
-                padding_mask = (yt == settings_dict['padding_values'])
+                padding_mask = (yt == settings['padding_values'])
                 # This is collapsed along the categorical dimension
                 padding_mask = B.any(padding_mask,axis=-2)
             else:
@@ -413,9 +413,9 @@ def train_model_dp_torch(
                 xt = xt.to(training_device)
                 yt = yt.to(training_device)
                 
-                if settings_dict['padding_values']:
+                if settings['padding_values']:
                     # A mask for where the padding is. This is the same shape as the batch
-                    padding_mask = (yt == settings_dict['padding_values'])
+                    padding_mask = (yt == settings['padding_values'])
                     # This is collapsed along the categorical dimension
                     padding_mask = B.any(padding_mask,axis=-2)
                 else:
@@ -424,7 +424,7 @@ def train_model_dp_torch(
                 # Forward pass
                 with torch.no_grad():
                     yt_pred, _, _, _ = nps.predict(
-                        model,xc, yc, xt, num_samples=settings_dict['num_samples'], dtype_lik=torch.float32
+                        model,xc, yc, xt, num_samples=settings['num_samples'], dtype_lik=torch.float32
                         ) 
                 
                 # Accuracy of the non-padding values for the test data
@@ -436,15 +436,15 @@ def train_model_dp_torch(
             print(f"Mean test accuracy: {np.round(float(test_accuracy_all_epochs[-1]),3)}")
         
         
-        if settings_dict['models_dir']:
+        if settings['models_dir']:
             # Check if the directory exists
-            if not os.path.exists(settings_dict['models_dir']):
+            if not os.path.exists(settings['models_dir']):
                 # If not, create the directory
-                os.makedirs(settings_dict['models_dir'])
+                os.makedirs(settings['models_dir'])
             
             # Save the model weights            
             model_name = f"weights_epoch_{epoch}.pt"
-            torch.save(model.state_dict(), os.path.join(settings_dict['models_dir'], model_name))
+            torch.save(model.state_dict(), os.path.join(settings['models_dir'], model_name))
 
     
     ##### End of training loop #####
@@ -461,10 +461,10 @@ def train_model_dp_torch(
     
     
     # Save the history to CSV
-    if settings_dict['models_dir']:
+    if settings['models_dir']:
         # Convert the dictionary to a pandas DataFrame        
         csv_name = 'training_metrics.csv'
-        csv_path = os.path.join(settings_dict['models_dir'], csv_name)
+        csv_path = os.path.join(settings['models_dir'], csv_name)
         pd.DataFrame(history).set_index('epoch').to_csv(csv_path)
         
     
