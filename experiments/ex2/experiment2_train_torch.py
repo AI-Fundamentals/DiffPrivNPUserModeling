@@ -68,7 +68,7 @@ padding_values = -1.
 dataset_train, metadata_train = hdf_to_dataset_pad_torch(settings['train_hdf'],
                                             n_users=settings['num_users'],
                                             batch_size=settings['batch_size'],
-                                            padding_values=settings['padding_values']
+                                            padding_value=settings['padding_value']
                                             )
 print(f"\nMetadata for dataset from file '{settings['train_hdf']}':")
 print_dictionary(metadata_train)
@@ -76,7 +76,7 @@ print_dictionary(metadata_train)
 dataset_test,metadata_test = hdf_to_dataset_pad_torch(settings['test_hdf'],
                                             n_users=settings['num_users'],
                                             batch_size=settings['batch_size'],
-                                            padding_values=settings['padding_values']
+                                            padding_value=settings['padding_value']
                                             )
 print(f"\nMetadata for dataset from file '{settings['test_hdf']}':")
 print_dictionary(metadata_test)

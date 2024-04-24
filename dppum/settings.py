@@ -62,6 +62,6 @@ def default_settings_ex2():
     "dp_dec" : False,
     "shuffle" : False,
     "optimizer" : "Adam",
-    "padding_values" : -1.
+    "padding_value" : -1.
     }
     return settings

@@ -73,7 +73,7 @@ class HDFDataset_torch(Dataset):
 
 
 
-def hdf_to_dataset_pad_torch(filepath, n_users=16, batch_size=1, padding_values=-1.):
+def hdf_to_dataset_pad_torch(filepath, n_users=16, batch_size=1, padding_value=-1.):
     """
     Load an HDF dataset and pad it into a PyTorch DataLoader.
 
@@ -85,7 +85,7 @@ def hdf_to_dataset_pad_torch(filepath, n_users=16, batch_size=1, padding_values=
         Number of users to be loaded from the dataset. Default is 16.
     batch_size : int, optional
         Size of the batches. Default is 1.
-    padding_values : float, optional
+    padding_value : float, optional
         Value used for padding, Default is -1.
 
     Returns
@@ -96,7 +96,7 @@ def hdf_to_dataset_pad_torch(filepath, n_users=16, batch_size=1, padding_values=
     """
     dataset = HDFDataset_torch(filepath, n_users)
     
-    def custom_pad(data, padding_values=-1.):
+    def custom_pad(data, padding_value=-1.):
         """
         Custom padding function for 3D tensors that vary in the size of
         dimensions 0 and 2.
@@ -105,7 +105,7 @@ def hdf_to_dataset_pad_torch(filepath, n_users=16, batch_size=1, padding_values=
         ----------
         data : list of torch.Tensor
             List of tensors to be padded.
-        padding_values : float, optional
+        padding_value : float, optional
             Value used for padding. Default is -1.
 
         Returns
@@ -116,7 +116,7 @@ def hdf_to_dataset_pad_torch(filepath, n_users=16, batch_size=1, padding_values=
         """
         max_len = max([x.size(0) for x in data])
         max_dim2 = max([x.size(2) for x in data])
-        padded = torch.full((len(data), max_len, data[0].size(1), max_dim2), padding_values)
+        padded = torch.full((len(data), max_len, data[0].size(1), max_dim2), padding_value)
         for i, tensor in enumerate(data):
             padded[i, :tensor.size(0), :, :tensor.size(2)] = tensor
         return padded
@@ -137,10 +137,10 @@ def hdf_to_dataset_pad_torch(filepath, n_users=16, batch_size=1, padding_values=
 
         """
         xc, yc, xt, yt = zip(*batch)
-        xc = custom_pad(xc, padding_values=padding_values)
-        yc = custom_pad(yc, padding_values=padding_values)
-        xt = custom_pad(xt, padding_values=padding_values)
-        yt = custom_pad(yt, padding_values=padding_values)
+        xc = custom_pad(xc, padding_value=padding_value)
+        yc = custom_pad(yc, padding_value=padding_value)
+        xt = custom_pad(xt, padding_value=padding_value)
+        yt = custom_pad(yt, padding_value=padding_value)
         return xc, yc, xt, yt
     
     dataloader = DataLoader(dataset, batch_size=batch_size, collate_fn=collate_fn)

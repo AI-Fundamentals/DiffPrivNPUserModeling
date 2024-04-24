@@ -5,7 +5,7 @@ These come from the DP user modelling Julia code
 
 import lab as B
 
-def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,padding_values=None,avg=True):
+def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,padding_value=None,avg=True):
     """
     Calculate the categorical accuracy of one-hot encoded predictions and true
     labels using linear algebra backend.
@@ -18,6 +18,10 @@ def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,padding_values=None,avg=True):
         Predicted labels, one-hot encoded.
     cat_axis : int, optional
         The axis that represents categories, by default -1.
+    padding_value : [float,array-like], optional
+        Value or array of values that represent padding in y_true and y_pred.
+        If array, must be the same shape as either y_true or y_true averaged
+        over the categorical axis.
     avg : bool, optional
         If true this will return one value. If false, the average will be the
         shape of 'y_true' collapsed over 'cat_axis'.
@@ -49,19 +53,19 @@ def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,padding_values=None,avg=True):
     y_pred_cat = B.argmax(y_pred,cat_axis)    
     
     # If there is padding, make sure we set the reconstruction loss to zero
-    if padding_values is not None:  # It gives an error if you do "if padding_values:"
+    if padding_value is not None:  # It gives an error if you do "if padding_value:"
         # If padding is a single value
-        if B.size(padding_values) == 1:
+        if B.size(padding_value) == 1:
             # Identify the padding
-            padding_mask = (y_true == padding_values)
+            padding_mask = (y_true == padding_value)
             padding_mask = B.any(padding_mask, axis=cat_axis)
-        elif B.shape(padding_values) == B.shape(y_true):
+        elif B.shape(padding_value) == B.shape(y_true):
             # padding is already a mask
-            padding_mask = B.any(padding_values, axis=cat_axis)
-        elif B.shape(padding_values) == B.shape(y_true_cat):
-            padding_mask = padding_values
+            padding_mask = B.any(padding_value, axis=cat_axis)
+        elif B.shape(padding_value) == B.shape(y_true_cat):
+            padding_mask = padding_value
         else:
-            raise ValueError("'padding_values' must be either a single value or a bool array either the same shape as 'yt' or the shape of 'yt' collapsed along the categorical axis.")
+            raise ValueError("'padding_value' must be either a single value or a bool array either the same shape as 'yt' or the shape of 'yt' collapsed along the categorical axis.")
         
         # Calculate the accuracy only for the non-padding parts
         accuracy = B.cast(B.dtype(y_true),y_true_cat[~padding_mask] == y_pred_cat[~padding_mask])
@@ -92,7 +96,7 @@ def calc_cat_confidence(y_pred_onehot, cat_axis=-1, padding_mask=None):
         One-hot encoded predicted values.
     cat_axis : int
         The categorical axis. Default value is -1.
-    padding_values : Union[float, tf.Tensor], optional
+    padding_value : Union[float, tf.Tensor], optional
         Padding mask which will be discarded during the loss calculations.
         Must be either a boolean tensor  either the same shape as 
         `y_pred_onehot` or as 'y_pred_onehot' collapsed along 'cat_axis'.
