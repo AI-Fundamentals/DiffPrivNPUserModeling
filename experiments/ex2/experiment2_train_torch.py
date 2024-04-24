@@ -10,10 +10,10 @@ import torch
 
 import pdb
 
-from dppum.torch.data import hdf_to_dataset_pad_torch
-from dppum.torch.loss import np_elbo_cat_torch
+from dppum.data import hdf_to_dataset_pad_torch
+from dppum.loss import np_elbo_cat_torch
 from dppum.util import print_dictionary
-from dppum.torch.train import train_model_dp_torch, get_device_type
+from dppum.train import train_model_dp_torch, get_device_type
 from dppum.settings import default_settings_ex2
 
 # %%
