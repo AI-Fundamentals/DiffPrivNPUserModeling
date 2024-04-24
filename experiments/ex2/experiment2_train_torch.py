@@ -1,4 +1,3 @@
-
 import neuralprocesses.torch as nps
 import argparse
 import os
@@ -10,11 +9,11 @@ import lab as B
 
 import pdb
 
-
 from dppum.torch.data import hdf_to_dataset_pad_torch
 from dppum.torch.loss import np_elbo_cat_torch
 from dppum.util import print_dictionary
 from dppum.torch.train import train_model_dp_torch, get_device_type
+from dppum.settings import default_settings_ex2
 
 # %%
 # Get GPU type
@@ -29,117 +28,54 @@ nps.lab.set_global_device(device)
 # Creating the ArgumentParser instance
 parser = argparse.ArgumentParser()
 
-# Adding arguments to the parser
-parser.add_argument("--num_users", 
-                    help="Number of users to load from the training data hdf.", 
-                    type=int, 
-                    default=128)
-
-parser.add_argument("--batch_size", 
-                    help="Number of users to put into each batch.", 
-                    type=int, 
-                    default=4)
-
-parser.add_argument("--train_hdf", 
-                    help="The file to load the training from.", 
-                    type=str,
-                    default="data/ex2/experiment2_training_data.hdf")
-
-parser.add_argument("--test_hdf", 
-                    help="The file to load the training from.", 
-                    type=str,
-                    default="data/ex2/experiment2_test_data.hdf")
-
-parser.add_argument("--models_dir", 
-                    help="The folder to save the trained models.", 
-                    type=str,
-                    default="models/ex2/")
-
-parser.add_argument("--figs_dir", 
-                    help="The folder for output figures.", 
-                    type=str,
-                    default="figures/ex2/")
-
-parser.add_argument("--num_samples", 
-                    help="Number of samples to take for model evaluation.", 
-                    type=int,
-                    default=1)
-
-parser.add_argument("--num_epochs", 
-                    help="Number of training epochs.", 
-                    type=int,
-                    default=5)
-
-parser.add_argument("--epsilon",
-                    "--eps",
-                    help="Epsilon parameter in differential privacy.", 
-                    type=float,
-                    default=1.0)
-
-parser.add_argument("--clipping_bound",
-                    "--cbound", 
-                    help="L2 clipping bound parameter in differential privacy.", 
-                    type=float,
-                    default=2.0)
-
-parser.add_argument("--learning_rate",
-                    "--lr",
-                    help="Learning rate for model training.", 
-                    type=float,
-                    default=5e-4)
-
-# Flag for a warmup epoch (i.e. testing the untrained model)
-parser.add_argument("--warmup_epoch", 
-                    help="Use a warmup epoch 0 (True/False)", 
-                    type=bool,
-                    default=False)
-
-# Cache/prefetch the data for faster training. However this will cause problems
-# if the dataset is too large to fit in memory
-parser.add_argument("--cache", 
-                    help="Cache/Prefetch the data for faster training (True/False)", 
-                    type=bool,
-                    default=False)
-
-parser.add_argument("--clip_user", 
-                    help="Method to clip gradients per user. ('loop'/'vectorize'/'false')", 
-                    type=str,
-                    default='loop')
+parser.add_argument("-settings", 
+                    help="Path to settings json file.", 
+                    type=str, 
+                    default="settings_ex2.json")
 
 # Parsing the arguments to a dictionary
-args = vars(parser.parse_args())
+settings_file_path = vars(parser.parse_args())['settings']
+# Load the settings file to json
+try:
+    settings = json.load(settings_file_path)
+    settings['settings_file_path'] = settings_file_path
+except:
+    settings = default_settings_ex2()
+    settings['settings_file_path'] = "Default"
+
 
 # Save the command line args to a json in model save folder
-if args['models_dir']:
-    # Check if the directory exists
-    if not os.path.exists(args['models_dir']):
-        # If not, create the directory
-        os.makedirs(args['models_dir'])
-    
-    # Write command line arguments to JSON file
-    with open(os.path.join(args['models_dir'], "train_command_line_args.json"), 'w') as json_file:
-        json.dump(args, json_file,indent=4)
+# Check if the directory exists
+if not os.path.exists(settings['models_dir']):
+    # If not, create the directory
+    os.makedirs(settings['models_dir'])
 
-print("Finished parsing command line arguments.")
+# Save settings to models dir
+with open(os.path.join(settings['models_dir'], "train_settings.json"), 'w') as json_file:
+    json.dump(settings, json_file,indent=4)
+
+print("Finished loading settings.")
 
 
 # %%
+settings['warmup_epoch'] = True
 padding_values = -1.
-dataset_train, metadata_train = hdf_to_dataset_pad_torch(args['train_hdf'],
-                                            n_users=args['num_users'],
-                                            batch_size=args['batch_size'],
-                                            padding_values=padding_values
+dataset_train, metadata_train = hdf_to_dataset_pad_torch(settings['train_hdf'],
+                                            n_users=settings['num_users'],
+                                            batch_size=settings['batch_size'],
+                                            padding_values=settings['padding_values']
                                             )
-print(f"\nMetadata for dataset from file '{args['train_hdf']}':")
+print(f"\nMetadata for dataset from file '{settings['train_hdf']}':")
 print_dictionary(metadata_train)
 
-dataset_test,metadata_test = hdf_to_dataset_pad_torch(args['test_hdf'],
-                                            n_users=128,
-                                            batch_size=args['batch_size'],
-                                            padding_values=padding_values
+dataset_test,metadata_test = hdf_to_dataset_pad_torch(settings['test_hdf'],
+                                            n_users=settings['num_users'],
+                                            batch_size=settings['batch_size'],
+                                            padding_values=settings['padding_values']
                                             )
-print(f"\nMetadata for dataset from file '{args['test_hdf']}':")
+print(f"\nMetadata for dataset from file '{settings['test_hdf']}':")
 print_dictionary(metadata_test)
+
 
 # %%
 
@@ -168,19 +104,19 @@ history = train_model_dp_torch(
     metadata_train,
     dataset_test = dataset_test,
     loss_fn=np_elbo_cat_torch,
-    num_epochs=args['num_epochs'],
-    epsilon=args['epsilon'],
-    clipping_bound=args['clipping_bound'],
-    optimizer_name='Adam',
-    learning_rate=args['learning_rate'],
-    dp_enc=True,
-    dp_dec=False,
-    num_samples=args['num_samples'],
-    warmup_epoch=args['warmup_epoch'],
-    shuffle=False,
-    model_save_dir = args['models_dir'],
-    padding_values=padding_values,
-    clip_grads_per_user=args['clip_user']
+    num_epochs=settings['num_epochs'],
+    epsilon=settings['epsilon'],
+    clipping_bound=settings['clipping_bound'],
+    optimizer_name=settings['optimizer'],
+    learning_rate=settings['learning_rate'],
+    dp_enc=settings['dp_enc'],
+    dp_dec=settings['dp_dec'],
+    num_samples=settings['num_samples'],
+    warmup_epoch=settings['warmup_epoch'],
+    shuffle=settings['shuffle'],
+    model_save_dir = settings['models_dir'],
+    padding_values=settings['padding_values'],
+    clip_grads_per_user=settings['clip_user']
     )
 
 time_end = dt.datetime.now()
