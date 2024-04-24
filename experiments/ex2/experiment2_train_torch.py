@@ -42,6 +42,10 @@ try:
 except:
     settings = default_settings_ex2()
     settings['settings_file_path'] = "Default"
+    
+# Calculate delta
+if not settings['delta']:
+    settings['delta'] = 1 / (settings['num_users'])**2
 
 
 # Save the command line args to a json in model save folder
@@ -102,21 +106,22 @@ history = train_model_dp_torch(
     model_ex2,
     dataset_train,
     metadata_train,
-    dataset_test = dataset_test,
     loss_fn=np_elbo_cat_torch,
-    num_epochs=settings['num_epochs'],
-    epsilon=settings['epsilon'],
-    clipping_bound=settings['clipping_bound'],
-    optimizer_name=settings['optimizer'],
-    learning_rate=settings['learning_rate'],
-    dp_enc=settings['dp_enc'],
-    dp_dec=settings['dp_dec'],
-    num_samples=settings['num_samples'],
-    warmup_epoch=settings['warmup_epoch'],
-    shuffle=settings['shuffle'],
-    model_save_dir = settings['models_dir'],
-    padding_values=settings['padding_values'],
-    clip_grads_per_user=settings['clip_user']
+    # num_epochs=settings['num_epochs'],
+    # epsilon=settings['epsilon'],
+    # clipping_bound=settings['clipping_bound'],
+    # optimizer_name=settings['optimizer'],
+    # learning_rate=settings['learning_rate'],
+    # dp_enc=settings['dp_enc'],
+    # dp_dec=settings['dp_dec'],
+    # num_samples=settings['num_samples'],
+    # warmup_epoch=settings['warmup_epoch'],
+    # shuffle=settings['shuffle'],
+    # model_save_dir = settings['models_dir'],
+    # padding_values=settings['padding_values'],
+    # clip_grads_per_user=settings['clip_user']
+    settings_dict=settings,
+    dataset_test = dataset_test
     )
 
 time_end = dt.datetime.now()
