@@ -340,7 +340,7 @@ def train_model_dp_torch(
                     encoder_gradients_batch.append(gradients_batch[0])
                     decoder_gradients_batch.append(gradients_batch[1])
 
-                # Average the gradients over the batch            
+                # Average the gradients over the batch      
                 encoder_gradients = average_grads_batch_torch(encoder_gradients_batch)
                 decoder_gradients = average_grads_batch_torch(decoder_gradients_batch)
             else:
