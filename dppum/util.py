@@ -196,12 +196,12 @@ def swap_axes(tensor, axis1, axis2):
     Swap two specified axes of a tensor.
 
     Args:
-        tensor (tf.Tensor): The input tensor.
+        tensor (B.Tensor): The input tensor.
         axis1 (int): The first axis to swap. Can be negative.
         axis2 (int): The second axis to swap. Can be negative.
 
     Returns:
-        tf.Tensor: The tensor with swapped axes.
+        B.Tensor: The tensor with swapped axes.
     """
     
     if axis1 >= len(tensor.shape) or axis2 >= len(tensor.shape):
@@ -241,7 +241,7 @@ def logpdf_explicit(d, x, axis=-1):
 
     Returns
     -------
-    tf.Tensor
+    B.Tensor
         A tensor representing the natural logarithm of the maximum product along each row.
 
     """
