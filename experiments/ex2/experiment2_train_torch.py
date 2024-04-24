@@ -159,7 +159,7 @@ model_ex2 = model_ex2.to(device)
 print("Finished constructing the model.")
 
 # %%
-# Train model using train_model_dp_tf function
+# Train model using train_model_dp_torch function
 time_start = dt.datetime.now()
 
 history = train_model_dp_torch(
