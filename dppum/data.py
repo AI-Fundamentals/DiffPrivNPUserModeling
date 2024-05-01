@@ -2,10 +2,8 @@ import h5py
 import numpy as np
 import torch
 
-from dppum.data import Dataset, DataLoader, hdf_get_metadata
 
-
-class HDFDataset_torch(Dataset):
+class HDFDataset_torch(torch.utils.data.Dataset):
     """
     A PyTorch Dataset for reading data from an HDF5 file.
 
@@ -142,7 +140,7 @@ def hdf_to_dataset_pad_torch(filepath, n_users=16, batch_size=1, padding_value=-
         yt = custom_pad(yt, padding_value=padding_value)
         return xc, yc, xt, yt
     
-    dataloader = DataLoader(dataset, batch_size=batch_size, collate_fn=collate_fn)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, collate_fn=collate_fn)
     
     # Load metadata from the HDF file
     metadata = hdf_get_metadata(filepath)
