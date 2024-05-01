@@ -4,62 +4,56 @@ import neuralprocesses.torch as nps
 import lab as B
 import argparse
 import os
-import torch
 import numpy as np
 import pandas as pd
 import json
 import matplotlib.pyplot as plt
 
-
-from dppum.data import hdf_to_tf_dataset
-from dppum.loss import np_elbo_tf_cat
-from dppum.util import print_dictionary, calc_cat_acc_onehot
-from dppum.train import train_model_dp_tf
+from dppum.data import hdf_to_dataloader_pad
+from dppum.util import print_dictionary
+from dppum.train import get_device_type
+from dppum.settings import default_settings_ex2_test
 
 print("Finished importing packages.")
 
-# %% Parse any command line arguments
+# %%
+# Parse the settings file from the command line argument
 
 # Creating the ArgumentParser instance
 parser = argparse.ArgumentParser()
 
-# Adding arguments to the parser
-parser.add_argument("--test_hdf", 
-                    help="The file to load the test from.", 
-                    type=str,
-                    default="data/ex2/experiment2_test_data.hdf")
-
-parser.add_argument("--models_dir", 
-                    help="The folder to load the trained models.", 
-                    type=str,
-                    default="models/ex2/")
-
-parser.add_argument("--figs_dir", 
-                    help="The folder for output figures.", 
-                    type=str,
-                    default="figures/ex2/")
-
-parser.add_argument("--num_batches", 
-                    help="Number of batches to load from the test data hdf.", 
-                    type=int, 
-                    default=16)
-
+parser.add_argument("-settings", 
+                    help="Path to settings json file.", 
+                    type=str, 
+                    default="settings/settings_ex2_test.json")
 
 # Parsing the arguments to a dictionary
-args = vars(parser.parse_args())
+settings_file_path = vars(parser.parse_args())['settings']
+
+# Load the settings file to json
+try:
+    print(f"Trying to load settings from '{settings_file_path}'")
+    with open(settings_file_path, 'r') as f:
+        settings = json.load(f)
+    settings['settings_file_path'] = settings_file_path
+    print("Loaded settings successfully.")
+except Exception as e:
+    print("Failed to load settings due to the following error:", e)
+    print("\nUsing default settings from function default_settings_ex2_test().")
+    settings = default_settings_ex2_test()
+    settings['settings_file_path'] = "Default"
 
 # Save the command line args to a json in model save folder
-if args['models_dir']:
-    # Check if the directory exists
-    if not os.path.exists(args['models_dir']):
-        # If not, create the directory
-        os.makedirs(args['models_dir'])
-    
-    # Write command line arguments to JSON file
-    with open(os.path.join(args['models_dir'], "test_command_line_args.json"), 'w') as json_file:
-        json.dump(args, json_file,indent=4)
+# Check if the directory exists
+if not os.path.exists(settings['models_dir']):
+    # If not, create the directory
+    os.makedirs(settings['models_dir'])
 
-print("Finished parsing command line arguments.")
+# Save settings to models dir
+with open(os.path.join(settings['models_dir'], "test_settings.json"), 'w') as json_file:
+    json.dump(settings, json_file,indent=4)
+
+print("Finished loading settings.")
 
 
 # %% Load training arguments/metadata

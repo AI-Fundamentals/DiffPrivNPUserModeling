@@ -71,3 +71,47 @@ def default_settings_ex2_train():
     "padding_value" : -1.0
     }
     return settings
+
+
+
+def default_settings_ex2_test():
+    """Returns a dictionary of settings for testing a model for experiment 2.
+    
+    Returns
+    -------
+    settings : dict
+        A dictionary containing all the arguments for the function.
+        The keys and values are as follows:
+        num_users : int
+            Number of users to load from the training data hdf.
+        batch_size : int
+            Number of users to put into each batch. Default is 4.
+        test_hdf : str
+            Path to the hdf file to load the test from.
+        models_dir : str
+            The folder to load the trained models from.
+        figs_dir : str
+            The folder for output figures.
+        num_samples : int
+            Number of samples to take for model evaluation.
+        padding_value : float
+            Value to use for padding during batching. Should be a value that is
+            not in the scope of the real data (e.g. use -1 for one-hot encoded
+            categorical data.)
+        
+    """ 
+    
+    settings = {
+        "num_users": 128,
+        "batch_size": 4,
+        "test_hdf": "data/ex2/experiment2_test_data.hdf",
+        "models_dir": "models/ex2/",
+        "figs_dir": "figures/ex2/",
+        "num_samples": 1,
+        "padding_value" : -1.0
+    }
+    return settings
+
+
+
+
