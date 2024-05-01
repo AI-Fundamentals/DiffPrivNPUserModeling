@@ -70,7 +70,7 @@ class HDFDataset_torch(torch.utils.data.Dataset):
 
 
 
-def hdf_to_dataloader_pad_torch(filepath, n_users=16, batch_size=1, padding_value=-1.):
+def hdf_to_dataloader_pad(filepath, n_users=16, batch_size=1, padding_value=-1.):
     """
     Load an HDF dataset and pad it into a PyTorch DataLoader.
 

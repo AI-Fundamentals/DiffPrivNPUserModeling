@@ -10,7 +10,7 @@ import torch
 
 import pdb
 
-from dppum.data import hdf_to_dataloader_pad_torch
+from dppum.data import hdf_to_dataloader_pad
 from dppum.loss import np_elbo_cat_torch
 from dppum.util import print_dictionary
 from dppum.train import train_model_dp_torch, get_device_type
@@ -66,6 +66,7 @@ print("Finished loading settings.")
 settings['warmup_epoch'] = True
 padding_values = -1.
 dataloader_train, metadata_train = hdf_to_dataloader_pad_torch(settings['train_hdf'],
+dataloader_train, metadata_train = hdf_to_dataloader_pad(settings['train_hdf'],
                                             n_users=settings['num_users'],
                                             batch_size=settings['batch_size'],
                                             padding_value=settings['padding_value']
@@ -73,7 +74,7 @@ dataloader_train, metadata_train = hdf_to_dataloader_pad_torch(settings['train_h
 print(f"\nMetadata for dataloader from file '{settings['train_hdf']}':")
 print_dictionary(metadata_train)
 
-dataloader_val,metadata_val = hdf_to_dataloader_pad_torch(settings['val_hdf'],
+dataloader_val,metadata_val = hdf_to_dataloader_pad(settings['val_hdf'],
                                             n_users=settings['num_users'],
                                             batch_size=settings['batch_size'],
                                             padding_value=settings['padding_value']
