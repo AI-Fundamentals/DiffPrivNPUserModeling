@@ -1,5 +1,5 @@
 
-def default_settings_ex2():
+def default_settings_ex2_train():
     """Returns a dictionary of settings for training a model for experiment 2.
     
     Returns

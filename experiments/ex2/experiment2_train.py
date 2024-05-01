@@ -14,7 +14,7 @@ from dppum.data import hdf_to_dataloader_pad
 from dppum.loss import np_elbo_cat_torch
 from dppum.util import print_dictionary
 from dppum.train import train_model_dp_torch, get_device_type
-from dppum.settings import default_settings_ex2
+from dppum.settings import default_settings_ex2_train
 
 # %%
 # Get GPU type
@@ -32,22 +32,22 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-settings", 
                     help="Path to settings json file.", 
                     type=str, 
-                    default="settings_ex2.json")
+                    default="settings_ex2_train.json")
 
 # Parsing the arguments to a dictionary
 settings_file_path = vars(parser.parse_args())['settings']
+
 # Load the settings file to json
 try:
     settings = json.load(settings_file_path)
     settings['settings_file_path'] = settings_file_path
 except:
-    settings = default_settings_ex2()
+    settings = default_settings_ex2_train()
     settings['settings_file_path'] = "Default"
     
 # Calculate delta
 if not settings['delta']:
     settings['delta'] = 1 / (settings['num_users'])**2
-
 
 # Save the command line args to a json in model save folder
 # Check if the directory exists
