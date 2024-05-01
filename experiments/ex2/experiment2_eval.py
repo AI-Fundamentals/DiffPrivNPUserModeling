@@ -28,73 +28,60 @@ parser.add_argument("-settings",
                     default="settings/settings_ex2_test.json")
 
 # Parsing the arguments to a dictionary
-settings_file_path = vars(parser.parse_args())['settings']
+test_settings_file_path = vars(parser.parse_args())['settings']
 
 # Load the settings file to json
 try:
-    print(f"Trying to load settings from '{settings_file_path}'")
-    with open(settings_file_path, 'r') as f:
-        settings = json.load(f)
-    settings['settings_file_path'] = settings_file_path
+    print(f"Trying to load settings from '{test_settings_file_path}'")
+    with open(test_settings_file_path, 'r') as f:
+        test_settings = json.load(f)
+    test_settings['test_settings_file_path'] = test_settings_file_path
     print("Loaded settings successfully.")
 except Exception as e:
     print("Failed to load settings due to the following error:", e)
     print("\nUsing default settings from function default_settings_ex2_test().")
-    settings = default_settings_ex2_test()
-    settings['settings_file_path'] = "Default"
+    test_settings = default_settings_ex2_test()
+    test_settings['settings_file_path'] = "Default"
 
 # Save the command line args to a json in model save folder
 # Check if the directory exists
-if not os.path.exists(settings['models_dir']):
+if not os.path.exists(test_settings['models_dir']):
     # If not, create the directory
-    os.makedirs(settings['models_dir'])
+    os.makedirs(test_settings['models_dir'])
 
 # Save settings to models dir
-with open(os.path.join(settings['models_dir'], "test_settings.json"), 'w') as json_file:
-    json.dump(settings, json_file,indent=4)
+with open(os.path.join(test_settings['models_dir'], "test_settings.json"), 'w') as json_file:
+    json.dump(test_settings, json_file,indent=4)
 
-print("Finished loading settings.")
+print("Finished loading test settings.")
 
-
-# %% Load training arguments/metadata
-training_args_path = os.path.join(args['models_dir'],'train_command_line_args.json')
-training_loop_args_path = os.path.join(args['models_dir'],'training_loop_args.json')
+# %% Load training settings
+train_settings_path = os.path.join(test_settings['models_dir'],'train_settings.json')
 
 # The command line arguments passed to the training script
-with open(training_args_path, 'r') as f:
+with open(train_settings_path, 'r') as f:
     # Load JSON data from file
-    training_args = json.load(f)
+    train_settings = json.load(f)
 
-# The arguments passed to the training loop function
-with open(training_loop_args_path, 'r') as f:
-    # Load JSON data from file
-    training_loop_args = json.load(f)
-    
+print("Finished loading training settings.")    
     
 # %% A list of the training epochs
-if training_args['warmup_epoch']:
-    epochs = np.arange(0,training_args['num_epochs']+1)
+if train_settings['warmup_epoch']:
+    epochs = np.arange(0,train_settings['num_epochs']+1)
 else:
-    epochs = np.arange(1,training_args['num_epochs']+1)
+    epochs = np.arange(1,train_settings['num_epochs']+1)
 
 
 # %% Load the test dataset
 
 # Load and prepare the data
-dataset, dataset_metadata = hdf_to_tf_dataset(args['test_hdf'],dtype=tf.float32)
-print(f"\nOriginal metadata for file '{args['test_hdf']}':")
-print_dictionary(dataset_metadata)
-
-dataset = dataset.shuffle(dataset_metadata['n_minibatches']).take(args['num_batches'])
-dataset_metadata['n_minibatches'] = args['num_batches']
-num_users = len(list(dataset)) * dataset_metadata['batch_size']
-dataset_metadata['n_users'] = num_users
-print(f"Dataset prepared for {num_users} users, in {args['num_batches']} (mini)batches of size {dataset_metadata['batch_size']}.")
-print(f"\nUpdated metadata for file '{args['test_hdf']}':")
-print_dictionary(dataset_metadata)
-
-# Prefetch the data to make training more efficient
-dataset = dataset.prefetch(tf.data.AUTOTUNE)
+dataloader_test, metadata_test = hdf_to_dataloader_pad(test_settings['test_hdf'],
+                                            n_users=test_settings['num_users'],
+                                            batch_size=test_settings['batch_size'],
+                                            padding_value=test_settings['padding_value']
+                                            )
+print(f"\nMetadata for dataloader from file '{test_settings['test_hdf']}':")
+print_dictionary(metadata_test)
 
 print("Finished loading test dataset.")
 
