@@ -42,6 +42,7 @@ try:
     settings = json.load(settings_file_path)
     settings['settings_file_path'] = settings_file_path
 except:
+    print("Using default settings from function default_settings_ex2_train().")
     settings = default_settings_ex2_train()
     settings['settings_file_path'] = "Default"
     
