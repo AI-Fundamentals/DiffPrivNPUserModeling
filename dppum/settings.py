@@ -4,46 +4,49 @@ def default_settings_ex2():
     
     Returns
     -------
-    args_dict : dict
+    settings : dict
         A dictionary containing all the arguments for the function.
         The keys and values are as follows:
-        dataset_train : pytorch training dataset
-            The dataset to be used for training.
-        dataset_val : pytorch training dataset
-            The dataset to be used for validation during training.
-        num_epochs : int
-            The number of epochs for training.
-        epsilon : float
-            The privacy budget for differential privacy.
-        delta : float
-            The delta parameter for differential privacy, which. If not specified
-            then defaults to 1/(num_users)^2.
-        clipping_bound : float
-            The clipping bound c for the gradients.
-        optimizer_name : str
-            The name of the optimizer to be used, must be from this list:
-            ['Adam'].
-        learning_rate : float
-            The learning rate for the optimizer.
-        dp_enc : bool
-            Whether to use differential privacy for the encoder.
-        dp_dec : bool
-            Whether to use differential privacy for the decoder.
-        num_samples : int
-            The number of model samples from the latent space.
-        warmup_epoch : bool
-            Whether to use a warmup epoch. If True there will be one epoch (0)
-            where model performance is assessed but the model is not trained.
-        shuffle : bool
-            Whether to shuffle dataset_train before each epoch.
+        num_users : int
+            Number of users to load from the training data hdf.
+        batch_size : int
+            Number of users to put into each batch. Default is 4.
+        train_hdf : str
+            Path to the hdf file to load the training from.
+        val_hdf : str
+            Path to the hdf file to load the val from.
         models_dir : str
-            The directory where the trained model will be saved.
-        padding_values : float
-            Padding value which will be discarded during the loss/accuracy calculations.
+            The folder to save the trained models.
+        figs_dir : str
+            The folder for output figures.
+        num_samples : int
+            Number of samples to take for model evaluation.
+        num_epochs : int
+            Number of training epochs.
+        epsilon : float
+            Epsilon parameter in differential privacy.
+        clipping_bound : float
+            L2 clipping bound parameter in differential privacy.
         clip_grads_per_user : str
-            If set to 'false', model gradients will be calculated once per batch like normal.
-            If set to 'loop', gradients will be calculated (and clipped if appropriate)
-            for each user in the batch individually by looping through them.
+            Method to clip gradients per user. ('loop'/'vectorize'/'false').
+        learning_rate : float
+            Learning rate for model training.
+        warmup_epoch : bool
+            Use a warmup epoch 0 to test the untrained model.
+        dp_enc : bool
+            Use differential privacy for the encoder during training.
+        dp_dec : bool
+            Use differential privacy for the decoder during training.
+        shuffle : bool
+            Shuffle the training dataset at the start of each epoch.
+        optimizer : str
+            Name of the optimizer to be used for training. Valid values are:
+            ['Adam'].
+        padding_value : float
+            Value to use for padding during batching. Should be a value that is
+            not in the scope of the real data (e.g. use -1 for one-hot encoded
+            categorical data.)
+        
     """ 
     
     settings = {
@@ -61,7 +64,6 @@ def default_settings_ex2():
     "clip_grads_per_user": "loop",
     "learning_rate": 0.0005,
     "warmup_epoch": False,
-    "clip_user": "loop",
     "dp_enc" : True,
     "dp_dec" : False,
     "shuffle" : False,
