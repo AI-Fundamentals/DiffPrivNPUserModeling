@@ -68,6 +68,6 @@ def default_settings_ex2_train():
     "dp_dec" : False,
     "shuffle" : False,
     "optimizer" : "Adam",
-    "padding_value" : -1.
+    "padding_value" : -1.0
     }
     return settings
