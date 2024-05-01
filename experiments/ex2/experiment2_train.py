@@ -63,9 +63,7 @@ print("Finished loading settings.")
 
 
 # %%
-settings['warmup_epoch'] = True
-padding_values = -1.
-dataloader_train, metadata_train = hdf_to_dataloader_pad_torch(settings['train_hdf'],
+# Load training and validation data
 dataloader_train, metadata_train = hdf_to_dataloader_pad(settings['train_hdf'],
                                             n_users=settings['num_users'],
                                             batch_size=settings['batch_size'],

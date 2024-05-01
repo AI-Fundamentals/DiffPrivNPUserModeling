@@ -63,7 +63,7 @@ def default_settings_ex2():
     "clipping_bound": 2.0,
     "clip_grads_per_user": "loop",
     "learning_rate": 0.0005,
-    "warmup_epoch": False,
+    "warmup_epoch": True,
     "dp_enc" : True,
     "dp_dec" : False,
     "shuffle" : False,
