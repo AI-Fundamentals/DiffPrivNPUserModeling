@@ -1,11 +1,10 @@
 # %% Load packages
 
-import neuralprocesses.tensorflow as nps
+import neuralprocesses.torch as nps
 import lab as B
 import argparse
 import os
-import tensorflow as tf
-import tensorflow.keras.backend as K
+import torch
 import numpy as np
 import pandas as pd
 import json
