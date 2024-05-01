@@ -5,7 +5,7 @@ These come from the DP user modelling Julia code
 
 import lab as B
 
-def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,padding_value=None,avg=True):
+def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,padding_values=None,avg=True):
     """
     Calculate the categorical accuracy of one-hot encoded predictions and true
     labels using linear algebra backend.
@@ -18,10 +18,6 @@ def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,padding_value=None,avg=True):
         Predicted labels, one-hot encoded.
     cat_axis : int, optional
         The axis that represents categories, by default -1.
-    padding_value : [float,array-like], optional
-        Value or array of values that represent padding in y_true and y_pred.
-        If array, must be the same shape as either y_true or y_true averaged
-        over the categorical axis.
     avg : bool, optional
         If true this will return one value. If false, the average will be the
         shape of 'y_true' collapsed over 'cat_axis'.
@@ -53,19 +49,19 @@ def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,padding_value=None,avg=True):
     y_pred_cat = B.argmax(y_pred,cat_axis)    
     
     # If there is padding, make sure we set the reconstruction loss to zero
-    if padding_value is not None:  # It gives an error if you do "if padding_value:"
+    if padding_values is not None:  # It gives an error if you do "if padding_values:"
         # If padding is a single value
-        if B.size(padding_value) == 1:
+        if B.size(padding_values) == 1:
             # Identify the padding
-            padding_mask = (y_true == padding_value)
+            padding_mask = (y_true == padding_values)
             padding_mask = B.any(padding_mask, axis=cat_axis)
-        elif B.shape(padding_value) == B.shape(y_true):
+        elif B.shape(padding_values) == B.shape(y_true):
             # padding is already a mask
-            padding_mask = B.any(padding_value, axis=cat_axis)
-        elif B.shape(padding_value) == B.shape(y_true_cat):
-            padding_mask = padding_value
+            padding_mask = B.any(padding_values, axis=cat_axis)
+        elif B.shape(padding_values) == B.shape(y_true_cat):
+            padding_mask = padding_values
         else:
-            raise ValueError("'padding_value' must be either a single value or a bool array either the same shape as 'yt' or the shape of 'yt' collapsed along the categorical axis.")
+            raise ValueError("'padding_values' must be either a single value or a bool array either the same shape as 'yt' or the shape of 'yt' collapsed along the categorical axis.")
         
         # Calculate the accuracy only for the non-padding parts
         accuracy = B.cast(B.dtype(y_true),y_true_cat[~padding_mask] == y_pred_cat[~padding_mask])
@@ -96,7 +92,7 @@ def calc_cat_confidence(y_pred_onehot, cat_axis=-1, padding_mask=None):
         One-hot encoded predicted values.
     cat_axis : int
         The categorical axis. Default value is -1.
-    padding_value : Union[float, B.Tensor], optional
+    padding_values : Union[float, tf.Tensor], optional
         Padding mask which will be discarded during the loss calculations.
         Must be either a boolean tensor  either the same shape as 
         `y_pred_onehot` or as 'y_pred_onehot' collapsed along 'cat_axis'.
@@ -186,43 +182,8 @@ def reshape_to_last(tensor, axis):
     # Append the specified axis at the end
     dims.append(axis)
 
-    # Reshape the tensor
+    # Use tf.transpose to reshape the tensor
     return B.transpose(tensor, dims)
-
-
-
-def swap_axes(tensor, axis1, axis2):
-    """
-    Swap two specified axes of a tensor.
-
-    Args:
-        tensor (B.Tensor): The input tensor.
-        axis1 (int): The first axis to swap. Can be negative.
-        axis2 (int): The second axis to swap. Can be negative.
-
-    Returns:
-        B.Tensor: The tensor with swapped axes.
-    """
-    
-    if axis1 >= len(tensor.shape) or axis2 >= len(tensor.shape):
-        raise IndexError("Axis value is greater than tensor dimensions")
-    
-    # If the axes are negative, adjust them to be positive
-    if axis1 < 0:
-        axis1 = len(B.shape(tensor)) + axis1
-    if axis2 < 0:
-        axis2 = len(B.shape(tensor)) + axis2
-
-    # Get the list of dimensions
-    dims = list(range(len(B.shape(tensor))))
-
-    # Swap the specified axes
-    dims[axis1], dims[axis2] = dims[axis2], dims[axis1]
-
-    # Reshape the tensor
-    return B.transpose(tensor, dims)
-
-
 
 
 def logpdf_explicit(d, x, axis=-1):
@@ -241,7 +202,7 @@ def logpdf_explicit(d, x, axis=-1):
 
     Returns
     -------
-    B.Tensor
+    tf.Tensor
         A tensor representing the natural logarithm of the maximum product along each row.
 
     """

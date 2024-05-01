@@ -1,92 +1,156 @@
-import neuralprocesses.torch as nps
+# Load packages
+import tensorflow as tf
+import neuralprocesses.tensorflow as nps
 import argparse
 import os
+import tensorflow.keras.backend as K
 import numpy as np
 import json
 import matplotlib.pyplot as plt
 import datetime as dt
-import lab as B
-import torch
 
-import pdb
-
-from dppum.data import hdf_to_dataloader_pad
-from dppum.loss import np_elbo_cat_torch
+from dppum.data import hdf_to_dataset_pad_tf
+from dppum.loss import np_elbo_tf_cat
 from dppum.util import print_dictionary
-from dppum.train import train_model_dp_torch, get_device_type
-from dppum.settings import default_settings_ex2_train
+from dppum.train import train_model_dp_tf
 
-# %%
-# Get GPU type
-device = get_device_type()
-B.set_global_device(device)
-nps.lab.set_global_device(device)
+print("Finished importing packages.")
 
 
 # %%
-# Parse the settings file from the command line argument
+# Parse any command line arguments
 
 # Creating the ArgumentParser instance
 parser = argparse.ArgumentParser()
 
-parser.add_argument("-settings", 
-                    help="Path to settings json file.", 
-                    type=str, 
-                    default="settings/settings_ex2_train.json")
+# Adding arguments to the parser
+parser.add_argument("--num_users", 
+                    help="Number of users to load from the training data hdf.", 
+                    type=int, 
+                    default=128)
+
+parser.add_argument("--batch_size", 
+                    help="Number of users to put into each batch.", 
+                    type=int, 
+                    default=4)
+
+parser.add_argument("--train_hdf", 
+                    help="The file to load the training from.", 
+                    type=str,
+                    default="data/ex2/experiment2_training_data.hdf")
+
+parser.add_argument("--test_hdf", 
+                    help="The file to load the training from.", 
+                    type=str,
+                    default="data/ex2/experiment2_test_data.hdf")
+
+parser.add_argument("--models_dir", 
+                    help="The folder to save the trained models.", 
+                    type=str,
+                    default="models/ex2/")
+
+parser.add_argument("--figs_dir", 
+                    help="The folder for output figures.", 
+                    type=str,
+                    default="figures/ex2/")
+
+parser.add_argument("--num_samples", 
+                    help="Number of samples to take for model evaluation.", 
+                    type=int,
+                    default=5)
+
+parser.add_argument("--num_epochs", 
+                    help="Number of training epochs.", 
+                    type=int,
+                    default=5)
+
+parser.add_argument("--epsilon",
+                    "--eps",
+                    help="Epsilon parameter in differential privacy.", 
+                    type=float,
+                    default=1.0)
+
+parser.add_argument("--clipping_bound",
+                    "--cbound", 
+                    help="L2 clipping bound parameter in differential privacy.", 
+                    type=float,
+                    default=2.0)
+
+parser.add_argument("--learning_rate",
+                    "--lr",
+                    help="Learning rate for model training.", 
+                    type=float,
+                    default=5e-4)
+
+# Flag for a warmup epoch (i.e. testing the untrained model)
+parser.add_argument("--warmup_epoch", 
+                    help="Use a warmup epoch 0 (True/False)", 
+                    type=bool,
+                    default=False)
+
+# Cache/prefetch the data for faster training. However this will cause problems
+# if the dataset is too large to fit in memory
+parser.add_argument("--cache", 
+                    help="Cache/Prefetch the data for faster training (True/False)", 
+                    type=bool,
+                    default=False)
+
+parser.add_argument("--clip_user", 
+                    help="Method to clip gradients per user. ('loop'/'vectorize'/'false')", 
+                    type=str,
+                    default='loop')
 
 # Parsing the arguments to a dictionary
-settings_file_path = vars(parser.parse_args())['settings']
-
-# Load the settings file to json
-try:
-    print(f"Trying to load settings from '{settings_file_path}'")
-    with open(settings_file_path, 'r') as f:
-        settings = json.load(f)
-    settings['settings_file_path'] = settings_file_path
-    print("Loaded settings successfully.")
-except Exception as e:
-    print("Failed to load settings due to the following error:", e)
-    print("\nUsing default settings from function default_settings_ex2_train().")
-    settings = default_settings_ex2_train()
-    settings['settings_file_path'] = "Default"
-    
-# Calculate delta
-if not settings['delta']:
-    settings['delta'] = 1 / (settings['num_users'])**2
+args = vars(parser.parse_args())
 
 # Save the command line args to a json in model save folder
-# Check if the directory exists
-if not os.path.exists(settings['models_dir']):
-    # If not, create the directory
-    os.makedirs(settings['models_dir'])
+if args['models_dir']:
+    # Check if the directory exists
+    if not os.path.exists(args['models_dir']):
+        # If not, create the directory
+        os.makedirs(args['models_dir'])
+    
+    # Write command line arguments to JSON file
+    with open(os.path.join(args['models_dir'], "train_command_line_args.json"), 'w') as json_file:
+        json.dump(args, json_file,indent=4)
 
-# Save settings to models dir
-with open(os.path.join(settings['models_dir'], "train_settings.json"), 'w') as json_file:
-    json.dump(settings, json_file,indent=4)
-
-print("Finished loading settings.")
-
+print("Finished parsing command line arguments.")
 
 # %%
-# Load training and validation data
-dataloader_train, metadata_train = hdf_to_dataloader_pad(settings['train_hdf'],
-                                            n_users=settings['num_users'],
-                                            batch_size=settings['batch_size'],
-                                            padding_value=settings['padding_value']
+# Load the train and test data
+
+padding_values = -1.
+dataset_train,metadata_train = hdf_to_dataset_pad_tf(args['train_hdf'],
+                                            n_users=args['num_users'],
+                                            batch_size=args['batch_size'],
+                                            padding_values=padding_values
                                             )
-print(f"\nMetadata for dataloader from file '{settings['train_hdf']}':")
+print(f"\nMetadata for file '{args['train_hdf']}':")
 print_dictionary(metadata_train)
 
-dataloader_val,metadata_val = hdf_to_dataloader_pad(settings['val_hdf'],
-                                            n_users=settings['num_users'],
-                                            batch_size=settings['batch_size'],
-                                            padding_value=settings['padding_value']
-                                            )
-print(f"\nMetadata for dataloader from file '{settings['val_hdf']}':")
-print_dictionary(metadata_val)
 
+dataset_test,metadata_test = hdf_to_dataset_pad_tf(args['test_hdf'],
+                                            n_users=128,
+                                            batch_size=args['batch_size'],
+                                            padding_values=padding_values
+                                            )
+print(f"\nMetadata for file '{args['test_hdf']}':")
+print_dictionary(metadata_test)
+
+
+if args['cache']:
+    # Cache and prefetch the data to make training more efficient
+    dataset_train = dataset_train.cache()
+    dataset_train = dataset_train.prefetch(tf.data.AUTOTUNE)
+    
+    dataset_test = dataset_test.cache()
+    dataset_test = dataset_test.prefetch(tf.data.AUTOTUNE)
+
+print("Finished loading training dataset.")
 
 # %%
+# Clear any previous models from memory
+K.clear_session()
 
 # Construct the model
 model_ex2 = nps.construct_agnp(
@@ -99,30 +163,34 @@ model_ex2 = nps.construct_agnp(
     nonlinearity='LeakyReLU' # Specified in appendix
     )
 
-model_ex2 = model_ex2.to(device)
-
 print("Finished constructing the model.")
 
-# %%
-# Setup optimizer
-valid_optimizers = ['Adam']
-if settings['optimizer'] == 'Adam':
-    optimizer = torch.optim.Adam(model_ex2.parameters(), lr=settings['learning_rate'])
-else:
-    raise ValueError(f"Invalid optimizer name. Expected one of: {valid_optimizers}")
 
-# %%
-# Train model using train_model_dp_torch function
+
+# %% 
+# Train model using train_model_dp_tf function
+
 time_start = dt.datetime.now()
 
-history = train_model_dp_torch(
+history = train_model_dp_tf(
     model_ex2,
-    dataloader_train,
+    dataset_train,
     metadata_train,
-    loss_fn=np_elbo_cat_torch,
-    optimizer=optimizer,
-    settings=settings,
-    dataloader_val = dataloader_val
+    dataset_test = dataset_test,
+    loss_fn=np_elbo_tf_cat,
+    num_epochs=args['num_epochs'],
+    epsilon=args['epsilon'],
+    clipping_bound=args['clipping_bound'],
+    optimizer_name='Adam',
+    learning_rate=args['learning_rate'],
+    dp_enc=True,
+    dp_dec=False,
+    num_samples=args['num_samples'],
+    warmup_epoch=args['warmup_epoch'],
+    shuffle=False,
+    model_save_dir = args['models_dir'],
+    padding_values=padding_values,
+    clip_grads_per_user=args['clip_user']
     )
 
 time_end = dt.datetime.now()
@@ -136,7 +204,7 @@ print(f"Training time: {'{:.2f}'.format(training_time.total_seconds()/60)} minut
 # Make output folders
 fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8, 6), sharex=True)
 
-if settings['warmup_epoch']:
+if args['warmup_epoch']:
     epochs_list = np.arange(len(history['loss']))
 else:
     epochs_list = np.arange(len(history['loss'])) + 1
@@ -156,17 +224,20 @@ ax[1].set_ylabel('Values')
 ax[0].legend()
 ax[1].legend()
 
+# Make loss y axis logscale
+#ax[0].set_yscale('symlog')
+
 # Display the plot when running in Spyder
 plt.tight_layout()
 plt.show()
 
 # Check if the directory exists
-if not os.path.exists(settings['figs_dir']):
+if not os.path.exists(args['figs_dir']):
     # If not, create the directory
-    os.makedirs(settings['figs_dir'])
+    os.makedirs(args['figs_dir'])
 
 # Save the figure
-fig.savefig(os.path.join(settings['figs_dir'],'experiment2_training_metrics.png'))
+fig.savefig(os.path.join(args['figs_dir'],'experiment2_training_metrics.png'))
 
 print("Finished plotting training metrics.")
 
