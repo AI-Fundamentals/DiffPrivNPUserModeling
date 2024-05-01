@@ -2,7 +2,7 @@
 Differentially Private Probabilistic User Modelling (in python)
 
 
-## Installation instructions
+#### Installation instructions
 1. Create and activate a python 3.9 environment
 2. Install packages from pip:
 
@@ -27,21 +27,25 @@ Differentially Private Probabilistic User Modelling (in python)
     pip install git+https://github.com/wesselb/neuralprocesses.git
     ```
 
-6. (Not currently implemented) Test the environment installation:
+6. Test the environment installation:
 
     ```
-    pytest tests/test_nps_tf.py
+    pytest tests/test_nps.py
     ```
     
 
-## Example usage
-### Note about needing the training data
 
-For training with 6400 users (4 per batch)
+#### Training data
+This repo requires pre-computed data which are generated using [this Julia code](https://github.com/AI-Fundamentals/DifferentiableUserModels-DataGen).
+
+#### Example usage
+To run the training for experiment 2:
 
 ```
-python -m experiments.ex2.experiment2_train --num_users 6400
+python -m experiments.ex2.experiment2_train -settings settings/settings_ex2_train.json
 ```
+Settings must be loaded from a valid `json` file. If no valid file is found (or the `-settings` argument isn't used), the default settings will be loaded instead. For full details of the settings file, see the docstrings in [dppum/settings.py](dppum/settings.py).
+
 
 ## Workflow
 1. Run training script. Load training data from data folder. Save model weights and metadata parameters in models folder. Save training metrics plot to figures folder.
