@@ -40,12 +40,12 @@ class AverageMeter(object):
 
 def train_model_dp_torch(
     model,
-    dataset_train,
-    dataset_train_metadata,
+    dataloader_train,
+    dataloader_train_metadata,
     loss_fn,
     optimizer,
     settings,
-    dataset_val=None    
+    dataloader_val=None    
 ):
     
     """
@@ -56,11 +56,11 @@ def train_model_dp_torch(
     ----------
     model : neuralprocesses.torch.Model
         The model to be trained.
-    dataset_train : torch.utils.data.DataLoader
-        The dataset to be used for training.
-    dataset_train_metadata : dict
+    dataloader_train : torch.utils.data.DataLoader
+        The dataloader to be used for training.
+    dataloader_train_metadata : dict
         A dictionary with keys 'n_users', 'n_minibatches' representing the
-        metadata of dataset_train.
+        metadata of dataloader_train.
     loss_fn : callable
         The loss function to be used for training. Must be from the file
         dppum.loss
@@ -93,7 +93,7 @@ def train_model_dp_torch(
             Whether to use a warmup epoch. If True there will be one epoch (0)
             where model performance is assessed but the model is not trained.
         shuffle : bool
-            Whether to shuffle dataset_train before each epoch.
+            Whether to shuffle dataloader_train before each epoch.
         models_dir : str
             The directory where the trained model will be saved.
         padding_value : float
@@ -102,8 +102,8 @@ def train_model_dp_torch(
             If set to 'false', model gradients will be calculated once per batch like normal.
             If set to 'loop', gradients will be calculated (and clipped if appropriate)
             for each user in the batch individually by looping through them.
-    dataset_val : torch.utils.data.DataLoader
-        The dataset to be used for validation during training.
+    dataloader_val : torch.utils.data.DataLoader
+        The dataloader to be used for validation during training.
 
     Returns
     -------
@@ -116,9 +116,9 @@ def train_model_dp_torch(
     """
     
     # The number of times the gradients will be updated during training
-    num_repeats = dataset_train_metadata['n_batches'] * settings['num_epochs']
+    num_repeats = dataloader_train_metadata['n_batches'] * settings['num_epochs']
     # The fraction of the data that is used in each minibatch
-    subsampling_rate = 1/dataset_train_metadata['n_batches']
+    subsampling_rate = 1/dataloader_train_metadata['n_batches']
     # Calculate sigma
     sigma = get_sigma(settings['epsilon'], settings['delta'], num_repeats, subsampling_rate)
 
@@ -127,14 +127,14 @@ def train_model_dp_torch(
     train_accuracy_per_epoch = AverageMeter()
     loss_per_epoch = AverageMeter()
     mean_confidence_per_epoch = AverageMeter()
-    if dataset_val:
+    if dataloader_val:
         val_accuracy_per_epoch = AverageMeter()
     
     # Define lists to store the metrics for all epochs
     train_accuracy_all_epochs = []
     loss_all_epochs = []
     mean_confidence_all_epochs = []    
-    if dataset_val:
+    if dataloader_val:
         val_accuracy_all_epochs = []
     
     # Use warmup epoch (or not)
@@ -241,17 +241,17 @@ def train_model_dp_torch(
         
         # Shuffle the training dataset
         if settings['shuffle']:
-            dataset_train = dataset_train.shuffle(buffer_size=dataset_train_metadata['n_batches'])
+            dataloader_train = dataloader_train.shuffle(buffer_size=dataloader_train_metadata['n_batches'])
         
         # Reset epoch metrics
         train_accuracy_per_epoch.reset()
         loss_per_epoch.reset()
         mean_confidence_per_epoch.reset()
-        if dataset_val:
+        if dataloader_val:
             val_accuracy_per_epoch.reset()
 
         # Iterate over the batches of the training dataset.
-        for step, (xc, yc, xt, yt) in enumerate(dataset_train):
+        for step, (xc, yc, xt, yt) in enumerate(dataloader_train):
 
             xc = xc.to(training_device)
             yc = yc.to(training_device)
@@ -345,8 +345,8 @@ def train_model_dp_torch(
         
         
         # Calculate accuracy using validation dataset
-        if dataset_val:            
-            for step, (xc, yc, xt, yt) in enumerate(dataset_val):
+        if dataloader_val:            
+            for step, (xc, yc, xt, yt) in enumerate(dataloader_val):
                 # Move tensors to training device (GPU)
                 xc = xc.to(training_device)
                 yc = yc.to(training_device)
@@ -396,7 +396,7 @@ def train_model_dp_torch(
         'cat_confidence' : mean_confidence_all_epochs,
         'epoch' : epochs
         }
-    if dataset_val:
+    if dataloader_val:
         history['val_accuracy'] = val_accuracy_all_epochs
     
     
