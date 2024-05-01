@@ -7,6 +7,10 @@ def default_settings_ex2():
     args_dict : dict
         A dictionary containing all the arguments for the function.
         The keys and values are as follows:
+        dataset_train : pytorch training dataset
+            The dataset to be used for training.
+        dataset_val : pytorch training dataset
+            The dataset to be used for validation during training.
         num_epochs : int
             The number of epochs for training.
         epsilon : float
@@ -46,7 +50,7 @@ def default_settings_ex2():
     "num_users": 128,
     "batch_size": 4,
     "train_hdf": "data/ex2/experiment2_training_data.hdf",
-    "test_hdf": "data/ex2/experiment2_test_data.hdf",
+    "val_hdf": "data/ex2/experiment2_val_data.hdf",
     "models_dir": "models/ex2/",
     "figs_dir": "figures/ex2/",
     "num_samples": 1,

@@ -45,7 +45,7 @@ def train_model_dp_torch(
     loss_fn,
     optimizer,
     settings,
-    dataset_test=None    
+    dataset_val=None    
 ):
     
     """
@@ -54,9 +54,9 @@ def train_model_dp_torch(
 
     Parameters
     ----------
-    model : neuralprocesses.tensorflow.Model
+    model : neuralprocesses.torch.Model
         The model to be trained.
-    dataset_train : tensorflow training dataset
+    dataset_train : torch.utils.data.DataLoader
         The dataset to be used for training.
     dataset_train_metadata : dict
         A dictionary with keys 'n_users', 'n_minibatches' representing the
@@ -66,7 +66,7 @@ def train_model_dp_torch(
         dppum.loss
     optimizer : torch.optim.Optimizer
         The optimizer to use for training.
-    args_dict : dict
+    settings : dict
         A dictionary containing all the arguments for the function.
         The keys and values are as follows:
         num_epochs : int
@@ -102,6 +102,8 @@ def train_model_dp_torch(
             If set to 'false', model gradients will be calculated once per batch like normal.
             If set to 'loop', gradients will be calculated (and clipped if appropriate)
             for each user in the batch individually by looping through them.
+    dataset_val : torch.utils.data.DataLoader
+        The dataset to be used for validation during training.
 
     Returns
     -------
@@ -125,15 +127,15 @@ def train_model_dp_torch(
     train_accuracy_per_epoch = AverageMeter()
     loss_per_epoch = AverageMeter()
     mean_confidence_per_epoch = AverageMeter()
-    if dataset_test:
-        test_accuracy_per_epoch = AverageMeter()
+    if dataset_val:
+        val_accuracy_per_epoch = AverageMeter()
     
     # Define lists to store the metrics for all epochs
     train_accuracy_all_epochs = []
     loss_all_epochs = []
     mean_confidence_all_epochs = []    
-    if dataset_test:
-        test_accuracy_all_epochs = []
+    if dataset_val:
+        val_accuracy_all_epochs = []
     
     # Use warmup epoch (or not)
     if settings['warmup_epoch']:
@@ -245,8 +247,8 @@ def train_model_dp_torch(
         train_accuracy_per_epoch.reset()
         loss_per_epoch.reset()
         mean_confidence_per_epoch.reset()
-        if dataset_test:
-            test_accuracy_per_epoch.reset()
+        if dataset_val:
+            val_accuracy_per_epoch.reset()
 
         # Iterate over the batches of the training dataset.
         for step, (xc, yc, xt, yt) in enumerate(dataset_train):
@@ -342,9 +344,9 @@ def train_model_dp_torch(
         print(f"Mean confidence of predictions: {np.round(float(mean_confidence_all_epochs[-1]),3)}")
         
         
-        # Calculate accuracy using test dataset
-        if dataset_test:            
-            for step, (xc, yc, xt, yt) in enumerate(dataset_test):
+        # Calculate accuracy using validation dataset
+        if dataset_val:            
+            for step, (xc, yc, xt, yt) in enumerate(dataset_val):
                 # Move tensors to training device (GPU)
                 xc = xc.to(training_device)
                 yc = yc.to(training_device)
@@ -365,13 +367,13 @@ def train_model_dp_torch(
                         model,xc, yc, xt, num_samples=settings['num_samples'], dtype_lik=torch.float32
                         ) 
                 
-                # Accuracy of the non-padding values for the test data
+                # Accuracy of the non-padding values for the validation data
                 accuracy=calc_cat_acc_onehot(yt,yt_pred,cat_axis=-2,padding_value=padding_mask)
-                test_accuracy_per_epoch.update(accuracy)
+                val_accuracy_per_epoch.update(accuracy)
             
             # Append to epoch metric
-            test_accuracy_all_epochs.append(test_accuracy_per_epoch.result())
-            print(f"Mean test accuracy: {np.round(float(test_accuracy_all_epochs[-1]),3)}")
+            val_accuracy_all_epochs.append(val_accuracy_per_epoch.result())
+            print(f"Mean val accuracy: {np.round(float(val_accuracy_all_epochs[-1]),3)}")
         
         
         if settings['models_dir']:
@@ -394,8 +396,8 @@ def train_model_dp_torch(
         'cat_confidence' : mean_confidence_all_epochs,
         'epoch' : epochs
         }
-    if dataset_test:
-        history['test_accuracy'] = test_accuracy_all_epochs
+    if dataset_val:
+        history['val_accuracy'] = val_accuracy_all_epochs
     
     
     # Save the history to CSV

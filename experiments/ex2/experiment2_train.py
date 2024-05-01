@@ -73,13 +73,13 @@ dataset_train, metadata_train = hdf_to_dataset_pad_torch(settings['train_hdf'],
 print(f"\nMetadata for dataset from file '{settings['train_hdf']}':")
 print_dictionary(metadata_train)
 
-dataset_test,metadata_test = hdf_to_dataset_pad_torch(settings['test_hdf'],
+dataset_val,metadata_val = hdf_to_dataset_pad_torch(settings['val_hdf'],
                                             n_users=settings['num_users'],
                                             batch_size=settings['batch_size'],
                                             padding_value=settings['padding_value']
                                             )
-print(f"\nMetadata for dataset from file '{settings['test_hdf']}':")
-print_dictionary(metadata_test)
+print(f"\nMetadata for dataset from file '{settings['val_hdf']}':")
+print_dictionary(metadata_val)
 
 
 # %%
@@ -118,7 +118,7 @@ history = train_model_dp_torch(
     loss_fn=np_elbo_cat_torch,
     optimizer=optimizer,
     settings=settings,
-    dataset_test = dataset_test
+    dataset_val = dataset_val
     )
 
 time_end = dt.datetime.now()
