@@ -233,11 +233,11 @@ def train_model_dp_torch(
     
         
     print("Starting training loop")
-    model.train()
     epochs = list(range(first_epoch, max(settings['num_epochs'], first_epoch) + 1))
     # Run the training loop
     for epoch in epochs:
         print(f"""######## Start of epoch {epoch} ########""")
+        model.train()
         
         # Shuffle the training dataset
         if settings['shuffle']:
@@ -306,13 +306,18 @@ def train_model_dp_torch(
             if epoch > 0:
                 optimizer.step()
 
-            # Assess accuracy after updating model weights
-            with torch.no_grad():
-                yt_pred, _, _, _ = nps.predict(
-                    model,xc, yc, xt, num_samples=settings['num_samples'], dtype_lik=torch.float32
-                    )
+
+        ##### End of epoch calculations #####
+        model.eval()
+        
+        # Assess accuracy and confidence of predictions using training dataset
+        for step, (xc, yc, xt, yt) in enumerate(dataloader_train):
+            # Move tensors to training device (GPU)
+            xc = xc.to(training_device)
+            yc = yc.to(training_device)
+            xt = xt.to(training_device)
+            yt = yt.to(training_device)
             
-            # Create mask for the padding
             if settings['padding_value']:
                 # A mask for where the padding is. This is the same shape as the batch
                 padding_mask = (yt == settings['padding_value'])
@@ -321,6 +326,11 @@ def train_model_dp_torch(
             else:
                 padding_mask = None
             
+            # Forward pass
+            with torch.no_grad():
+                yt_pred, _, _, _ = nps.predict(
+                    model,xc, yc, xt, num_samples=settings['num_samples'], dtype_lik=torch.float32
+                    ) 
             # Accuracy of the non-padding values
             accuracy=calc_cat_acc_onehot(yt,yt_pred,cat_axis=-2,padding_value=padding_mask)
             # Mean confidence of the non-padding values
@@ -329,10 +339,8 @@ def train_model_dp_torch(
             # Update accuracy and confidence metrics
             train_accuracy_per_epoch.update(accuracy)
             mean_confidence_per_epoch.update(confidence)
-
-
-        ##### End of epoch calculations #####
-
+        
+        
         # Append to epoch metrics
         loss_all_epochs.append(loss_per_epoch.result())
         train_accuracy_all_epochs.append(train_accuracy_per_epoch.result())
