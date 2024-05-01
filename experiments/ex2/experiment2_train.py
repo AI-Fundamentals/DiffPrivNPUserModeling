@@ -39,10 +39,14 @@ settings_file_path = vars(parser.parse_args())['settings']
 
 # Load the settings file to json
 try:
-    settings = json.load(settings_file_path)
+    print(f"Trying to load settings from '{settings_file_path}'")
+    with open(settings_file_path, 'r') as f:
+        settings = json.load(f)
     settings['settings_file_path'] = settings_file_path
-except:
-    print("Using default settings from function default_settings_ex2_train().")
+    print("Loaded settings successfully.")
+except Exception as e:
+    print("Failed to load settings due to the following error:", e)
+    print("\nUsing default settings from function default_settings_ex2_train().")
     settings = default_settings_ex2_train()
     settings['settings_file_path'] = "Default"
     
