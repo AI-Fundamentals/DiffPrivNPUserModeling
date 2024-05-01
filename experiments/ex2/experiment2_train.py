@@ -152,9 +152,6 @@ ax[1].set_ylabel('Values')
 ax[0].legend()
 ax[1].legend()
 
-# Make loss y axis logscale
-#ax[0].set_yscale('symlog')
-
 # Display the plot when running in Spyder
 plt.tight_layout()
 plt.show()
