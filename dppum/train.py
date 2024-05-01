@@ -50,7 +50,7 @@ def train_model_dp_torch(
     
     """
     Train a neural process model with differential privacy by streaming data
-    from a tensorflow dataset. The model is modified in-place.
+    from a torch dataloader. The model is modified in-place.
 
     Parameters
     ----------

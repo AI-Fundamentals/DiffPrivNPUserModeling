@@ -18,7 +18,7 @@ from dppum.util import (
 
 
 def test_calc_cat_acc_onehot():
-    # 1D tensorflow tensors
+    # 1D torch tensors
     y_pred = torch.tensor([0, 0, 1], dtype=torch.float32)
     y_true = torch.tensor([0, 0, 1], dtype=torch.float32)
     assert calc_cat_acc_onehot(y_true,y_pred) == 1.0
