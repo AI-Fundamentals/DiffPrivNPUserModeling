@@ -1,5 +1,5 @@
 import torch
-from dppum.torch.train import get_device_type, average_grads_batch_torch, AverageMeter
+from dppum.train import get_device_type, average_grads_batch_torch, AverageMeter
 
 def test_get_device_type():
     device = get_device_type()
@@ -19,7 +19,7 @@ def test_AverageMeter():
     averagemeter.update(torch.tensor(2.5))
     assert averagemeter.result() == 2
     
-def average_grads_batch_torch():
+def test_average_grads_batch_torch():
     tensor1_1 = torch.ones([10,11])
     tensor1_2 = torch.ones([10,11])*2
     tensor1_3 = torch.ones([10,11])*3
