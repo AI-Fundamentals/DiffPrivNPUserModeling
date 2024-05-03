@@ -17,6 +17,11 @@ from dppum.settings import default_settings_ex2_test
 print("Finished importing packages.")
 
 # %%
+# Get GPU type
+device = get_device_type()
+B.set_global_device(device)
+nps.lab.set_global_device(device)
+# %%
 # Parse the settings file from the command line argument
 
 # Creating the ArgumentParser instance
