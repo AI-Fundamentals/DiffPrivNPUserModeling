@@ -18,10 +18,9 @@ def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,padding_value=None,avg=True):
         Predicted labels, one-hot encoded.
     cat_axis : int, optional
         The axis that represents categories, by default -1.
-    padding_value : [float,array-like], optional
-        Value or array of values that represent padding in y_true and y_pred.
-        If array, must be the same shape as either y_true or y_true averaged
-        over the categorical axis.
+    padding_value : float, optional
+        Value that represents padding in y_true and y_pred. These values will
+        not be used in the averaging
     avg : bool, optional
         If true this will return one value. If false, the average will be the
         shape of 'y_true' collapsed over 'cat_axis', with the same padding as
@@ -48,7 +47,10 @@ def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,padding_value=None,avg=True):
     
     if B.shape(y_true) != B.shape(y_pred):
         raise ValueError("y_true and y_pred do not have the same shape.")
-    
+        
+    if padding_value is not None and B.size(padding_value) != 1:
+        raise ValueError("padding_value must be a single float.")
+        
     # Calculate the categories (i.e. not one-hot)
     y_true_cat = B.argmax(y_true,cat_axis)
     y_pred_cat = B.argmax(y_pred,cat_axis)    
@@ -57,19 +59,9 @@ def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,padding_value=None,avg=True):
     # categorical dimension
 
     # If there is padding, create the padding mask
-    if padding_value is not None:  # It gives an error if you do "if padding_value:"
-        # If padding is a single value
-        if B.size(padding_value) == 1:
-            # Identify the padding
-            padding_mask = (y_true == padding_value)
-            padding_mask = B.any(padding_mask, axis=cat_axis)
-        elif B.shape(padding_value) == B.shape(y_true):
-            # padding is already a mask
-            padding_mask = B.any(padding_value, axis=cat_axis)
-        elif B.shape(padding_value) == B.shape(y_true_cat):
-            padding_mask = padding_value
-        else:
-            raise ValueError("'padding_value' must be either a single value or a bool array either the same shape as 'yt' or the shape of 'yt' collapsed along the categorical axis.")
+    if padding_value is not None:
+        padding_mask = (y_true == padding_value)
+        padding_mask = B.any(padding_mask, axis=cat_axis)
     
     # Returns
     if avg:
