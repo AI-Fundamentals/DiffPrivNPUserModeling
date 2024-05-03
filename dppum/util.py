@@ -76,7 +76,7 @@ def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,padding_value=None,avg=True):
         return accuracy
 
 
-def calc_cat_confidence(y_pred_onehot, cat_axis=-1, padding_value=None):
+def calc_greedy_confidence(y_pred_onehot, cat_axis=-1, padding_value=None):
     """
     Calculate the mean confidence of the most likely prediction of a categorical.
 

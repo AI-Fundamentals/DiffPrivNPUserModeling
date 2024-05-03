@@ -7,7 +7,7 @@ import pandas as pd
 import neuralprocesses.torch as nps
 
 from dppum.privacy_oracle import get_sigma_from_privacy_loss_distribution as get_sigma
-from dppum.util import calc_cat_confidence, flatten_first_two_dims, calc_cat_acc_onehot
+from dppum.util import calc_greedy_confidence, flatten_first_two_dims, calc_cat_acc_onehot
   
     
 class AverageMeter(object):
@@ -326,7 +326,7 @@ def train_model_dp_torch(
             # Accuracy of the non-padding values
             accuracy=calc_cat_acc_onehot(yt,yt_pred,cat_axis=-2,padding_value=settings['padding_value'])
             # Mean confidence of the non-padding values
-            confidence = calc_cat_confidence(yt_pred,-2,padding_value=settings['padding_value'])
+            confidence = calc_greedy_confidence(yt_pred,-2,padding_value=settings['padding_value'])
             
             # Update accuracy and confidence metrics
             train_accuracy_per_epoch.update(accuracy)

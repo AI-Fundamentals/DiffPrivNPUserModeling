@@ -9,7 +9,7 @@ import neuralprocesses.torch as nps
 
 from dppum.util import (
     calc_cat_acc_onehot,
-    calc_cat_confidence,
+    calc_greedy_confidence,
     flatten_first_two_dims,
     reshape_to_last,
     swap_axes,
@@ -89,20 +89,20 @@ def test_calc_cat_acc_onehot():
         calc_cat_acc_onehot(y_true,y_pred,-1,np.array([True,False]))
     
 
-def test_calc_cat_confidence():
+def test_calc_greedy_confidence():
     # 2D numpy arrays
     logits_2D = np.array([[-100,0.001,100],[99,-0.001,-99]])
     # Axis 0, it should be looking at very high confidence for points 0&2 but low for 1
-    assert calc_cat_confidence(logits_2D,0) == pytest.approx(0.833, 0.01)
+    assert calc_greedy_confidence(logits_2D,0) == pytest.approx(0.833, 0.01)
     # Axis 1, it should be looking at very high confidence for all points
-    assert calc_cat_confidence(logits_2D,1) == pytest.approx(1.0, 0.01)
+    assert calc_greedy_confidence(logits_2D,1) == pytest.approx(1.0, 0.01)
     # Double check default axis
-    assert calc_cat_confidence(logits_2D) == pytest.approx(1.0, 0.01)
+    assert calc_greedy_confidence(logits_2D) == pytest.approx(1.0, 0.01)
     
     # Check it raises an exception if padding is an array
     with pytest.raises(ValueError):
         padding_mask = np.array([[False,False,False],[True,True,True]])
-        assert calc_cat_confidence(logits_2D,padding_value=padding_mask) == pytest.approx(1.0, 0.01)
+        assert calc_greedy_confidence(logits_2D,padding_value=padding_mask) == pytest.approx(1.0, 0.01)
 
     
 def test_flatten_first_two_dims():
