@@ -24,7 +24,8 @@ def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,padding_value=None,avg=True):
         over the categorical axis.
     avg : bool, optional
         If true this will return one value. If false, the average will be the
-        shape of 'y_true' collapsed over 'cat_axis'.
+        shape of 'y_true' collapsed over 'cat_axis', with the same padding as
+        y_true based on padding_value.
 
     Returns
     -------
@@ -48,11 +49,14 @@ def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,padding_value=None,avg=True):
     if B.shape(y_true) != B.shape(y_pred):
         raise ValueError("y_true and y_pred do not have the same shape.")
     
-    
+    # Calculate the categories (i.e. not one-hot)
     y_true_cat = B.argmax(y_true,cat_axis)
     y_pred_cat = B.argmax(y_pred,cat_axis)    
-    
-    # If there is padding, make sure we set the reconstruction loss to zero
+    accuracy = B.cast(B.dtype(y_true),y_true_cat == y_pred_cat)
+    # At this stage accuracy is of the shape as y_true, but collapsed over the
+    # categorical dimension
+
+    # If there is padding, create the padding mask
     if padding_value is not None:  # It gives an error if you do "if padding_value:"
         # If padding is a single value
         if B.size(padding_value) == 1:
@@ -66,19 +70,17 @@ def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,padding_value=None,avg=True):
             padding_mask = padding_value
         else:
             raise ValueError("'padding_value' must be either a single value or a bool array either the same shape as 'yt' or the shape of 'yt' collapsed along the categorical axis.")
-        
-        # Calculate the accuracy only for the non-padding parts
-        accuracy = B.cast(B.dtype(y_true),y_true_cat[~padding_mask] == y_pred_cat[~padding_mask])
     
-    else:
-        accuracy = B.cast(B.dtype(y_true),y_true_cat == y_pred_cat)
-    
-    # At this stage accuracy is of the shape as y_true, but collapsed over the
-    # categorical dimension
-    
+    # Returns
     if avg:
-        return B.mean(accuracy)
+        if padding_value is not None:
+            return B.mean(accuracy[~padding_mask])
+        else:
+            return B.mean(accuracy)            
     else:
+        if padding_value is not None:
+            # Assign padding values to the padding parts
+            accuracy[padding_mask] = padding_value
         return accuracy
 
 
