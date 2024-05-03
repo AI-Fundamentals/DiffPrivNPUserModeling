@@ -80,6 +80,14 @@ def test_calc_cat_acc_onehot():
     assert B.shape(accuracy_not_averaged) == B.shape(y_true)[0:2]
     assert B.mean(accuracy_not_averaged) == calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,avg=True)
     
+    # Check values without averaging, with padding
+    padding_value = -1.
+    accuracy_not_averaged = calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,avg=False,padding_value=-1.)
+    assert B.shape(accuracy_not_averaged) == B.shape(y_true)[0:2]
+    padding_mask = (y_true == padding_value)
+    padding_mask = B.any(padding_mask, axis=-1)
+    assert B.mean(accuracy_not_averaged[~padding_mask]) == calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,avg=True,padding_value=-1.)
+    
     # Check it raises an exception if you try use a list
     with pytest.raises(ValueError):
         calc_cat_acc_onehot([1,0,0],[0,1,0])
