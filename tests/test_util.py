@@ -8,7 +8,7 @@ import lab as B
 import neuralprocesses.torch as nps
 
 from dppum.util import (
-    calc_cat_acc_onehot,
+    calc_greedy_acc_onehot,
     calc_greedy_confidence,
     flatten_first_two_dims,
     reshape_to_last,
@@ -17,16 +17,16 @@ from dppum.util import (
     )
 
 
-def test_calc_cat_acc_onehot():
+def test_calc_greedy_acc_onehot():
     # 1D torch tensors
     y_pred = torch.tensor([0, 0, 1], dtype=torch.float32)
     y_true = torch.tensor([0, 0, 1], dtype=torch.float32)
-    assert calc_cat_acc_onehot(y_true,y_pred) == 1.0
+    assert calc_greedy_acc_onehot(y_true,y_pred) == 1.0
     
     # 2D numpy arrays
     y_true = np.array([[0,1,0],[0,0,1]])
     y_pred = np.array([[0,1,0],[1,0,0]])
-    assert calc_cat_acc_onehot(y_true,y_pred) == 0.5
+    assert calc_greedy_acc_onehot(y_true,y_pred) == 0.5
 
     # 3D numpy arrays
     y_true = np.array([
@@ -41,12 +41,12 @@ def test_calc_cat_acc_onehot():
         [[1, 0, 0], [0, 1, 0], [0, 1, 0]]
     ])
     
-    assert calc_cat_acc_onehot(y_true,y_pred) == pytest.approx(2/3, 0.001)
+    assert calc_greedy_acc_onehot(y_true,y_pred) == pytest.approx(2/3, 0.001)
     
     # Check the cat_axis
     y_true = B.transpose(y_true,perm=[0,2,1])
     y_pred = B.transpose(y_pred,perm=[0,2,1])
-    assert calc_cat_acc_onehot(y_true,y_pred,cat_axis=-2) == pytest.approx(2/3, 0.001)
+    assert calc_greedy_acc_onehot(y_true,y_pred,cat_axis=-2) == pytest.approx(2/3, 0.001)
     
     # Add padding
     y_true =  np.array([
@@ -61,32 +61,32 @@ def test_calc_cat_acc_onehot():
     ])
     
     padding_value = -1
-    assert calc_cat_acc_onehot(y_true,y_pred,cat_axis=-2,padding_value=padding_value) == pytest.approx(0.833, 0.02)
+    assert calc_greedy_acc_onehot(y_true,y_pred,cat_axis=-2,padding_value=padding_value) == pytest.approx(0.833, 0.02)
 
     # Check shapes without averaging
-    accuracy_not_averaged = calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,avg=False)
+    accuracy_not_averaged = calc_greedy_acc_onehot(y_true,y_pred,cat_axis=-1,avg=False)
     assert B.shape(accuracy_not_averaged) == B.shape(y_true)[0:2]
-    assert B.mean(accuracy_not_averaged) == calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,avg=True)
+    assert B.mean(accuracy_not_averaged) == calc_greedy_acc_onehot(y_true,y_pred,cat_axis=-1,avg=True)
     
     # Check values without averaging, with padding
     padding_value = -1.
-    accuracy_not_averaged = calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,avg=False,padding_value=-1.)
+    accuracy_not_averaged = calc_greedy_acc_onehot(y_true,y_pred,cat_axis=-1,avg=False,padding_value=-1.)
     assert B.shape(accuracy_not_averaged) == B.shape(y_true)[0:2]
     padding_mask = (y_true == padding_value)
     padding_mask = B.any(padding_mask, axis=-1)
-    assert B.mean(accuracy_not_averaged[~padding_mask]) == calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,avg=True,padding_value=-1.)
+    assert B.mean(accuracy_not_averaged[~padding_mask]) == calc_greedy_acc_onehot(y_true,y_pred,cat_axis=-1,avg=True,padding_value=-1.)
     
     # Check it raises an exception if you try use a list
     with pytest.raises(ValueError):
-        calc_cat_acc_onehot([1,0,0],[0,1,0])
+        calc_greedy_acc_onehot([1,0,0],[0,1,0])
                             
     # Check it raises an exception if y_pred and y_true are not the same shapes
     with pytest.raises(ValueError):
-        calc_cat_acc_onehot([1,0,0],[1,0])
+        calc_greedy_acc_onehot([1,0,0],[1,0])
         
     # Check it raises an exception if padding is an array
     with pytest.raises(ValueError):
-        calc_cat_acc_onehot(y_true,y_pred,-1,np.array([True,False]))
+        calc_greedy_acc_onehot(y_true,y_pred,-1,np.array([True,False]))
     
 
 def test_calc_greedy_confidence():

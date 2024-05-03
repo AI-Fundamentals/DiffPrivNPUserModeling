@@ -5,7 +5,7 @@ These come from the DP user modelling Julia code
 
 import lab as B
 
-def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,padding_value=None,avg=True):
+def calc_greedy_acc_onehot(y_true,y_pred,cat_axis=-1,padding_value=None,avg=True):
     """
     Calculate the categorical accuracy of one-hot encoded predictions and true
     labels using linear algebra backend.
