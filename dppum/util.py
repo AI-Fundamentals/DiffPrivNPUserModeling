@@ -20,7 +20,7 @@ def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,padding_value=None,avg=True):
         The axis that represents categories, by default -1.
     padding_value : float, optional
         Value that represents padding in y_true and y_pred. These values will
-        not be used in the averaging
+        not be used in the averaging.
     avg : bool, optional
         If true this will return one value. If false, the average will be the
         shape of 'y_true' collapsed over 'cat_axis', with the same padding as
@@ -76,7 +76,7 @@ def calc_cat_acc_onehot(y_true,y_pred,cat_axis=-1,padding_value=None,avg=True):
         return accuracy
 
 
-def calc_cat_confidence(y_pred_onehot, cat_axis=-1, padding_mask=None):
+def calc_cat_confidence(y_pred_onehot, cat_axis=-1, padding_value=None):
     """
     Calculate the mean confidence of the most likely prediction of a categorical.
 
@@ -90,10 +90,9 @@ def calc_cat_confidence(y_pred_onehot, cat_axis=-1, padding_mask=None):
         One-hot encoded predicted values.
     cat_axis : int
         The categorical axis. Default value is -1.
-    padding_value : Union[float, B.Tensor], optional
-        Padding mask which will be discarded during the loss calculations.
-        Must be either a boolean tensor  either the same shape as 
-        `y_pred_onehot` or as 'y_pred_onehot' collapsed along 'cat_axis'.
+    padding_value : float, optional
+        Value that represents padding in y_pred_onehot. These values will not
+        be used in the averaging.
 
     Returns
     -------
@@ -108,18 +107,24 @@ def calc_cat_confidence(y_pred_onehot, cat_axis=-1, padding_mask=None):
     # Calculate confidence of y_pred
     y_pred_confidence = B.max(y_pred_onehot, axis=cat_axis)
     
+    if padding_value is not None and B.size(padding_value) != 1:
+        raise ValueError("padding_value must be a single float.")
+    
     # Calculate the mean confidence
-    if padding_mask is not None:
-        # Need to deal with padding
-        # If the padding is the same shape as 
-        if B.shape(padding_mask) == B.shape(y_pred_onehot):
-            collapsed_mask = B.any(padding_mask, axis=cat_axis)
-        elif B.shape(padding_mask) == B.shape(y_pred_confidence):
-            collapsed_mask = padding_mask
-        else:
-            raise ValueError("'padding_mask' must be a bool array either the same shape as 'y_pred_onehot' or the shape of 'y_pred_onehot' collapsed along 'cat axis'.")
-            
-        mean_confidence = B.mean(y_pred_confidence[~collapsed_mask])
+    #if padding_mask is not None:
+        # # Need to deal with padding
+        # # If the padding is the same shape as 
+        # if B.shape(padding_mask) == B.shape(y_pred_onehot):
+        #     collapsed_mask = B.any(padding_mask, axis=cat_axis)
+        # elif B.shape(padding_mask) == B.shape(y_pred_confidence):
+        #     collapsed_mask = padding_mask
+        # else:
+        #     raise ValueError("'padding_mask' must be a bool array either the same shape as 'y_pred_onehot' or the shape of 'y_pred_onehot' collapsed along 'cat axis'.")
+        # If there is padding, create the padding mask
+    if padding_value is not None:
+        padding_mask = (y_pred_onehot == padding_value)
+        padding_mask = B.any(padding_mask, axis=cat_axis)            
+        mean_confidence = B.mean(y_pred_confidence[~padding_mask])
     else:
         # Calculate the mean confidence, ignoring padding
         mean_confidence = B.mean(y_pred_confidence)
