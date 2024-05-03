@@ -111,16 +111,7 @@ def calc_cat_confidence(y_pred_onehot, cat_axis=-1, padding_value=None):
         raise ValueError("padding_value must be a single float.")
     
     # Calculate the mean confidence
-    #if padding_mask is not None:
-        # # Need to deal with padding
-        # # If the padding is the same shape as 
-        # if B.shape(padding_mask) == B.shape(y_pred_onehot):
-        #     collapsed_mask = B.any(padding_mask, axis=cat_axis)
-        # elif B.shape(padding_mask) == B.shape(y_pred_confidence):
-        #     collapsed_mask = padding_mask
-        # else:
-        #     raise ValueError("'padding_mask' must be a bool array either the same shape as 'y_pred_onehot' or the shape of 'y_pred_onehot' collapsed along 'cat axis'.")
-        # If there is padding, create the padding mask
+    # If there is padding, create the padding mask
     if padding_value is not None:
         padding_mask = (y_pred_onehot == padding_value)
         padding_mask = B.any(padding_mask, axis=cat_axis)            
