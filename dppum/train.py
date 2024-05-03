@@ -318,23 +318,15 @@ def train_model_dp_torch(
             xt = xt.to(training_device)
             yt = yt.to(training_device)
             
-            if settings['padding_value']:
-                # A mask for where the padding is. This is the same shape as the batch
-                padding_mask = (yt == settings['padding_value'])
-                # This is collapsed along the categorical dimension
-                padding_mask = B.any(padding_mask,axis=-2)
-            else:
-                padding_mask = None
-            
             # Forward pass
             with torch.no_grad():
                 yt_pred, _, _, _ = nps.predict(
                     model,xc, yc, xt, num_samples=settings['num_samples'], dtype_lik=torch.float32
                     ) 
             # Accuracy of the non-padding values
-            accuracy=calc_cat_acc_onehot(yt,yt_pred,cat_axis=-2,padding_value=padding_mask)
+            accuracy=calc_cat_acc_onehot(yt,yt_pred,cat_axis=-2,padding_value=settings['padding_value'])
             # Mean confidence of the non-padding values
-            confidence = calc_cat_confidence(yt_pred,-2,padding_mask)
+            confidence = calc_cat_confidence(yt_pred,-2,padding_value=settings['padding_value'])
             
             # Update accuracy and confidence metrics
             train_accuracy_per_epoch.update(accuracy)
@@ -361,13 +353,13 @@ def train_model_dp_torch(
                 xt = xt.to(training_device)
                 yt = yt.to(training_device)
                 
-                if settings['padding_value']:
-                    # A mask for where the padding is. This is the same shape as the batch
-                    padding_mask = (yt == settings['padding_value'])
-                    # This is collapsed along the categorical dimension
-                    padding_mask = B.any(padding_mask,axis=-2)
-                else:
-                    padding_mask = None
+                # if settings['padding_value']:
+                #     # A mask for where the padding is. This is the same shape as the batch
+                #     padding_mask = (yt == settings['padding_value'])
+                #     # This is collapsed along the categorical dimension
+                #     padding_mask = B.any(padding_mask,axis=-2)
+                # else:
+                #     padding_mask = None
                 
                 # Forward pass
                 with torch.no_grad():
@@ -376,7 +368,7 @@ def train_model_dp_torch(
                         ) 
                 
                 # Accuracy of the non-padding values for the validation data
-                accuracy=calc_cat_acc_onehot(yt,yt_pred,cat_axis=-2,padding_value=padding_mask)
+                accuracy=calc_cat_acc_onehot(yt,yt_pred,cat_axis=-2,padding_value=settings['padding_value'])
                 val_accuracy_per_epoch.update(accuracy)
             
             # Append to epoch metric
