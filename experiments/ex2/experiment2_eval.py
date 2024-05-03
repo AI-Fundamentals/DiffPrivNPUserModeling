@@ -21,6 +21,8 @@ print("Finished importing packages.")
 device = get_device_type()
 B.set_global_device(device)
 nps.lab.set_global_device(device)
+print("fDevice set to '{device}'")
+
 # %%
 # Parse the settings file from the command line argument
 

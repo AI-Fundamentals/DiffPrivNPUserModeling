@@ -21,6 +21,7 @@ from dppum.settings import default_settings_ex2_train
 device = get_device_type()
 B.set_global_device(device)
 nps.lab.set_global_device(device)
+print("fDevice set to '{device}'")
 
 
 # %%
