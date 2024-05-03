@@ -144,8 +144,10 @@ else:
 
 # Plotting the data
 ax[0].plot(epochs_list, history['loss'], label='Loss')
-ax[1].plot(epochs_list, history['train_accuracy'], label='Mean Accuracy')
+ax[1].plot(epochs_list, history['train_accuracy'], label='Train Accuracy')
 ax[1].plot(epochs_list, history['cat_confidence'], label='Mean Confidence')
+if settings['warmup_epoch']:
+    ax[1].plot(epochs_list, history['val_accuracy'], label='Val Accuracy')    
 
 # Adding labels and title
 ax[0].set_xlabel('Epochs completed')
