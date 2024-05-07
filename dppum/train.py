@@ -353,7 +353,7 @@ def train_model_dp_torch(
             # Accuracy of the non-padding values
             greedy_accuracy = calc_greedy_acc_onehot(yt,yt_pred,cat_axis=-2,padding_value=settings['padding_value'])
             # Sample accuracy is the model's confidence in the true category
-            sample_accuracy = calc_true_confidence(yt_pred,yt,-2,padding_value=settings['padding_value'])
+            sample_accuracy = calc_true_confidence(yt,yt_pred,-2,padding_value=settings['padding_value'])
             # Mean confidence of the non-padding values
             greedy_confidence = calc_greedy_confidence(yt_pred,-2,padding_value=settings['padding_value'])
             
@@ -361,8 +361,8 @@ def train_model_dp_torch(
             train_acc_greedy_per_epoch.update(greedy_accuracy)
             train_acc_sample_per_epoch.update(sample_accuracy)
             train_conf_greedy_per_epoch.update(greedy_confidence)
-        
-        
+            
+
         # Append to epoch metrics
         loss_all_epochs.append(loss_per_epoch.result())
         train_acc_greedy_all_epochs.append(train_acc_greedy_per_epoch.result())
@@ -394,7 +394,7 @@ def train_model_dp_torch(
                 # Accuracy of the non-padding values
                 greedy_accuracy = calc_greedy_acc_onehot(yt,yt_pred,cat_axis=-2,padding_value=settings['padding_value'])
                 # Sample accuracy is the model's confidence in the true category
-                sample_accuracy = calc_true_confidence(yt_pred,yt,-2,padding_value=settings['padding_value'])
+                sample_accuracy = calc_true_confidence(yt,yt_pred,-2,padding_value=settings['padding_value'])
                 
                 # Update accuracy and confidence metrics
                 val_acc_greedy_per_epoch.update(greedy_accuracy)
