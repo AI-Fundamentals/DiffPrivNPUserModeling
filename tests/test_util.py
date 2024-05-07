@@ -10,6 +10,7 @@ import neuralprocesses.torch as nps
 from dppum.util import (
     calc_greedy_acc_onehot,
     calc_greedy_confidence,
+    calc_true_confidence,
     flatten_first_two_dims,
     reshape_to_last,
     swap_axes,
@@ -103,6 +104,48 @@ def test_calc_greedy_confidence():
     with pytest.raises(ValueError):
         padding_mask = np.array([[False,False,False],[True,True,True]])
         assert calc_greedy_confidence(logits_2D,padding_value=padding_mask) == pytest.approx(1.0, 0.01)
+
+
+def test_calc_true_confidence():
+
+    y_pred_onehot = torch.tensor(
+        [[-100,0.001,100],
+         [99,-0.001,-99]]
+    )
+    
+    # Axis 0, the actual categories are [1,1,0]
+    y_true_onehot = torch.tensor([[0.,0.,1.],
+                                  [1.,1.,0.]])
+    # So the confidence of these should be [1,~0.5,1], so mean of about 0.833
+    assert calc_true_confidence(y_true_onehot,y_pred_onehot,0) == pytest.approx(0.833, 0.01)
+    
+    # Same but transposed and axis 1
+    assert calc_true_confidence(y_true_onehot.T,y_pred_onehot.T,1) == pytest.approx(0.833, 0.01)
+    
+    # Test padding
+    padding_value = -1.
+    # No padding in the data
+    assert calc_true_confidence(y_true_onehot,y_pred_onehot,0,padding_value) == pytest.approx(0.833, 0.01)
+    
+    pad = (1,1)
+    y_true_onehot_pad = torch.nn.functional.pad(y_true_onehot,pad,"constant",padding_value)
+    y_pred_onehot_pad = torch.nn.functional.pad(y_pred_onehot,pad,"constant",padding_value)
+    assert calc_true_confidence(y_true_onehot_pad,y_pred_onehot_pad,0,padding_value) == pytest.approx(0.833, 0.01)   
+    
+    
+    # Check it raises an exception if padding is an array
+    with pytest.raises(ValueError):
+        padding_mask = torch.tensor([[False,False,False],[True,True,True]])
+        calc_true_confidence(y_true_onehot,y_pred_onehot,0,padding_value=padding_mask)
+        
+    # Check it raises an exception if inputs are not pytorch tensors
+    with pytest.raises(TypeError):
+        numpy_array = np.array([[-100,0.001,100],[99,-0.001,-99]])
+        calc_true_confidence(numpy_array,y_pred_onehot,0)
+    with pytest.raises(TypeError):
+        numpy_array = np.array([[-100,0.001,100],[99,-0.001,-99]])
+        calc_true_confidence(y_true_onehot,numpy_array,0)
+        
 
     
 def test_flatten_first_two_dims():
