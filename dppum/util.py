@@ -15,7 +15,7 @@ def calc_greedy_acc_onehot(y_true,y_pred,cat_axis=-1,padding_value=None,avg=True
     y_true : array-like
         True labels, one-hot encoded.
     y_pred : array-like
-        Predicted labels, one-hot encoded.
+        Predicted labels, soft one-hot encoded.
     cat_axis : int, optional
         The axis that represents categories, by default -1.
     padding_value : float, optional
