@@ -137,17 +137,14 @@ print(f"Training time: {'{:.2f}'.format(training_time.total_seconds()/60)} minut
 # Make output folders
 fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8, 6), sharex=True)
 
-if settings['warmup_epoch']:
-    epochs_list = np.arange(len(history['loss']))
-else:
-    epochs_list = np.arange(len(history['loss'])) + 1
-
 # Plotting the data
-ax[0].plot(epochs_list, history['loss'], label='Loss')
-ax[1].plot(epochs_list, history['train_accuracy'], label='Train Accuracy')
-ax[1].plot(epochs_list, history['cat_confidence'], label='Mean Confidence')
+ax[0].plot(history['epoch'], history['loss'], label='Loss')
+ax[1].plot(history['epoch'], history['train_acc_greedy'], label='Train Acc (greedy)')
+ax[1].plot(history['epoch'], history['train_acc_sample'], label='Train Acc (sample)')
+ax[1].plot(history['epoch'], history['train_conf_greedy'], label='Train Confidence (greedy)')
 if settings['warmup_epoch']:
-    ax[1].plot(epochs_list, history['val_accuracy'], label='Val Accuracy')    
+    ax[1].plot(history['epoch'], history['val_acc_greedy'], label='Val Acc (greedy)')    
+    ax[1].plot(history['epoch'], history['val_acc_sample'], label='Val Acc (sample)')    
 
 # Adding labels and title
 ax[0].set_xlabel('Epochs completed')
