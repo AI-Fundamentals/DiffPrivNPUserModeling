@@ -75,6 +75,65 @@ def calc_greedy_acc_onehot(y_true,y_pred,cat_axis=-1,padding_value=None,avg=True
             # Assign padding values to the padding parts
             accuracy[padding_mask] = padding_value
         return accuracy
+    
+    
+def calc_true_confidence(y_true_onehot,y_pred_onehot, cat_axis=-1, padding_value=None):
+    """
+    Calculate the mean confidence of the true (i.e. correct) category.
+
+    1. Apply a softmax.
+    2. Extract the confidence of the true category (i.e. the highest value).
+    3. Take the mean of all these values (if applicable).
+
+    Parameters
+    ----------
+    y_true : array-like
+        True labels, one-hot encoded.
+    y_pred : array-like
+        Predicted labels, soft one-hot encoded.
+    cat_axis : int
+        The categorical axis. Default value is -1.
+    padding_value : float, optional
+        Value that represents padding in y_pred_onehot and y_true. These values
+        will not be used in the averaging.
+
+    Returns
+    -------
+    float
+        The mean confidence of the true category.
+
+    """
+    
+    if padding_value is not None and B.size(padding_value) != 1:
+        raise ValueError("padding_value must be a single float.")
+        
+    if not isinstance(y_pred_onehot,torch.Tensor):
+        raise TypeError("y_pred_onehot must be a pytorch tensor")
+    if not isinstance(y_true_onehot,torch.Tensor):
+        raise TypeError("y_true_onehot must be a pytorch tensor")
+    
+    # Normalise y_pred_onehot with a softmax
+    y_pred_onehot = B.softmax(y_pred_onehot,axis=cat_axis)
+    
+    # Get the true category
+    y_true_cat = B.argmax(y_true_onehot, axis=cat_axis)
+    
+    # Use the true category to index y_pred_onehot to get the confidence of the
+    # true category (need to make y_true_cat of dtype int64).
+    y_true_confidence  = torch.gather(y_pred_onehot, dim=cat_axis, index=y_true_cat.int().long().unsqueeze(dim=cat_axis))
+    y_true_confidence = y_true_confidence.squeeze()
+
+    # Calculate the mean confidence
+    # If there is padding, create the padding mask
+    if padding_value is not None:
+        padding_mask = (y_true_onehot == padding_value)
+        padding_mask = B.any(padding_mask, axis=cat_axis)            
+        mean_confidence = B.mean(y_true_confidence[~padding_mask])
+    else:
+        # Calculate the mean confidence, ignoring padding
+        mean_confidence = B.mean(y_true_confidence)
+    
+    return mean_confidence
 
 
 def calc_greedy_confidence(y_pred_onehot, cat_axis=-1, padding_value=None):
@@ -120,69 +179,8 @@ def calc_greedy_confidence(y_pred_onehot, cat_axis=-1, padding_value=None):
     else:
         # Calculate the mean confidence, ignoring padding
         mean_confidence = B.mean(y_pred_confidence)
-    
+
     return mean_confidence
-
-
-def calc_true_confidence(y_true_onehot,y_pred_onehot, cat_axis=-1, padding_value=None):
-    """
-    Calculate the mean confidence of the true (i.e. correct) category.
-
-    1. Apply a softmax.
-    2. Extract the confidence of the true category (i.e. the highest value).
-    3. Take the mean of all these values (if applicable).
-
-    Parameters
-    ----------
-    y_true : array-like
-        True labels, one-hot encoded.
-    y_pred : array-like
-        Predicted labels, soft one-hot encoded.
-    cat_axis : int
-        The categorical axis. Default value is -1.
-    padding_value : float, optional
-        Value that represents padding in y_pred_onehot and y_true. These values
-        will not be used in the averaging.
-
-    Returns
-    -------
-    float
-        The mean confidence of the true category.
-
-    """
-    
-    if padding_value is not None and B.size(padding_value) != 1:
-        raise ValueError("padding_value must be a single float.")
-        
-    if not isinstance(y_pred_onehot,torch.Tensor):
-        raise TypeError("y_pred_onehot must be a pytorch tensor")
-    if not isinstance(y_true_onehot,torch.Tensor):
-        raise TypeError("y_true_onehot must be a pytorch tensor")
-
-    # Normalise y_pred_onehot with a softmax to make it probabilities
-    y_pred_onehot = B.softmax(y_pred_onehot,axis=cat_axis)
-    
-    # Get the true category
-    y_true_cat = B.argmax(y_true_onehot, axis=cat_axis)
-    # Use the true category to index y_pred_onehot to get the confidence of the
-    # true category (need to make y_true_cat of dtype int64).
-    y_true_confidence  = torch.gather(y_pred_onehot, dim=cat_axis, index=y_true_cat.int().long().unsqueeze(dim=cat_axis))
-    y_true_confidence = y_true_confidence.squeeze()
-        
-    # Calculate the mean confidence
-    # If there is padding, create the padding mask
-    if padding_value is not None:
-        padding_mask = (y_true_onehot == padding_value)
-        padding_mask = B.any(padding_mask, axis=cat_axis)            
-        mean_confidence = B.mean(y_true_confidence[~padding_mask])
-    else:
-        # Calculate the mean confidence, ignoring padding
-        mean_confidence = B.mean(y_true_confidence)
-    
-    return mean_confidence
-
-
-
 
 
 def flatten_first_two_dims(tensor):
