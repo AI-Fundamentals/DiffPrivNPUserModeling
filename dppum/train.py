@@ -7,7 +7,7 @@ import pandas as pd
 import neuralprocesses.torch as nps
 
 from dppum.privacy_oracle import get_sigma_from_privacy_loss_distribution as get_sigma
-from dppum.util import calc_greedy_confidence, flatten_first_two_dims, calc_greedy_acc_onehot
+from dppum.util import calc_greedy_confidence, calc_true_confidence, calc_greedy_acc_onehot
   
     
 class AverageMeter(object):
@@ -108,8 +108,29 @@ def train_model_dp_torch(
     Returns
     -------
     history : dict
-        A dictionary with the training metrics: loss, accuracy, confidence.
-
+        A dictionary with the training metrics:
+        epoch : int
+            The training epochs.
+        loss : float
+            The training loss.
+        train_acc_greedy : float
+            The greedy accuracy tested on the training dataset. Take the most
+            likely category from the neuralprocess model and see if its correct.
+        train_acc_sample : float
+            The sampled accuracy tested on the training dataset. Take the
+            probability that the neuralprocess model gives for the true category.
+        train_conf_greedy : float
+            The confidence (probability) the neuralprocess model gives for the
+            most likely category it predicts.
+        val_acc_greedy : float
+            The greedy accuracy tested on the validation dataset. Take the most
+            likely category from the neuralprocess model and see if its correct.
+            Only output if dataloader_val is provided.
+        val_acc_sample : float
+            The sampled accuracy tested on the validation dataset. Take the
+            probability that the neuralprocess model gives for the true category.
+            Only output if dataloader_val is provided.
+        
     Notes
     -----
     The model is modified in-place so it is not returned.
@@ -124,18 +145,23 @@ def train_model_dp_torch(
 
     # Define training metrics: loss, accuracy, and confidence of mean model category
     # These metrics are for within epochs, and are reset after each epoch
-    train_accuracy_per_epoch = AverageMeter()
+    train_acc_greedy_per_epoch = AverageMeter()
+    train_acc_sample_per_epoch = AverageMeter()
     loss_per_epoch = AverageMeter()
-    mean_confidence_per_epoch = AverageMeter()
+    train_conf_greedy_per_epoch = AverageMeter()
     if dataloader_val:
-        val_accuracy_per_epoch = AverageMeter()
+        val_acc_greedy_per_epoch = AverageMeter()
+        val_acc_sample_per_epoch = AverageMeter()
+        
     
     # Define lists to store the metrics for all epochs
-    train_accuracy_all_epochs = []
+    train_acc_greedy_all_epochs = []
+    train_acc_sample_all_epochs = []
     loss_all_epochs = []
-    mean_confidence_all_epochs = []    
+    train_conf_greedy_all_epochs = []    
     if dataloader_val:
-        val_accuracy_all_epochs = []
+        val_acc_greedy_all_epochs = []
+        val_acc_sample_all_epochs = []
     
     # Use warmup epoch (or not)
     if settings['warmup_epoch']:
@@ -244,15 +270,16 @@ def train_model_dp_torch(
             dataloader_train = dataloader_train.shuffle(buffer_size=dataloader_train_metadata['n_batches'])
         
         # Reset epoch metrics
-        train_accuracy_per_epoch.reset()
+        train_acc_greedy_per_epoch.reset()
+        train_acc_sample_per_epoch.reset()
         loss_per_epoch.reset()
-        mean_confidence_per_epoch.reset()
+        train_conf_greedy_per_epoch.reset()
         if dataloader_val:
-            val_accuracy_per_epoch.reset()
+            val_acc_greedy_per_epoch.reset()
+            val_acc_sample_per_epoch.reset()
 
         # Iterate over the batches of the training dataset.
         for step, (xc, yc, xt, yt) in enumerate(dataloader_train):
-
             xc = xc.to(training_device)
             yc = yc.to(training_device)
             xt = xt.to(training_device)
@@ -324,28 +351,34 @@ def train_model_dp_torch(
                     model,xc, yc, xt, num_samples=settings['num_samples'], dtype_lik=torch.float32
                     ) 
             # Accuracy of the non-padding values
-            accuracy=calc_greedy_acc_onehot(yt,yt_pred,cat_axis=-2,padding_value=settings['padding_value'])
+            greedy_accuracy = calc_greedy_acc_onehot(yt,yt_pred,cat_axis=-2,padding_value=settings['padding_value'])
+            # Sample accuracy is the model's confidence in the true category
+            sample_accuracy = calc_true_confidence(yt_pred,yt,-2,padding_value=settings['padding_value'])
             # Mean confidence of the non-padding values
-            confidence = calc_greedy_confidence(yt_pred,-2,padding_value=settings['padding_value'])
+            greedy_confidence = calc_greedy_confidence(yt_pred,-2,padding_value=settings['padding_value'])
             
             # Update accuracy and confidence metrics
-            train_accuracy_per_epoch.update(accuracy)
-            mean_confidence_per_epoch.update(confidence)
+            train_acc_greedy_per_epoch.update(greedy_accuracy)
+            train_acc_sample_per_epoch.update(sample_accuracy)
+            train_conf_greedy_per_epoch.update(greedy_confidence)
         
         
         # Append to epoch metrics
         loss_all_epochs.append(loss_per_epoch.result())
-        train_accuracy_all_epochs.append(train_accuracy_per_epoch.result())
-        mean_confidence_all_epochs.append(mean_confidence_per_epoch.result())
+        train_acc_greedy_all_epochs.append(train_acc_greedy_per_epoch.result())
+        train_acc_sample_all_epochs.append(train_acc_sample_per_epoch.result())
+        train_conf_greedy_all_epochs.append(train_conf_greedy_per_epoch.result())
         
         # Print epoch metrics
         print(f"Loss: {np.round(float(loss_all_epochs[-1]),5)}")
-        print(f"Mean training accuracy: {np.round(float(train_accuracy_all_epochs[-1]),3)}")
-        print(f"Mean confidence of predictions: {np.round(float(mean_confidence_all_epochs[-1]),3)}")
+        print(f"Greedy train accuracy: {np.round(float(train_acc_greedy_all_epochs[-1]),3)}")
+        print(f"Sample train accuracy: {np.round(float(train_acc_sample_all_epochs[-1]),3)}")
+        print(f"Greedy train confidence of predictions: {np.round(float(train_conf_greedy_all_epochs[-1]),3)}")
         
         
         # Calculate accuracy using validation dataset
         if dataloader_val:            
+            # Assess accuracy and confidence of predictions using training dataset
             for step, (xc, yc, xt, yt) in enumerate(dataloader_val):
                 # Move tensors to training device (GPU)
                 xc = xc.to(training_device)
@@ -353,27 +386,26 @@ def train_model_dp_torch(
                 xt = xt.to(training_device)
                 yt = yt.to(training_device)
                 
-                # if settings['padding_value']:
-                #     # A mask for where the padding is. This is the same shape as the batch
-                #     padding_mask = (yt == settings['padding_value'])
-                #     # This is collapsed along the categorical dimension
-                #     padding_mask = B.any(padding_mask,axis=-2)
-                # else:
-                #     padding_mask = None
-                
                 # Forward pass
                 with torch.no_grad():
                     yt_pred, _, _, _ = nps.predict(
                         model,xc, yc, xt, num_samples=settings['num_samples'], dtype_lik=torch.float32
                         ) 
+                # Accuracy of the non-padding values
+                greedy_accuracy = calc_greedy_acc_onehot(yt,yt_pred,cat_axis=-2,padding_value=settings['padding_value'])
+                # Sample accuracy is the model's confidence in the true category
+                sample_accuracy = calc_true_confidence(yt_pred,yt,-2,padding_value=settings['padding_value'])
                 
-                # Accuracy of the non-padding values for the validation data
-                accuracy=calc_greedy_acc_onehot(yt,yt_pred,cat_axis=-2,padding_value=settings['padding_value'])
-                val_accuracy_per_epoch.update(accuracy)
+                # Update accuracy and confidence metrics
+                val_acc_greedy_per_epoch.update(greedy_accuracy)
+                val_acc_sample_per_epoch.update(sample_accuracy)
             
-            # Append to epoch metric
-            val_accuracy_all_epochs.append(val_accuracy_per_epoch.result())
-            print(f"Mean val accuracy: {np.round(float(val_accuracy_all_epochs[-1]),3)}")
+            
+            # Append to epoch metrics
+            val_acc_greedy_all_epochs.append(val_acc_greedy_per_epoch.result())
+            val_acc_sample_all_epochs.append(val_acc_sample_per_epoch.result())
+            print(f"Greedy val accuracy: {np.round(float(val_acc_greedy_all_epochs[-1]),3)}")
+            print(f"Sample val accuracy: {np.round(float(val_acc_sample_all_epochs[-1]),3)}")
         
         
         if settings['models_dir']:
@@ -391,13 +423,15 @@ def train_model_dp_torch(
     
     # Return the history data (training metrics)
     history = {
+        'epoch' : epochs,
         'loss' : loss_all_epochs,
-        'train_accuracy' : train_accuracy_all_epochs,
-        'cat_confidence' : mean_confidence_all_epochs,
-        'epoch' : epochs
+        'train_acc_greedy' : train_acc_greedy_all_epochs,
+        'train_acc_sample' : train_acc_sample_all_epochs,
+        'train_conf_greedy' : train_conf_greedy_all_epochs
         }
     if dataloader_val:
-        history['val_accuracy'] = val_accuracy_all_epochs
+        history['val_acc_greedy'] = val_acc_greedy_all_epochs
+        history['val_acc_sample'] = val_acc_sample_all_epochs
     
     
     # Save the history to CSV
