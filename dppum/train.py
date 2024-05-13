@@ -457,11 +457,13 @@ def get_device_type():
         if torch.backends.mps.is_available():
             return "mps"
     except:
-        if torch.cuda.is_available():
-            current_device = torch.cuda.current_device()
-            return f"cuda:{current_device}"
-        else:
-            return "cpu"
+        pass
+
+    if torch.cuda.is_available():
+        current_device = torch.cuda.current_device()
+        return f"cuda:{current_device}"
+    else:
+        return "cpu"
 
     
 
