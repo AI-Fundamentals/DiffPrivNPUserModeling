@@ -46,7 +46,17 @@ def default_settings_ex2_train():
             Value to use for padding during batching. Should be a value that is
             not in the scope of the real data (e.g. use -1 for one-hot encoded
             categorical data.)
-        
+        "nonlinearity" : str
+            Nonlinearity (i.e. activation function) in the neural proces model.
+            Must be 'ReLU' or 'LeakyReLU'.
+        "likelihood" : str
+            Likelihood in the neuralprocess model. Must be one of “het” or
+            “lowrank”.    
+        dim_lv : int
+            Dimensionality of the latent variable in the neural process model.
+        "lv_likelihood" : str
+            Likelihood of the latent variable. Must be one of “het”, “dense”,
+            or “spikes-beta”.
     """ 
     
     settings = {
@@ -68,7 +78,11 @@ def default_settings_ex2_train():
     "dp_dec" : False,
     "shuffle" : False,
     "optimizer" : "Adam",
-    "padding_value" : -1.0
+    "padding_value" : -1.0,
+    "nonlinearity" : "LeakyReLU",
+    "likelihood" : "het",
+    "dim_lv" : 0,
+    "lv_likelihood" : "het",
     }
     return settings
 

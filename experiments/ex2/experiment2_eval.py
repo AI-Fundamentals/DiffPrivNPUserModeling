@@ -95,11 +95,18 @@ print("Finished loading test dataset.")
 
 # %% Construct the test model
 # These MUST be the same parameters as were used for training
-model = nps.construct_agnp(dim_x=17, dim_y=9, dim_lv=0, dim_embedding=128,
-                        num_enc_layers=6,num_dec_layers=6,
-                        likelihood="het",
-                        nonlinearity='LeakyReLU')
-
+model_ex2 = nps.construct_agnp(
+    dim_x=17, # From the data dimensions
+    dim_y=9, # From the data dimensions
+    dim_embedding=128, # Specified in appendix as hidden dimensions
+    num_enc_layers=6, # Specified in appendix as number of layers
+    num_dec_layers=6, # Specified in appendix as number of layers
+    likelihood=train_settings['likelihood'], # NOT Similar to the Julia HeterogeneousGaussianLikelihood()
+    dim_lv=train_settings['dim_lv'],
+    lv_likelihood=train_settings['lv_likelihood'],
+    nonlinearity=train_settings['nonlinearity'], # Specified in appendix
+    )
+model_ex2 = model_ex2.to(device)
 
 # %% Loop through epochs and test accuracy
 # This loop is quite similar to the training loop but does not train the model

@@ -85,7 +85,6 @@ print_dictionary(metadata_val)
 
 
 # %%
-
 # Construct the model
 model_ex2 = nps.construct_agnp(
     dim_x=17, # From the data dimensions
@@ -93,8 +92,10 @@ model_ex2 = nps.construct_agnp(
     dim_embedding=128, # Specified in appendix as hidden dimensions
     num_enc_layers=6, # Specified in appendix as number of layers
     num_dec_layers=6, # Specified in appendix as number of layers
-    likelihood="het", # Similar to the Julia HeterogeneousGaussianLikelihood()
-    nonlinearity='LeakyReLU' # Specified in appendix
+    likelihood=settings['likelihood'], # NOT Similar to the Julia HeterogeneousGaussianLikelihood()
+    dim_lv=settings['dim_lv'],
+    lv_likelihood=settings['lv_likelihood'],
+    nonlinearity=settings['nonlinearity'], # Specified in appendix
     )
 
 model_ex2 = model_ex2.to(device)
