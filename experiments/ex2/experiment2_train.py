@@ -26,7 +26,6 @@ print("fDevice set to '{device}'")
 
 # Creating the ArgumentParser instance
 parser = argparse.ArgumentParser()
-
 parser.add_argument("-settings", 
                     help="Path to settings json file.", 
                     type=str, 
@@ -92,12 +91,11 @@ model_ex2 = nps.construct_agnp(
     dim_embedding=128, # Specified in appendix as hidden dimensions
     num_enc_layers=6, # Specified in appendix as number of layers
     num_dec_layers=6, # Specified in appendix as number of layers
-    likelihood=settings['likelihood'], # NOT Similar to the Julia HeterogeneousGaussianLikelihood()
+    likelihood=settings['likelihood'],
     dim_lv=settings['dim_lv'],
     lv_likelihood=settings['lv_likelihood'],
-    nonlinearity=settings['nonlinearity'], # Specified in appendix
+    nonlinearity=settings['nonlinearity'],
     )
-
 model_ex2 = model_ex2.to(device)
 
 print("Finished constructing the model.")

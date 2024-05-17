@@ -101,10 +101,10 @@ model_ex2 = nps.construct_agnp(
     dim_embedding=128, # Specified in appendix as hidden dimensions
     num_enc_layers=6, # Specified in appendix as number of layers
     num_dec_layers=6, # Specified in appendix as number of layers
-    likelihood=train_settings['likelihood'], # NOT Similar to the Julia HeterogeneousGaussianLikelihood()
+    likelihood=train_settings['likelihood'],
     dim_lv=train_settings['dim_lv'],
     lv_likelihood=train_settings['lv_likelihood'],
-    nonlinearity=train_settings['nonlinearity'], # Specified in appendix
+    nonlinearity=train_settings['nonlinearity'],
     )
 model_ex2 = model_ex2.to(device)
 
