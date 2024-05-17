@@ -35,35 +35,35 @@ parser.add_argument("-settings",
                     default="settings/settings_ex2_test.json")
 
 # Parsing the arguments to a dictionary
-test_settings_file_path = vars(parser.parse_args())['settings']
+eval_settings_file_path = vars(parser.parse_args())['settings']
 
 # Load the settings file to json
 try:
-    print(f"Trying to load settings from '{test_settings_file_path}'")
-    with open(test_settings_file_path, 'r') as f:
-        test_settings = json.load(f)
-    test_settings['test_settings_file_path'] = test_settings_file_path
+    print(f"Trying to load settings from '{eval_settings_file_path}'")
+    with open(eval_settings_file_path, 'r') as f:
+        eval_settings = json.load(f)
+    eval_settings['eval_settings_file_path'] = eval_settings_file_path
     print("Loaded settings successfully.")
 except Exception as e:
     print("Failed to load settings due to the following error:", e)
     print("\nUsing default settings from function default_settings_ex2_test().")
-    test_settings = default_settings_ex2_test()
-    test_settings['settings_file_path'] = "Default"
+    eval_settings = default_settings_ex2_test()
+    eval_settings['settings_file_path'] = "Default"
 
 # Save the command line args to a json in model save folder
 # Check if the directory exists
-if not os.path.exists(test_settings['models_dir']):
+if not os.path.exists(eval_settings['models_dir']):
     # If not, create the directory
-    os.makedirs(test_settings['models_dir'])
+    os.makedirs(eval_settings['models_dir'])
 
 # Save settings to models dir
-with open(os.path.join(test_settings['models_dir'], "test_settings.json"), 'w') as json_file:
-    json.dump(test_settings, json_file,indent=4)
+with open(os.path.join(eval_settings['models_dir'], "eval_settings.json"), 'w') as json_file:
+    json.dump(eval_settings, json_file,indent=4)
 
 print("Finished loading test settings.")
 
 # %% Load training settings
-train_settings_path = os.path.join(test_settings['models_dir'],'train_settings.json')
+train_settings_path = os.path.join(eval_settings['models_dir'],'train_settings.json')
 
 # The command line arguments passed to the training script
 with open(train_settings_path, 'r') as f:
@@ -82,12 +82,12 @@ else:
 # %% Load the test dataset
 
 # Load and prepare the data
-dataloader_test, metadata_test = hdf_to_dataloader_pad(test_settings['test_hdf'],
-                                            n_users=test_settings['num_users'],
-                                            batch_size=test_settings['batch_size'],
-                                            padding_value=test_settings['padding_value']
+dataloader_test, metadata_test = hdf_to_dataloader_pad(eval_settings['test_hdf'],
+                                            n_users=eval_settings['num_users'],
+                                            batch_size=eval_settings['batch_size'],
+                                            padding_value=eval_settings['padding_value']
                                             )
-print(f"\nMetadata for dataloader from file '{test_settings['test_hdf']}':")
+print(f"\nMetadata for dataloader from file '{eval_settings['test_hdf']}':")
 print_dictionary(metadata_test)
 
 print("Finished loading test dataset.")
@@ -121,9 +121,10 @@ df_accuracy.index.name = "batch"
 
 for epoch in epochs:
     # Load the trained model
-    model_name = f"weights_epoch_{epoch}.tf"
-    model.load_weights(os.path.join(args['models_dir'], model_name))
-    accuracy_this_epoch= []   
+    model_name = f"weights_epoch_{epoch}.pt"
+    model_ex2.load_state_dict(torch.load(os.path.join(eval_settings['models_dir'], model_name)))
+    accuracy_this_epoch= []
+    accuracy_Q5_this_epoch= []
     
     # Iterate over the batches of the dataset.
     for batch, (xc, yc, xt, yt) in enumerate(dataset):
@@ -147,7 +148,7 @@ for epoch in epochs:
     df_accuracy[epoch_name] = accuracy_this_epoch
 
 # %% Save accuracy data
-accuracy_csv_path = os.path.join(args['models_dir'],"accuracy_vs_epochs.csv")
+accuracy_csv_path = os.path.join(eval_settings['models_dir'],"accuracy_vs_epochs.csv")
 df_accuracy.to_csv(accuracy_csv_path,index=True)
 
 

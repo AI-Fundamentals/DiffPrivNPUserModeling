@@ -157,12 +157,12 @@ plt.tight_layout()
 plt.show()
 
 # Check if the directory exists
-if not os.path.exists(settings['figs_dir']):
+if not os.path.exists(train_settings['figs_dir']):
     # If not, create the directory
-    os.makedirs(settings['figs_dir'])
+    os.makedirs(train_settings['figs_dir'])
 
 # Save the figure
-fig.savefig(os.path.join(settings['figs_dir'],'experiment2_training_metrics.png'))
+fig.savefig(os.path.join(train_settings['figs_dir'],'experiment2_training_metrics.png'))
 
 print("Finished plotting training metrics.")
 
