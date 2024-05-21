@@ -1,6 +1,5 @@
-# %% Load packages
-
 import neuralprocesses.torch as nps
+import torch
 import lab as B
 import argparse
 import os
@@ -10,7 +9,7 @@ import json
 import matplotlib.pyplot as plt
 
 from dppum.data import hdf_to_dataloader_pad
-from dppum.util import print_dictionary
+from dppum.util import print_dictionary, calc_greedy_acc_onehot, calc_true_confidence
 from dppum.train import get_device_type
 from dppum.settings import default_settings_ex2_test
 
@@ -114,62 +113,89 @@ model_ex2 = model_ex2.to(device)
 # %% Loop through epochs and test accuracy
 # This loop is quite similar to the training loop but does not train the model
 
-# Define an array to store the test accuracy for all batches in all epochs
-# Dimension 0 is epochs, and dimension 1 is batches
-# Epochs might start at 0 or 1 depending on if there was a warmup epoch
-# Batches will always start at 0
-#df_accuracy = pd.DataFrame(index=epochs,columns=np.arange(0, args['num_batches']))
-df_accuracy = pd.DataFrame()
-df_accuracy.index.name = "batch"
+# Define a dataframe to store the results
+columns = ["acc_greedy", "acc_sample_mean", "acc_sample_Q5", "acc_sample_Q25", "acc_sample_Q50", "acc_sample_Q75", "acc_sample_Q95"]
+df_results = pd.DataFrame(columns=columns,index=epochs,dtype='float')
+df_results.index.name = 'epoch'
 
+model_ex2.eval()
 for epoch in epochs:
     # Load the trained model
     model_name = f"weights_epoch_{epoch}.pt"
     model_ex2.load_state_dict(torch.load(os.path.join(eval_settings['models_dir'], model_name)))
-    accuracy_this_epoch= []
-    accuracy_Q5_this_epoch= []
+    acc_greedy_this_epoch = []
+    acc_sample_this_epoch = []
+    conf_greedy_this_epoch = []    
     
     # Iterate over the batches of the dataset.
-    for batch, (xc, yc, xt, yt) in enumerate(dataset):
-        # Transpose the y data so they go into the model
-        if(tf.rank(yc)==4):
-            # This should only happen if the data are re-batched
-            yc_t = B.transpose(yc,perm=[0,1,3,2])
-            yt_t = B.transpose(yt,perm=[0,1,3,2])
-        elif(tf.rank(yc)==3):
-            yc_t = B.transpose(yc,perm=[0,2,1])
-            yt_t = B.transpose(yt,perm=[0,2,1])
-    
-        mean, _, _, _ = nps.predict(
-            model,xc, yc_t, xt, num_samples=1
-            )
+    for step, (xc, yc, xt, yt) in enumerate(dataloader_test):
+        # Move tensors to training device (GPU)
+        xc = xc.to(device)
+        yc = yc.to(device)
+        xt = xt.to(device)
+        yt = yt.to(device)
         
-        accuracy_this_epoch.append(calc_cat_acc_onehot(yt_t,mean,cat_axis=-2).numpy())
+        if eval_settings['padding_value']:
+            # A mask for where the padding is. This is the same shape as the batch
+            padding_mask = (yt == eval_settings['padding_value'])
+            # This is collapsed along the categorical dimension
+            padding_mask = B.any(padding_mask,axis=-2)
+        else:
+            padding_mask = None
+        
+        # Forward pass
+        with torch.no_grad():
+            yt_pred, _, _, _ = nps.predict(
+                model_ex2,xc, yc, xt, num_samples=train_settings['num_samples'], dtype_lik=torch.float32
+                ) 
+
+        # Accuracy of the non-padding values
+        greedy_accuracy = calc_greedy_acc_onehot(yt,yt_pred,cat_axis=-2,padding_value=train_settings['padding_value'])
+        # Sample accuracy is the model's confidence in the true category
+        sample_accuracy = calc_true_confidence(yt,yt_pred,-2,padding_value=train_settings['padding_value'])
+        
+        # Append values the epoch lists
+        for value in greedy_accuracy.cpu().numpy().ravel():
+            acc_greedy_this_epoch.append(float(value))
+        for value in sample_accuracy.cpu().numpy().ravel():
+            acc_sample_this_epoch.append(float(value))
+        
+    ##### End of epoch calculations #####
+    df_results.loc[epoch,'acc_greedy'] = np.mean(acc_greedy_this_epoch)
+    df_results.loc[epoch,'acc_sample_mean'] = np.mean(acc_sample_this_epoch)
+    df_results.loc[epoch,'acc_sample_Q5'] = np.quantile(acc_sample_this_epoch,0.05)
+    df_results.loc[epoch,'acc_sample_Q25'] = np.quantile(acc_sample_this_epoch,0.25)
+    df_results.loc[epoch,'acc_sample_Q50'] = np.quantile(acc_sample_this_epoch,0.5)
+    df_results.loc[epoch,'acc_sample_Q75'] = np.quantile(acc_sample_this_epoch,0.75)
+    df_results.loc[epoch,'acc_sample_Q95'] = np.quantile(acc_sample_this_epoch,0.95)
     
-    
-    epoch_name = f"epoch_{epoch}"
-    df_accuracy[epoch_name] = accuracy_this_epoch
 
 # %% Save accuracy data
-accuracy_csv_path = os.path.join(eval_settings['models_dir'],"accuracy_vs_epochs.csv")
-df_accuracy.to_csv(accuracy_csv_path,index=True)
+accuracy_csv_path = os.path.join(eval_settings['models_dir'],"eval_acc_vs_epochs.csv")
+df_results.to_csv(accuracy_csv_path,index=True)
 
 
 # %% Plot accuracy vs epochs
 
-# Assuming 'df' is your DataFrame
-means = df_accuracy.mean(axis=0)
+# Create a figure and assign it to the variable 'fig'
+fig, ax = plt.subplots(figsize=(10, 6))
 
-# Calculate Q5 and Q95
-q5 = df_accuracy.quantile(0.05, axis=0,numeric_only=True)
-q95 = df_accuracy.quantile(0.95, axis=0,numeric_only=True)
-
-plt.figure(figsize=(10, 6))
-plt.plot(epochs, means.values, label='Mean')
-plt.fill_between(epochs, q5.values, q95.values, color='b', alpha=.1, label='Q5-Q95')
-plt.xlabel('Epochs')
-plt.ylabel('Values')
-plt.title('Mean of all batches vs Epochs with Q5 and Q95')
-plt.legend()
-plt.grid(True)
+ax.plot(df_results['acc_greedy'], label='acc_greedy', linestyle='-')
+ax.plot(df_results['acc_sample_Q50'], label='acc_sample_Q50', linestyle='-')
+ax.fill_between(df_results.index, df_results['acc_sample_Q5'], df_results['acc_sample_Q95'], color='skyblue', alpha=0.4)
+ax.set_xlabel('N training epochs')
+ax.set_xlabel('Accuracy')
+ax.legend(loc='best')
+ax.grid(True)
 plt.show()
+
+# Check if the directory exists
+if not os.path.exists(eval_settings['figs_dir']):
+    # If not, create the directory
+    os.makedirs(eval_settings['figs_dir'])
+
+# Save the figure
+fig.savefig(os.path.join(eval_settings['figs_dir'],'experiment2_eval_metrics.png'))
+
+
+print("Finished plotting training metrics.")
