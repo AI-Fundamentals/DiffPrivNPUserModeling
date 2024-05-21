@@ -21,6 +21,9 @@ print("Finished importing packages.")
 device = get_device_type()
 B.set_global_device(device)
 nps.lab.set_global_device(device)
+if device == "mps":
+    # Set pytorch to fallback to cpu for features where mps not available
+    os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
 print("fDevice set to '{device}'")
 
 # %%

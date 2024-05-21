@@ -18,6 +18,9 @@ from dppum.settings import default_settings_ex2_train
 device = get_device_type()
 B.set_global_device(device)
 nps.lab.set_global_device(device)
+if device == "mps":
+    # Set pytorch to fallback to cpu for features where mps not available
+    os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
 print("fDevice set to '{device}'")
 
 
@@ -38,48 +41,48 @@ settings_file_path = vars(parser.parse_args())['settings']
 try:
     print(f"Trying to load settings from '{settings_file_path}'")
     with open(settings_file_path, 'r') as f:
-        settings = json.load(f)
-    settings['settings_file_path'] = settings_file_path
+        train_settings = json.load(f)
+    train_settings['settings_file_path'] = settings_file_path
     print("Loaded settings successfully.")
 except Exception as e:
     print("Failed to load settings due to the following error:", e)
     print("\nUsing default settings from function default_settings_ex2_train().")
-    settings = default_settings_ex2_train()
-    settings['settings_file_path'] = "Default"
+    train_settings = default_settings_ex2_train()
+    train_settings['settings_file_path'] = "Default"
     
 # Calculate delta
-if not settings['delta']:
-    settings['delta'] = 1 / (settings['num_users'])**2
+if not train_settings['delta']:
+    train_settings['delta'] = 1 / (train_settings['num_users'])**2
 
 # Save the command line args to a json in model save folder
 # Check if the directory exists
-if not os.path.exists(settings['models_dir']):
+if not os.path.exists(train_settings['models_dir']):
     # If not, create the directory
-    os.makedirs(settings['models_dir'])
+    os.makedirs(train_settings['models_dir'])
 
 # Save settings to models dir
-with open(os.path.join(settings['models_dir'], "train_settings.json"), 'w') as json_file:
-    json.dump(settings, json_file,indent=4)
+with open(os.path.join(train_settings['models_dir'], "train_settings.json"), 'w') as json_file:
+    json.dump(train_settings, json_file,indent=4)
 
 print("Finished loading settings.")
 
 
 # %%
 # Load training and validation data
-dataloader_train, metadata_train = hdf_to_dataloader_pad(settings['train_hdf'],
-                                            n_users=settings['num_users'],
-                                            batch_size=settings['batch_size'],
-                                            padding_value=settings['padding_value']
+dataloader_train, metadata_train = hdf_to_dataloader_pad(train_settings['train_hdf'],
+                                            n_users=train_settings['num_users'],
+                                            batch_size=train_settings['batch_size'],
+                                            padding_value=train_settings['padding_value']
                                             )
-print(f"\nMetadata for dataloader from file '{settings['train_hdf']}':")
+print(f"\nMetadata for dataloader from file '{train_settings['train_hdf']}':")
 print_dictionary(metadata_train)
 
-dataloader_val,metadata_val = hdf_to_dataloader_pad(settings['val_hdf'],
-                                            n_users=settings['num_users'],
-                                            batch_size=settings['batch_size'],
-                                            padding_value=settings['padding_value']
+dataloader_val,metadata_val = hdf_to_dataloader_pad(train_settings['val_hdf'],
+                                            n_users=train_settings['num_users'],
+                                            batch_size=train_settings['batch_size'],
+                                            padding_value=train_settings['padding_value']
                                             )
-print(f"\nMetadata for dataloader from file '{settings['val_hdf']}':")
+print(f"\nMetadata for dataloader from file '{train_settings['val_hdf']}':")
 print_dictionary(metadata_val)
 
 
@@ -91,10 +94,10 @@ model_ex2 = nps.construct_agnp(
     dim_embedding=128, # Specified in appendix as hidden dimensions
     num_enc_layers=6, # Specified in appendix as number of layers
     num_dec_layers=6, # Specified in appendix as number of layers
-    likelihood=settings['likelihood'],
-    dim_lv=settings['dim_lv'],
-    lv_likelihood=settings['lv_likelihood'],
-    nonlinearity=settings['nonlinearity'],
+    likelihood=train_settings['likelihood'],
+    dim_lv=train_settings['dim_lv'],
+    lv_likelihood=train_settings['lv_likelihood'],
+    nonlinearity=train_settings['nonlinearity'],
     )
 model_ex2 = model_ex2.to(device)
 
@@ -103,8 +106,8 @@ print("Finished constructing the model.")
 # %%
 # Setup optimizer
 valid_optimizers = ['Adam']
-if settings['optimizer'] == 'Adam':
-    optimizer = torch.optim.Adam(model_ex2.parameters(), lr=settings['learning_rate'])
+if train_settings['optimizer'] == 'Adam':
+    optimizer = torch.optim.Adam(model_ex2.parameters(), lr=train_settings['learning_rate'])
 else:
     raise ValueError(f"Invalid optimizer name. Expected one of: {valid_optimizers}")
 
@@ -118,7 +121,7 @@ history = train_model_dp_torch(
     metadata_train,
     loss_fn=np_elbo_cat_torch,
     optimizer=optimizer,
-    settings=settings,
+    settings=train_settings,
     dataloader_val = dataloader_val
     )
 
@@ -138,7 +141,7 @@ ax[0].plot(history['epoch'], history['loss'], label='Loss')
 ax[1].plot(history['epoch'], history['train_acc_greedy'], label='Train Acc (greedy)')
 ax[1].plot(history['epoch'], history['train_acc_sample'], label='Train Acc (sample)')
 ax[1].plot(history['epoch'], history['train_conf_greedy'], label='Train Confidence (greedy)')
-if settings['warmup_epoch']:
+if train_settings['warmup_epoch']:
     ax[1].plot(history['epoch'], history['val_acc_greedy'], label='Val Acc (greedy)')    
     ax[1].plot(history['epoch'], history['val_acc_sample'], label='Val Acc (sample)')    
 
