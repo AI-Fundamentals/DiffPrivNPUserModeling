@@ -1,0 +1,9 @@
+{
+    "num_users": 128,
+    "batch_size": 4,
+    "test_hdf": "data/ex2/experiment2_test_data.hdf",
+    "models_dir": "models/ex2/",
+    "figs_dir": "figures/ex2/",
+    "num_samples": 1,
+    "padding_value" : -1.0
+}
