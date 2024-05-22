@@ -84,13 +84,13 @@ else:
 # %% Load the test dataset
 
 # Load and prepare the data
-dataloader_test, metadata_test = hdf_to_dataloader_pad(eval_settings['test_hdf'],
+dataloader_eval, metadata_eval = hdf_to_dataloader_pad(eval_settings['eval_hdf'],
                                             n_users=eval_settings['num_users'],
                                             batch_size=eval_settings['batch_size'],
                                             padding_value=eval_settings['padding_value']
                                             )
-print(f"\nMetadata for dataloader from file '{eval_settings['test_hdf']}':")
-print_dictionary(metadata_test)
+print(f"\nMetadata for dataloader from file '{eval_settings['eval_hdf']}':")
+print_dictionary(metadata_eval)
 
 print("Finished loading test dataset.")
 
@@ -128,7 +128,7 @@ for epoch in epochs:
     conf_greedy_this_epoch = []    
     
     # Iterate over the batches of the dataset.
-    for step, (xc, yc, xt, yt) in enumerate(dataloader_test):
+    for step, (xc, yc, xt, yt) in enumerate(dataloader_eval):
         # Move tensors to training device (GPU)
         xc = xc.to(device)
         yc = yc.to(device)
