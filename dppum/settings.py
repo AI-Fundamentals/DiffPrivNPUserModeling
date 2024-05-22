@@ -63,7 +63,7 @@ def default_settings_ex2_train():
     "num_users": 128,
     "batch_size": 4,
     "train_hdf": "data/ex2/experiment2_training_data.hdf",
-    "val_hdf": "data/ex2/experiment2_val_data.hdf",
+    "val_hdf": "data/ex2/experiment2_eval_data.hdf",
     "models_dir": "models/ex2/",
     "figs_dir": "figures/ex2/",
     "num_samples": 1,
