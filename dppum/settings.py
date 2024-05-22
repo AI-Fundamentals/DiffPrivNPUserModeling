@@ -88,7 +88,7 @@ def default_settings_ex2_train():
 
 
 
-def default_settings_ex2_test():
+def default_settings_ex2_eval():
     """Returns a dictionary of settings for testing a model for experiment 2.
     
     Returns
