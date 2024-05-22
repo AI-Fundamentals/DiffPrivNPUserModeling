@@ -100,8 +100,12 @@ def default_settings_ex2_eval():
             Number of users to load from the training data hdf.
         batch_size : int
             Number of users to put into each batch. Default is 4.
-        test_hdf : str
-            Path to the hdf file to load the test from.
+        eval_hdf : str
+            Path to the hdf file to load the evaluation data from. This should
+            probably have n_traj of 1 - 8.
+        eval_ntraj_hdf : str
+            Path to the hdf file to load the evaluation data from for assessing
+            the impact of n_traj. This should have n_traj = 10.
         models_dir : str
             The folder to load the trained models from.
         figs_dir : str
@@ -118,7 +122,8 @@ def default_settings_ex2_eval():
     settings = {
         "num_users": 128,
         "batch_size": 4,
-        "test_hdf": "data/ex2/experiment2_test_data.hdf",
+        "eval_hdf": "data/ex2/experiment2_eval_data.hdf",
+        "eval_ntraj_hdf": "data/ex2/experiment2_eval_ntraj_data.hdf",
         "models_dir": "models/ex2/",
         "figs_dir": "figures/ex2/",
         "num_samples": 1,
