@@ -84,13 +84,16 @@ else:
 # %% Load the test dataset
 
 # Load and prepare the data
-dataloader_eval, metadata_eval = hdf_to_dataloader_pad(eval_settings['eval_hdf'],
+dataloader_eval, metadata_eval = hdf_to_dataloader_pad(eval_settings['eval_ntraj_hdf'],
                                             n_users=eval_settings['num_users'],
                                             batch_size=eval_settings['batch_size'],
                                             padding_value=eval_settings['padding_value']
                                             )
-print(f"\nMetadata for dataloader from file '{eval_settings['eval_hdf']}':")
+print(f"\nMetadata for dataloader from file '{eval_settings['eval_ntraj_hdf']}':")
 print_dictionary(metadata_eval)
+
+if metadata_eval['n_traj'] != 10:
+    raise ValueError("HDF file for n_traj evaluation must have n_traj=10.")
 
 print("Finished loading test dataset.")
 
