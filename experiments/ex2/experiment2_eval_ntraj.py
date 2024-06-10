@@ -51,6 +51,23 @@ except Exception as e:
     print("\nUsing default settings from function default_settings_ex2_eval().")
     eval_settings = default_settings_ex2_eval()
     eval_settings['settings_file_path'] = "Default"
+    
+print("Finished loading test settings.")
+
+# %% Load training settings
+train_settings_path = os.path.join(eval_settings['models_dir'],'train_settings.json')
+
+# The command line arguments passed to the training script
+with open(train_settings_path, 'r') as f:
+    # Load JSON data from file
+    train_settings = json.load(f)
+
+print("Finished loading training settings.")
+
+# %%
+# Work out which epoch to load
+if eval_settings['best_epoch'] == "max":
+    eval_settings['best_epoch'] = train_settings['num_epochs']
 
 # Save the command line args to a json in model save folder
 # Check if the directory exists
@@ -62,17 +79,6 @@ if not os.path.exists(eval_settings['models_dir']):
 with open(os.path.join(eval_settings['models_dir'], "eval_settings.json"), 'w') as json_file:
     json.dump(eval_settings, json_file,indent=4)
 
-print("Finished loading test settings.")
-
-# %% Load training settings
-train_settings_path = os.path.join(eval_settings['models_dir'],'train_settings.json')
-
-# The command line arguments passed to the training script
-with open(train_settings_path, 'r') as f:
-    # Load JSON data from file
-    train_settings = json.load(f)
-
-print("Finished loading training settings.")    
     
 # %% A list of the training epochs
 if train_settings['warmup_epoch']:
