@@ -116,6 +116,10 @@ def default_settings_ex2_eval():
             Value to use for padding during batching. Should be a value that is
             not in the scope of the real data (e.g. use -1 for one-hot encoded
             categorical data.)
+        best_epoch : union[int,str]
+            Value of the best training epoch, to be used for evaluating the
+            impact of n_traj. If this is an int it will load that epoch, or if
+            it is the string 'max' it will load the highest one.
         
     """ 
     
@@ -127,7 +131,8 @@ def default_settings_ex2_eval():
         "models_dir": "models/ex2/",
         "figs_dir": "figures/ex2/",
         "num_samples": 1,
-        "padding_value" : -1.0
+        "padding_value" : -1.0,
+        "best_epoch" : "max" 
     }
     return settings
 
