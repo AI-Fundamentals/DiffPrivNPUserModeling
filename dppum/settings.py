@@ -108,7 +108,44 @@ def default_settings_ex2_eval():
         eval_hdf : str
             Path to the hdf file to load the evaluation data from. This should
             probably have n_traj of 1 - 8.
-        eval_ntraj_hdf : str
+        models_dir : str
+            The folder to load the trained models from.
+        figs_dir : str
+            The folder for output figures.
+        num_samples : int
+            Number of samples to take for model evaluation.
+        padding_value : float
+            Value to use for padding during batching. Should be a value that is
+            not in the scope of the real data (e.g. use -1 for one-hot encoded
+            categorical data.)
+        
+    """ 
+    
+    settings = {
+        "num_users": 128,
+        "batch_size": 4,
+        "eval_hdf": "data/ex2/experiment2_eval_data.hdf",
+        "models_dir": "models/ex2/",
+        "figs_dir": "figures/ex2/",
+        "num_samples": 1,
+        "padding_value": -1.0
+    }
+    return settings
+
+def default_settings_ex2_eval_ntraj():
+    """Returns a dictionary of settings for testing a model for experiment 2,
+    to evaluate the impact of varying n_traj.
+    
+    Returns
+    -------
+    settings : dict
+        A dictionary containing all the arguments for the function.
+        The keys and values are as follows:
+        num_users : int
+            Number of users to load from the training data hdf.
+        batch_size : int
+            Number of users to put into each batch. Default is 4.
+        eval_hdf : str
             Path to the hdf file to load the evaluation data from for assessing
             the impact of n_traj. This should have n_traj = 10.
         models_dir : str
@@ -121,23 +158,22 @@ def default_settings_ex2_eval():
             Value to use for padding during batching. Should be a value that is
             not in the scope of the real data (e.g. use -1 for one-hot encoded
             categorical data.)
-        best_epoch : union[int,str]
-            Value of the best training epoch, to be used for evaluating the
-            impact of n_traj. If this is an int it will load that epoch, or if
-            it is the string 'max' it will load the highest one.
+        init_weights : str
+            Path to a file containings weights to initialize the model. If
+            null/None, weights will be initialized randomly. An example would
+            be "models/ex2/weights_epoch_5.pt".
         
     """ 
     
     settings = {
         "num_users": 128,
         "batch_size": 4,
-        "eval_hdf": "data/ex2/experiment2_eval_data.hdf",
-        "eval_ntraj_hdf": "data/ex2/experiment2_eval_ntraj_data.hdf",
+        "eval_hdf": "data/ex2/experiment2_eval_ntraj_data.hdf",
         "models_dir": "models/ex2/",
         "figs_dir": "figures/ex2/",
         "num_samples": 1,
-        "padding_value" : -1.0,
-        "best_epoch" : "max" 
+        "padding_value": -1.0,
+        "init_weights": "models/ex2/weights_epoch_5.pt"
     }
     return settings
 
