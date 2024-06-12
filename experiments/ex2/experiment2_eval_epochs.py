@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from dppum.data import hdf_to_dataloader_pad
 from dppum.util import print_dictionary, calc_greedy_acc_onehot, calc_true_confidence
 from dppum.train import get_device_type
-from dppum.settings import default_settings_ex2_eval
+from dppum.settings import default_settings_ex2_eval_epochs
 
 print("Finished importing packages.")
 
@@ -34,7 +34,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-settings", 
                     help="Path to settings json file.", 
                     type=str, 
-                    default="settings/settings_ex2_eval.json")
+                    default="settings/settings_ex2_eval_epochs.json")
 
 # Parsing the arguments to a dictionary
 eval_settings_file_path = vars(parser.parse_args())['settings']
@@ -48,8 +48,8 @@ try:
     print("Loaded settings successfully.")
 except Exception as e:
     print("Failed to load settings due to the following error:", e)
-    print("\nUsing default settings from function default_settings_ex2_eval().")
-    eval_settings = default_settings_ex2_eval()
+    print("\nUsing default settings from function default_settings_ex2_eval_epochs().")
+    eval_settings = default_settings_ex2_eval_epochs()
     eval_settings['settings_file_path'] = "Default"
 
 # Save the command line args to a json in model save folder

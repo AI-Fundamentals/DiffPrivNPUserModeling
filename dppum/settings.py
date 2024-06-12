@@ -93,8 +93,9 @@ def default_settings_ex2_train():
 
 
 
-def default_settings_ex2_eval():
-    """Returns a dictionary of settings for testing a model for experiment 2.
+def default_settings_ex2_eval_epochs():
+    """Returns a dictionary of settings for evaluating performance of a model
+    for experiment 2 as a function of number of training epochs.
     
     Returns
     -------
