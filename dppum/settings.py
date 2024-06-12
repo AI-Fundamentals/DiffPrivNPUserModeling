@@ -19,6 +19,10 @@ def default_settings_ex2_train():
             The folder to save the trained models.
         figs_dir : str
             The folder for output figures.
+        init_weights : str
+            Path to a file containings weights to initialize the model. If
+            null/None, weights will be initialized randomly. An example would
+            be "models/ex2/weights_epoch_5.pt".
         num_samples : int
             Number of samples to take for model evaluation.
         num_epochs : int
@@ -66,6 +70,7 @@ def default_settings_ex2_train():
     "val_hdf": "data/ex2/experiment2_eval_data.hdf",
     "models_dir": "models/ex2/",
     "figs_dir": "figures/ex2/",
+    "init_weights": None,
     "num_samples": 1,
     "num_epochs": 5,
     "epsilon": 1.0,
