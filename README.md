@@ -1,15 +1,20 @@
 # dp-priv-python
-Differentially Private Probabilistic User Modelling (in python)
+Differentially Private Probabilistic User Modelling (in python). This is a python implementation of [this](https://github.com/hamalajaa/DifferentiablyPrivateProbabilisticUserModeling) Julia repo.
 
 
 #### Installation instructions
-1. Create and activate a python 3.9 environment
-2. Install packages from pip:
+1. Clone and enter the repo:
+    ```
+    git clone https://github.com/AI-Fundamentals/dp-priv-python.git
+    cd dp-priv-python
+    ```
+2. Create and activate a python 3.9 environment
+3. Install packages from pip:
 
     ```
     pip install -r requirements.txt
     ```
-2. Install PyTorch:
+4. Install PyTorch:
    1. On a "standard" system with Nvidia GPU:
    ```
     pip install torch
@@ -21,7 +26,7 @@ Differentially Private Probabilistic User Modelling (in python)
     ```
    3. On high-performance computing systems, refer to the relevant documentation.
 
-4. Install `neuralprocesses` from github:
+5. Install `neuralprocesses` from github:
 
     ```
     pip install git+https://github.com/wesselb/neuralprocesses.git
@@ -44,7 +49,7 @@ To run the training for experiment 2:
 ```
 python -m experiments.ex2.experiment2_train -settings settings/settings_ex2_train.json
 ```
-Settings must be loaded from a valid `json` file. If no valid file is found (or the `-settings` argument isn't used), the default settings will be loaded instead. For full details of the settings file, see the docstrings in [dppum/settings.py](dppum/settings.py).
+Settings must be loaded from a valid `json` file. If no valid file is found (or the `-settings` argument isn't used), the default settings will be loaded instead. For full details of the settings file, see the docstrings in [dppum/settings.py](dppum/settings.py). Each function in this file returns a dictionary with the same keys as are required in the relevant settings file.
 
 #### Re-training a pre-trained model
 In the training settings json file, there is an item 'init_weights'. Set this to the path of a file containing weights from a previous model training run. These weights will then be used as the initial training weights.
