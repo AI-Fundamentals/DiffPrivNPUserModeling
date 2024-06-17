@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from dppum.data import hdf_to_dataloader_pad
 from dppum.util import print_dictionary, calc_greedy_acc_onehot, calc_true_confidence
 from dppum.train import get_device_type
-from dppum.settings import default_settings_ex2_test
+from dppum.settings import default_settings_ex2_eval_ntraj
 
 print("Finished importing packages.")
 
@@ -34,7 +34,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-settings", 
                     help="Path to settings json file.", 
                     type=str, 
-                    default="settings/settings_ex2_test.json")
+                    default="settings/settings_ex2_eval_ntraj.json")
 
 # Parsing the arguments to a dictionary
 eval_settings_file_path = vars(parser.parse_args())['settings']
@@ -48,9 +48,26 @@ try:
     print("Loaded settings successfully.")
 except Exception as e:
     print("Failed to load settings due to the following error:", e)
-    print("\nUsing default settings from function default_settings_ex2_test().")
-    eval_settings = default_settings_ex2_test()
+    print("\nUsing default settings from function default_settings_ex2_eval().")
+    eval_settings = default_settings_ex2_eval_ntraj()
     eval_settings['settings_file_path'] = "Default"
+    
+print("Finished loading test settings.")
+
+# %% Load training settings
+train_settings_path = os.path.join(eval_settings['models_dir'],'train_settings.json')
+
+# The command line arguments passed to the training script
+with open(train_settings_path, 'r') as f:
+    # Load JSON data from file
+    train_settings = json.load(f)
+
+print("Finished loading training settings.")
+
+# %%
+# Work out which epoch to load
+if eval_settings['best_epoch'] == "max":
+    eval_settings['best_epoch'] = train_settings['num_epochs']
 
 # Save the command line args to a json in model save folder
 # Check if the directory exists
@@ -62,17 +79,6 @@ if not os.path.exists(eval_settings['models_dir']):
 with open(os.path.join(eval_settings['models_dir'], "eval_settings.json"), 'w') as json_file:
     json.dump(eval_settings, json_file,indent=4)
 
-print("Finished loading test settings.")
-
-# %% Load training settings
-train_settings_path = os.path.join(eval_settings['models_dir'],'train_settings.json')
-
-# The command line arguments passed to the training script
-with open(train_settings_path, 'r') as f:
-    # Load JSON data from file
-    train_settings = json.load(f)
-
-print("Finished loading training settings.")    
     
 # %% A list of the training epochs
 if train_settings['warmup_epoch']:
@@ -84,13 +90,16 @@ else:
 # %% Load the test dataset
 
 # Load and prepare the data
-dataloader_test, metadata_test = hdf_to_dataloader_pad(eval_settings['test_hdf'],
+dataloader_eval, metadata_eval = hdf_to_dataloader_pad(eval_settings['eval_ntraj_hdf'],
                                             n_users=eval_settings['num_users'],
                                             batch_size=eval_settings['batch_size'],
                                             padding_value=eval_settings['padding_value']
                                             )
-print(f"\nMetadata for dataloader from file '{eval_settings['test_hdf']}':")
-print_dictionary(metadata_test)
+print(f"\nMetadata for dataloader from file '{eval_settings['eval_ntraj_hdf']}':")
+print_dictionary(metadata_eval)
+
+if metadata_eval['n_traj'] != 10:
+    raise ValueError("HDF file for n_traj evaluation must have n_traj=10.")
 
 print("Finished loading test dataset.")
 
@@ -128,7 +137,7 @@ for epoch in epochs:
     conf_greedy_this_epoch = []    
     
     # Iterate over the batches of the dataset.
-    for step, (xc, yc, xt, yt) in enumerate(dataloader_test):
+    for step, (xc, yc, xt, yt) in enumerate(dataloader_eval):
         # Move tensors to training device (GPU)
         xc = xc.to(device)
         yc = yc.to(device)

@@ -104,6 +104,11 @@ model_ex2 = model_ex2.to(device)
 print("Finished constructing the model.")
 
 # %%
+# Load weights from file if required
+if train_settings['init_weights']:
+    model_ex2.load_state_dict(torch.load(train_settings['init_weights']))
+
+# %%
 # Setup optimizer
 valid_optimizers = ['Adam']
 if train_settings['optimizer'] == 'Adam':
