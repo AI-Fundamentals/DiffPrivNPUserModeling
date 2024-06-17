@@ -3,7 +3,7 @@
 # Example from https://wessel.ai/neuralprocesses/basic_usage.html
 # Pytorch version
 
-def test_nps_tf():
+def test_nps():
     try:
         import lab as B
         import torch
