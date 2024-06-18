@@ -26,13 +26,7 @@ Differentially Private Probabilistic User Modelling (in python). This is a pytho
     ```
    3. On high-performance computing systems, refer to the relevant documentation.
 
-5. Install `neuralprocesses` from github:
-
-    ```
-    pip install git+https://github.com/wesselb/neuralprocesses.git
-    ```
-
-6. Test the environment installation:
+5. Test the environment installation:
 
     ```
     pytest tests/test_nps.py
