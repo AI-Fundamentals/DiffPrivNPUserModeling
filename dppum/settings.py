@@ -67,7 +67,7 @@ def default_settings_ex2_train():
     "num_users": 128,
     "batch_size": 4,
     "train_hdf": "data/ex2/experiment2_train_data.hdf",
-    "val_hdf": "data/ex2/experiment2_eval_data.hdf",
+    "val_hdf": "data/ex2/experiment2_eval_epochs_data.hdf",
     "models_dir": "models/ex2/",
     "figs_dir": "figures/ex2/",
     "init_weights": None,
@@ -125,7 +125,7 @@ def default_settings_ex2_eval_epochs():
     settings = {
         "num_users": 128,
         "batch_size": 4,
-        "eval_hdf": "data/ex2/experiment2_eval_data.hdf",
+        "eval_hdf": "data/ex2/experiment2_eval_epochs_data.hdf",
         "models_dir": "models/ex2/",
         "figs_dir": "figures/ex2/",
         "num_samples": 1,
