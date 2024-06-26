@@ -65,10 +65,6 @@ with open(train_settings_path, 'r') as f:
 print("Finished loading training settings.")
 
 # %%
-# Work out which epoch to load
-if eval_settings['best_epoch'] == "max":
-    eval_settings['best_epoch'] = train_settings['num_epochs']
-
 # Save the command line args to a json in model save folder
 # Check if the directory exists
 if not os.path.exists(eval_settings['models_dir']):
@@ -79,23 +75,15 @@ if not os.path.exists(eval_settings['models_dir']):
 with open(os.path.join(eval_settings['models_dir'], "eval_settings.json"), 'w') as json_file:
     json.dump(eval_settings, json_file,indent=4)
 
-    
-# %% A list of the training epochs
-if train_settings['warmup_epoch']:
-    epochs = np.arange(0,train_settings['num_epochs']+1)
-else:
-    epochs = np.arange(1,train_settings['num_epochs']+1)
-
-
 # %% Load the test dataset
 
 # Load and prepare the data
-dataloader_eval, metadata_eval = hdf_to_dataloader_pad(eval_settings['eval_ntraj_hdf'],
+dataloader_eval, metadata_eval = hdf_to_dataloader_pad(eval_settings['eval_hdf'],
                                             n_users=eval_settings['num_users'],
                                             batch_size=eval_settings['batch_size'],
                                             padding_value=eval_settings['padding_value']
                                             )
-print(f"\nMetadata for dataloader from file '{eval_settings['eval_ntraj_hdf']}':")
+print(f"\nMetadata for dataloader from file '{eval_settings['eval_hdf']}':")
 print_dictionary(metadata_eval)
 
 if metadata_eval['n_traj'] != 10:
@@ -124,25 +112,43 @@ model_ex2 = nps.construct_agnp(
     )
 model_ex2 = model_ex2.to(device)
 
+# %% Load the model weights
+# Load weights from file if required
+if eval_settings['init_weights']:
+    model_ex2.load_state_dict(torch.load(eval_settings['init_weights']))
+else:
+    raise ValueError("Training settings file must contain the init_weights key with a value of the path to the file from which to load model weights.")
+
 # %% Loop through epochs and test accuracy
 # This loop is quite similar to the training loop but does not train the model
 
 # Define a dataframe to store the results
 columns = ["acc_greedy", "acc_sample_mean", "acc_sample_Q5", "acc_sample_Q25", "acc_sample_Q50", "acc_sample_Q75", "acc_sample_Q95"]
-df_results = pd.DataFrame(columns=columns,index=epochs,dtype='float')
-df_results.index.name = 'epoch'
+n_traj = np.arange(0,10)
+df_results = pd.DataFrame(columns=columns,index=n_traj,dtype='float')
+df_results.index.name = 'n_traj'
 
 model_ex2.eval()
-for epoch in epochs:
-    # Load the trained model
-    model_name = f"weights_epoch_{epoch}.pt"
-    model_ex2.load_state_dict(torch.load(os.path.join(eval_settings['models_dir'], model_name)))
-    acc_greedy_this_epoch = []
-    acc_sample_this_epoch = []
-    conf_greedy_this_epoch = []    
+for ntraj in n_traj:
+    
+    end_idx_perm = 5 * ntraj
+    
+    if ntraj>0:    
+        end_idx_length = (5 * (ntraj-1)) + 1 
+    else:
+        end_idx_length = 0
+    
+    
+    acc_greedy_this_ntraj = []
+    acc_sample_this_ntraj = []
+    conf_greedy_this_ntraj = []    
     
     # Iterate over the batches of the dataset.
     for step, (xc, yc, xt, yt) in enumerate(dataloader_eval):
+        # Set some trajectories to be padding (so not used)
+        xc[:,end_idx_perm:,:,end_idx_length:] = eval_settings['padding_value']
+        yc[:,end_idx_perm:,:,end_idx_length:] = eval_settings['padding_value']
+        
         # Move tensors to training device (GPU)
         xc = xc.to(device)
         yc = yc.to(device)
@@ -164,30 +170,28 @@ for epoch in epochs:
                 ) 
 
         # Accuracy of the non-padding values
-        greedy_accuracy = calc_greedy_acc_onehot(yt,yt_pred,cat_axis=-2,padding_value=train_settings['padding_value'])
+        greedy_accuracy = calc_greedy_acc_onehot(yt,yt_pred,cat_axis=-2,padding_value=eval_settings['padding_value'])
         # Sample accuracy is the model's confidence in the true category
-        sample_accuracy = calc_true_confidence(yt,yt_pred,-2,padding_value=train_settings['padding_value'])
+        sample_accuracy = calc_true_confidence(yt,yt_pred,-2,padding_value=eval_settings['padding_value'])
         
         # Append values the epoch lists
         for value in greedy_accuracy.cpu().numpy().ravel():
-            acc_greedy_this_epoch.append(float(value))
+            acc_greedy_this_ntraj.append(float(value))
         for value in sample_accuracy.cpu().numpy().ravel():
-            acc_sample_this_epoch.append(float(value))
+            acc_sample_this_ntraj.append(float(value))
         
     ##### End of epoch calculations #####
-    df_results.loc[epoch,'acc_greedy'] = np.mean(acc_greedy_this_epoch)
-    df_results.loc[epoch,'acc_sample_mean'] = np.mean(acc_sample_this_epoch)
-    df_results.loc[epoch,'acc_sample_Q5'] = np.quantile(acc_sample_this_epoch,0.05)
-    df_results.loc[epoch,'acc_sample_Q25'] = np.quantile(acc_sample_this_epoch,0.25)
-    df_results.loc[epoch,'acc_sample_Q50'] = np.quantile(acc_sample_this_epoch,0.5)
-    df_results.loc[epoch,'acc_sample_Q75'] = np.quantile(acc_sample_this_epoch,0.75)
-    df_results.loc[epoch,'acc_sample_Q95'] = np.quantile(acc_sample_this_epoch,0.95)
+    df_results.loc[ntraj,'acc_greedy'] = np.mean(acc_greedy_this_ntraj)
+    df_results.loc[ntraj,'acc_sample_mean'] = np.mean(acc_sample_this_ntraj)
+    df_results.loc[ntraj,'acc_sample_Q5'] = np.quantile(acc_sample_this_ntraj,0.05)
+    df_results.loc[ntraj,'acc_sample_Q25'] = np.quantile(acc_sample_this_ntraj,0.25)
+    df_results.loc[ntraj,'acc_sample_Q50'] = np.quantile(acc_sample_this_ntraj,0.5)
+    df_results.loc[ntraj,'acc_sample_Q75'] = np.quantile(acc_sample_this_ntraj,0.75)
+    df_results.loc[ntraj,'acc_sample_Q95'] = np.quantile(acc_sample_this_ntraj,0.95)
     
 
 # %% Save accuracy data
-accuracy_csv_path = os.path.join(eval_settings['models_dir'],"eval_acc_vs_epochs.csv")
-df_results.to_csv(accuracy_csv_path,index=True)
-
+accuracy_csv_path = os.path.join(eval_settings['models_dir'],"eval_acc_vs_ntraj.csv")
 df_results.round(3).to_csv(accuracy_csv_path,index=True)
 
 # %% Plot accuracy vs epochs
