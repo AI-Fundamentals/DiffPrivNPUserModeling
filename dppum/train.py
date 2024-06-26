@@ -439,7 +439,7 @@ def train_model_dp_torch(
         # Convert the dictionary to a pandas DataFrame        
         csv_name = 'training_metrics.csv'
         csv_path = os.path.join(settings['models_dir'], csv_name)
-        pd.DataFrame(history).set_index('epoch').to_csv(csv_path)
+        pd.DataFrame(history).round(3).set_index('epoch').to_csv(csv_path)
         
     
     return history

@@ -188,6 +188,7 @@ for epoch in epochs:
 accuracy_csv_path = os.path.join(eval_settings['models_dir'],"eval_acc_vs_epochs.csv")
 df_results.to_csv(accuracy_csv_path,index=True)
 
+df_results.round(3).to_csv(accuracy_csv_path,index=True)
 
 # %% Plot accuracy vs epochs
 
