@@ -200,7 +200,7 @@ if not os.path.exists(eval_settings['figs_dir']):
     os.makedirs(eval_settings['figs_dir'])
 
 # Save the figure
-fig.savefig(os.path.join(eval_settings['figs_dir'],'experiment2_eval_metrics.png'))
+fig.savefig(os.path.join(eval_settings['figs_dir'],'ex2_eval_epochs_metrics.png'))
 
 
 print("Finished plotting training metrics.")
