@@ -85,12 +85,17 @@ dataloader_val,metadata_val = hdf_to_dataloader_pad(train_settings['val_hdf'],
 print(f"\nMetadata for dataloader from file '{train_settings['val_hdf']}':")
 print_dictionary(metadata_val)
 
+# %% Get dimensions of the data
+dataiter = iter(dataloader_train)
+_,_,xt,yt = next(dataiter)
+dim_x = xt.shape[2]
+dim_y = yt.shape[2]
 
 # %%
 # Construct the model
 model_ex2 = nps.construct_agnp(
-    dim_x=17, # From the data dimensions
-    dim_y=9, # From the data dimensions
+    dim_x=dim_x, # From the data dimensions
+    dim_y=dim_y, # From the data dimensions
     dim_embedding=128, # Specified in appendix as hidden dimensions
     num_enc_layers=6, # Specified in appendix as number of layers
     num_dec_layers=6, # Specified in appendix as number of layers
