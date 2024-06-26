@@ -1,0 +1,75 @@
+#!/bin/bash --login
+ 
+# Job will run in the current directory (where you ran qsub)
+#$ -cwd
+
+# Mount NVIDIA a100 GPU
+#$ -l a100
+ 
+# Request 4 CPU core
+#$ -pe smp.pe 4
+ 
+# Name the project name
+#$ -N dppum-setup
+ 
+# Join output file to .o
+#$ -j y
+
+# Purge modules
+module purge
+
+# Python 3.9 for GPUS: (uses CUDA 11.3, Anaconda3, 2021.11) - works on v100 AND A100 GPUs
+module load apps/binapps/pytorch/1.11.0-39-gpu-cu113
+
+# Name of the environment
+ENV_NAME="dppum-torch"
+
+# Version of Python
+PYTHON_VERSION="3.9"
+
+# Check if the environment already exists
+conda env list | awk '{print $1}' | grep -x $ENV_NAME
+if [ $? -eq 0 ]; then
+    echo "Environment $ENV_NAME already exists, removing..."
+    # Remove it using conda
+    conda env remove --name $ENV_NAME
+    # double check by removing the folder
+    rm -rf $CONDA_PREFIX/envs/$ENV_NAME
+fi
+
+# Create the environment
+echo "Creating new environment $ENV_NAME with Python $PYTHON_VERSION..."
+conda create --name $ENV_NAME python=$PYTHON_VERSION --yes
+
+echo "Environment '$ENV_NAME' created successfully."
+source activate $ENV_NAME
+
+# Check if activation was successful
+if [ $? -eq 0 ]; then
+    echo "Successfully activated $ENV_NAME"
+else
+    echo "Failed to activate $ENV_NAME. Aborting."
+    exit 1
+fi
+
+echo -e "\nInstalling hdf5 from conda\n"
+conda install -c anaconda hdf5
+
+echo -e "\nInstalling pip packages from requirements.txt\n"
+pip install --isolated -r requirements.txt
+
+# We now have a python environment with the required packages
+echo -e "\nFinished creating python environment $ENV_NAME\n"
+
+echo -e "\nRunning a test of the environment $ENV_NAME:\n"
+python3 -c "
+from dppum.train import get_device_type
+print(get_device_type())
+"
+echo -e "\nFinished running environment test. It should have said something like 'cuda:0'"
+
+echo -e "\nRunning test_nps.py to test the neuralprocesses installation."
+pytest tests/test_nps.py
+echo -e "\nFinished running test_nps.py"
+
+echo -e "\nFinished running jobscript."
