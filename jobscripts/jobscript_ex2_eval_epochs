@@ -10,7 +10,7 @@
 #$ -pe smp.pe 4
  
 # Name the project name
-#$ -N dppum-ex2-eval-epochs
+#$ -N ex2-eval-epochs
  
 # Join output file to .o
 #$ -j y
