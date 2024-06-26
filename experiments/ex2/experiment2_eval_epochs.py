@@ -203,4 +203,4 @@ if not os.path.exists(eval_settings['figs_dir']):
 fig.savefig(os.path.join(eval_settings['figs_dir'],'ex2_eval_epochs_metrics.png'))
 
 
-print("Finished plotting training metrics.")
+print("Finished plotting eval epochs metrics.")
