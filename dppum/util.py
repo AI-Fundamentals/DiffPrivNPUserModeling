@@ -127,7 +127,8 @@ def calc_true_confidence(y_true_onehot,y_pred_onehot, cat_axis=-1, padding_value
     # If there is padding, create the padding mask
     if padding_value is not None:
         padding_mask = (y_true_onehot == padding_value)
-        padding_mask = B.any(padding_mask, axis=cat_axis)            
+        padding_mask = B.any(padding_mask, axis=cat_axis)
+        padding_mask = B.squeeze(padding_mask)
         mean_confidence = B.mean(y_true_confidence[~padding_mask])
     else:
         # Calculate the mean confidence, ignoring padding
