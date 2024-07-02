@@ -2,8 +2,8 @@
     "num_users": 128,
     "batch_size": 4,
     "eval_hdf": "data/ex2/ex2_eval_epochs_data.hdf",
-    "models_dir": "models/ex2/",
-    "figs_dir": "figures/ex2/",
+    "models_dir": "models/ex2/eps1_128users/",
+    "figs_dir": "figures/ex2/eps1_128users/",
     "num_samples": 1,
     "padding_value": -1.0
 }

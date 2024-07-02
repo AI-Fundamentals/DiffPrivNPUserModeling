@@ -68,8 +68,8 @@ def default_settings_ex2_train():
     "batch_size": 4,
     "train_hdf": "data/ex2/ex2_train_data.hdf",
     "val_hdf": "data/ex2/ex2_eval_epochs_data.hdf",
-    "models_dir": "models/ex2/",
-    "figs_dir": "figures/ex2/",
+    "models_dir": "models/ex2/eps1_128users/",
+    "figs_dir": "figures/ex2/eps1_128users/",
     "init_weights": None,
     "num_samples": 1,
     "num_epochs": 5,
@@ -126,8 +126,8 @@ def default_settings_ex2_eval_epochs():
         "num_users": 128,
         "batch_size": 4,
         "eval_hdf": "data/ex2/ex2_eval_epochs_data.hdf",
-        "models_dir": "models/ex2/",
-        "figs_dir": "figures/ex2/",
+        "models_dir": "models/ex2/eps1_128users/",
+        "figs_dir": "figures/ex2/eps1_128users/",
         "num_samples": 1,
         "padding_value": -1.0
     }
@@ -170,11 +170,11 @@ def default_settings_ex2_eval_ntraj():
         "num_users": 128,
         "batch_size": 4,
         "eval_hdf": "data/ex2/ex2_eval_ntraj_data.hdf",
-        "models_dir": "models/ex2/",
-        "figs_dir": "figures/ex2/",
+        "models_dir": "models/ex2/eps1_128users/",
+        "figs_dir": "figures/ex2/eps1_128users/",
         "num_samples": 1,
         "padding_value": -1.0,
-        "init_weights": "models/ex2/weights_epoch_5.pt"
+        "init_weights": "models/ex2/eps1_128users/weights_epoch_5.pt"
     }
     return settings
 
