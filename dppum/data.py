@@ -145,9 +145,9 @@ def hdf_to_dataloader_pad(filepath, n_users=16, batch_size=1, padding_value=-1.)
     # Load metadata from the HDF file
     metadata = hdf_get_metadata(filepath)
     # Augment the metadata
-    metadata['n_users'] = n_users
+    metadata['n_users'] = min(n_users,metadata['n_users'])
     metadata['batch_size'] = batch_size
-    metadata['n_batches'] = int(np.ceil(n_users/batch_size))
+    metadata['n_batches'] = int(np.ceil(metadata['n_users']/batch_size))
     
     return dataloader, metadata
 
