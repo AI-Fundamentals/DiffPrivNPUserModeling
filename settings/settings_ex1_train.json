@@ -14,7 +14,6 @@
     "clip_grads_per_user": "loop",
     "learning_rate": 0.0005,
     "warmup_epoch": true,
-    "clip_user": "loop",
     "dp_enc" : true,
     "dp_dec" : false,
     "shuffle" : false,
