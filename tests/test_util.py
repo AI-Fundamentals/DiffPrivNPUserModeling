@@ -14,7 +14,8 @@ from dppum.util import (
     flatten_first_two_dims,
     reshape_to_last,
     swap_axes,
-    logpdf_explicit
+    logpdf_explicit,
+    average_grads_batch_torch
     )
 
 
@@ -186,6 +187,27 @@ def test_logpdf_explicit():
     assert torch.equal(logpdf_explicit(data1,data2,1),B.log(torch.tensor([9,25])))
     assert torch.equal(logpdf_explicit(data1,data2,0),B.log(torch.tensor([5,8,9,16,25])))
     
+    
+def test_average_grads_batch_torch():
+    shape1 = (3,4)
+    shape2 = (4,3)
+    shape3 = (5,5)
+    # Average of all these should be 2
+    list1 = [torch.full(shape1, 1.), torch.full(shape2, 1.), torch.full(shape3, 1.)]
+    list2 = [torch.full(shape1, 3.), torch.full(shape2, 3.), torch.full(shape3, 3.)]
+    list3 = [torch.full(shape1, 4.), torch.full(shape2, 4.), torch.full(shape3, 4.)]
+    list4 = [torch.full(shape1, 0.), torch.full(shape2, 0.), torch.full(shape3, 0.)]
+    
+    biglist = [list1,list2,list3,list4]
+    
+    biglist_avg = average_grads_batch_torch(biglist)
+    
+    avglist_check = [torch.full(shape1, 2.), torch.full(shape2, 2.), torch.full(shape3, 2.)]
+    
+    
+    assert all(torch.allclose(tensor1, tensor2) for tensor1, tensor2 in zip(biglist_avg, avglist_check))
+
+
     
     
     
