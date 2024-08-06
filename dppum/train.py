@@ -7,9 +7,12 @@ import pandas as pd
 import neuralprocesses.torch as nps
 
 from dppum.privacy_oracle import get_sigma_from_privacy_loss_distribution as get_sigma
-from dppum.util import calc_greedy_confidence, calc_true_confidence, calc_greedy_acc_onehot
+from dppum.util import calc_greedy_confidence, calc_true_confidence, calc_greedy_acc_onehot, swap_axes, average_grads_batch_torch
   
     
+  
+    
+  
 class AverageMeter(object):
     """Computes and stores the average and current value. This is used as a 
     training metric.
@@ -467,43 +470,3 @@ def get_device_type():
 
     
 
-def average_grads_batch_torch(tensor_list):
-    """
-    Compute the average of tensors over the batch dimension. This is designed
-    to average a list of lists of gradients into one single list of gradients.
-
-    Parameters
-    ----------
-    tensor_list : list of list of torch.Tensor
-        The input list of lists of tensors. The dimensions of this list of
-        lists are [batch,num_tensors,tensor_sizes].
-
-    Returns
-    -------
-    list of torch.Tensor
-        The output list of averaged tensors. The dimensions of this list are
-        [num_tensors,tensor_sizes].
-
-    """
-    # Initialize a list to store the averaged tensors
-    averaged_tensors = []
-
-    # Iterate over the number of tensors
-    for i in range(len(tensor_list[0])):
-        # Initialize a list to store the tensors of the current index from each batch
-        tensors = []
-
-        # Iterate over the batches
-        for j in range(len(tensor_list)):
-            # Append the tensor of the current index from the current batch to the list
-            tensors.append(tensor_list[j][i])
-
-        # Convert the list of tensors to a 3D tensor
-        tensors = torch.stack(tensors)
-
-        # Calculate the mean over the batch dimension (0th dimension) and
-        # append the result to the averaged tensors list
-        averaged_tensors.append(torch.mean(tensors, dim=0))
-
-    # Return the list of averaged tensors
-    return averaged_tensors
