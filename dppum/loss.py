@@ -162,7 +162,7 @@ def np_elbo_explicit(
     subsume_context=False,
     fix_noise=None,
     dtype_lik=None,
-    padding_values=None,
+    padding_value=None,
 
     **kw_args,
 ):
@@ -186,7 +186,7 @@ def np_elbo_explicit(
         fix_noise (float, optional): Fix the likelihood variance to this value.
         dtype_lik (dtype, optional): Data type to use for the likelihood computation.
             Defaults to the 64-bit variant of the data type of `yt`.
-        padding_values : float, optional
+        padding_value : float, optional
             Padding value for yt which will be discarded during the loss calculations.
 
     Returns:
@@ -259,14 +259,14 @@ def np_elbo_explicit(
     recon_loss = logpdf_explicit(yt_pred_prob, yt,axis=cat_axis)
 
     # If there is padding, make sure we set the reconstruction loss to zero
-    if padding_values is not None:  # It gives an error if you do "if padding_values:"
+    if padding_value is not None:  # It gives an error if you do "if padding_value:"
         # If padding is a single value
-        if B.size(padding_values) == 1:
+        if B.size(padding_value) == 1:
             # Identify the padding
-            padding_mask = (yt == padding_values)
+            padding_mask = (yt == padding_value)
             padding_mask = B.any(padding_mask, axis=cat_axis)
         else:
-            raise ValueError("'padding_values' must be a single value")
+            raise ValueError("'padding_value' must be a single value")
             
         # For the padding parts, assign the loss to zero
         recon_loss = B.where(padding_mask, 0., recon_loss)    
