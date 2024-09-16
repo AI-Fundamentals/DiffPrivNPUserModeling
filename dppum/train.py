@@ -236,27 +236,24 @@ def train_model_dp_torch(
         decoder_gradients = [p.grad for p in model.decoder.parameters() if p.requires_grad]
         
         if settings['dp_enc']:
-                # Clip encoder gradients per user
+            # Clip encoder gradients per user
             for i, grad in enumerate(encoder_gradients):
                 if grad is not None:
                     # L2 clipping
                     grad_norm = torch.norm(grad)
-                    grad_normalized = grad / grad_norm
-                    grad_clipped = grad_normalized * min(1.0, settings['clipping_bound'] / grad_norm)
-                    
+                    grad_clipped = grad * min(1.0, settings['clipping_bound'] / grad_norm)
                     # Store the clipped gradient
                     encoder_gradients[i] = grad_clipped.clone()
+                    
         if settings['dp_dec']:
-                # Clip decoder gradients per user
-                for i, grad in enumerate(decoder_gradients):
-                    if grad is not None:
-                        # L2 clipping
-                        grad_norm = torch.norm(grad)
-                        grad_normalized = grad / grad_norm
-                        grad_clipped = grad_normalized * min(1.0, settings['clipping_bound'] / grad_norm)
-                        
-                        # Store the clipped gradient
-                        decoder_gradients[i] = grad_clipped.clone()
+            # Clip decoder gradients per user
+            for i, grad in enumerate(decoder_gradients):
+                if grad is not None:
+                    # L2 clipping
+                    grad_norm = torch.norm(grad)
+                    grad_clipped = grad * min(1.0, settings['clipping_bound'] / grad_norm)
+                    # Store the clipped gradient
+                    decoder_gradients[i] = grad_clipped.clone()
         
         return encoder_gradients, decoder_gradients
     
