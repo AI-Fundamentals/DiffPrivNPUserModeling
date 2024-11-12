@@ -92,9 +92,8 @@ _,_,xt,yt = next(dataiter)
 dim_x = xt.shape[2]
 dim_y = yt.shape[2]
 
-# %%
-# Construct the model
-model_ex2 = nps.construct_agnp(
+# %% Construct the model
+model = nps.construct_agnp(
     dim_x=dim_x, # From the data dimensions
     dim_y=dim_y, # From the data dimensions
     dim_embedding=128, # Specified in appendix as hidden dimensions
@@ -103,31 +102,29 @@ model_ex2 = nps.construct_agnp(
     likelihood=train_settings['likelihood'],
     dim_lv=train_settings['dim_lv'],
     lv_likelihood=train_settings['lv_likelihood'],
-    nonlinearity=train_settings['nonlinearity'],
+    nonlinearity=train_settings['nonlinearity']
     )
-model_ex2 = model_ex2.to(device)
+
+model = model.to(device)
 
 print("Finished constructing the model.")
 
-# %%
-# Load weights from file if required
+# %% Load weights from file if required
 if train_settings['init_weights']:
-    model_ex2.load_state_dict(torch.load(train_settings['init_weights']))
+    model.load_state_dict(torch.load(train_settings['init_weights']))
 
-# %%
-# Setup optimizer
+# %% Setup optimizer
 valid_optimizers = ['Adam']
 if train_settings['optimizer'] == 'Adam':
-    optimizer = torch.optim.Adam(model_ex2.parameters(), lr=train_settings['learning_rate'])
+    optimizer = torch.optim.Adam(model.parameters(), lr=train_settings['learning_rate'])
 else:
     raise ValueError(f"Invalid optimizer name. Expected one of: {valid_optimizers}")
 
-# %%
-# Train model using train_model_dp_torch function
+# %% # Train model using train_model_dp_torch function
 time_start = dt.datetime.now()
 
 history = train_model_dp_torch(
-    model_ex2,
+    model,
     dataloader_train,
     metadata_train,
     loss_fn=np_elbo_cat_torch,
