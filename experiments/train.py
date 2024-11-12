@@ -173,9 +173,9 @@ if not os.path.exists(train_settings['figs_dir']):
     os.makedirs(train_settings['figs_dir'])
 
 # Save the figure
-fig.savefig(os.path.join(train_settings['figs_dir'],'experiment2_training_metrics.png'))
+fig.savefig(os.path.join(train_settings['figs_dir'],'ex_training_metrics.png'))
 
 print("Finished plotting training metrics.")
 
 # %%
-print("Finished training experiment2.py training script.")
+print("Finished train.py training script.")
