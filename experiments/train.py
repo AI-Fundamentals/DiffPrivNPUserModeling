@@ -77,13 +77,14 @@ dataloader_train, metadata_train = hdf_to_dataloader_pad(train_settings['train_h
 print(f"\nMetadata for dataloader from file '{train_settings['train_hdf']}':")
 print_dictionary(metadata_train)
 
-dataloader_val,metadata_val = hdf_to_dataloader_pad(train_settings['val_hdf'],
-                                            n_users=train_settings['num_users'],
-                                            batch_size=train_settings['batch_size'],
-                                            padding_value=train_settings['padding_value']
-                                            )
-print(f"\nMetadata for dataloader from file '{train_settings['val_hdf']}':")
-print_dictionary(metadata_val)
+if train_settings['val_hdf']:
+    dataloader_val,metadata_val = hdf_to_dataloader_pad(train_settings['val_hdf'],
+                                                        n_users=train_settings['num_users'],
+                                                        batch_size=train_settings['batch_size'],
+                                                        padding_value=train_settings['padding_value']
+                                                        )
+    print(f"\nMetadata for dataloader from file '{train_settings['val_hdf']}':")
+    print_dictionary(metadata_val)
 
 # %% Get dimensions of the data
 dataiter = iter(dataloader_train)
