@@ -1,16 +1,13 @@
 import torch
 import numpy as np
-import json
+import math
 import os
 import lab as B
 import pandas as pd
 import neuralprocesses.torch as nps
 
 from dppum.privacy_oracle import get_sigma_from_privacy_loss_distribution as get_sigma
-from dppum.util import calc_greedy_confidence, calc_true_confidence, calc_greedy_acc_onehot, swap_axes, average_grads_batch_torch
-  
-    
-  
+from dppum.util import calc_greedy_confidence, calc_true_confidence, calc_greedy_acc_onehot, average_grads_batch_torch
     
   
 class AverageMeter(object):
@@ -38,7 +35,6 @@ class AverageMeter(object):
             return self.sum / self.count
         else:
             return 0
-
 
 
 def train_model_dp_torch(
@@ -152,19 +148,25 @@ def train_model_dp_torch(
     train_acc_sample_per_epoch = AverageMeter()
     loss_per_epoch = AverageMeter()
     train_conf_greedy_per_epoch = AverageMeter()
+    # Metrics to keep track of the encoder gradient L2 norms (useful to work out if c is too high/low)
+    enc_norms_per_epoch = AverageMeter()
+    dec_norms_per_epoch = AverageMeter()
+    
     if dataloader_val:
         val_acc_greedy_per_epoch = AverageMeter()
-        val_acc_sample_per_epoch = AverageMeter()
+        val_acc_sample_per_epoch = AverageMeter()  
         
-    
     # Define lists to store the metrics for all epochs
     train_acc_greedy_all_epochs = []
     train_acc_sample_all_epochs = []
     loss_all_epochs = []
     train_conf_greedy_all_epochs = []    
+    enc_norms_all_epochs = []
+    dec_norms_all_epochs = []
     if dataloader_val:
         val_acc_greedy_all_epochs = []
         val_acc_sample_all_epochs = []
+    
     
     # Use warmup epoch (or not)
     if settings['warmup_epoch']:
@@ -176,7 +178,7 @@ def train_model_dp_torch(
     training_device = get_device_type()
 
 
-    def loss_wrapper(args_tuple):
+    def loss_wrapper(args_tuple, state=None):
         """
         A wrapper function to calculate the loss and gradients, clip the
         gradients (if required), and return the gradients.
@@ -186,6 +188,7 @@ def train_model_dp_torch(
         args_tuple : tuple
         A tuple containing four PyTorch tensors (xc,yc,xt,yt) for the context
         and target data.
+        state : B random state (optional).
         
         Returns
         -------
@@ -207,10 +210,12 @@ def train_model_dp_torch(
             yt = B.expand_dims(yt, 0)
         
         # Reset optimizer
-        optimizer.zero_grad()        
+        optimizer.zero_grad()
         
         # Compute the loss value for this minibatch.
-        state = B.global_random_state(B.dtype(xc))
+        if not state:
+            state = B.global_random_state(B.dtype(xc))
+        
         vector_loss = -loss_fn(
                 state=state,
                 model=model,
@@ -230,6 +235,15 @@ def train_model_dp_torch(
         
         # Backward pass
         scalar_loss.backward()
+
+        # Get the gradients as tensors and calculate average L2 norms
+        encoder_gradients = torch.cat([p.grad.view(-1) for p in model.encoder.parameters() if p.requires_grad])
+        decoder_gradients = torch.cat([p.grad.view(-1) for p in model.decoder.parameters() if p.requires_grad])        
+        
+        enc_norm = torch.linalg.vector_norm(encoder_gradients, ord=2)
+        dec_norm = torch.linalg.vector_norm(decoder_gradients, ord=2)
+        enc_norms_per_epoch.update(enc_norm)
+        dec_norms_per_epoch.update(dec_norm)
         
         # Get the gradients
         encoder_gradients = [p.grad for p in model.encoder.parameters() if p.requires_grad]
@@ -242,8 +256,12 @@ def train_model_dp_torch(
                     # L2 clipping
                     grad_norm = torch.norm(grad)
                     grad_clipped = grad * min(1.0, settings['clipping_bound'] / grad_norm)
+                    
                     # Store the clipped gradient
                     encoder_gradients[i] = grad_clipped.clone()
+             
+            # Add gaussian noise
+            encoder_gradients = [tensor + torch.randn_like(tensor) * math.sqrt(settings['clipping_bound']**2 * sigma**2) for tensor in encoder_gradients]
                     
         if settings['dp_dec']:
             # Clip decoder gradients per user
@@ -252,9 +270,12 @@ def train_model_dp_torch(
                     # L2 clipping
                     grad_norm = torch.norm(grad)
                     grad_clipped = grad * min(1.0, settings['clipping_bound'] / grad_norm)
+                    
                     # Store the clipped gradient
                     decoder_gradients[i] = grad_clipped.clone()
         
+            decoder_gradients = [tensor + torch.randn_like(tensor) * math.sqrt(settings['clipping_bound']**2 * sigma**2) for tensor in decoder_gradients]
+    
         return encoder_gradients, decoder_gradients
     
         
@@ -284,7 +305,7 @@ def train_model_dp_torch(
             yc = yc.to(training_device)
             xt = xt.to(training_device)
             yt = yt.to(training_device)
-            
+
             # First, calculate the loss/gradients
             # (the loss metric is updated within loss_wrapper so we don't need to see it explicitly here)
             if settings['clip_grads_per_user'] == 'loop':
@@ -297,35 +318,26 @@ def train_model_dp_torch(
                     xt_user = xt[i]
                     yc_user = yc[i]
                     yt_user = yt[i]
-                    
+
                     gradients_batch = loss_wrapper((xc_user, yc_user, xt_user, yt_user))
                     encoder_gradients_batch.append(gradients_batch[0])
                     decoder_gradients_batch.append(gradients_batch[1])
 
-                # Average the gradients over the batch      
+                # Average the gradients over the batch   
                 encoder_gradients = average_grads_batch_torch(encoder_gradients_batch)
                 decoder_gradients = average_grads_batch_torch(decoder_gradients_batch)
             else:
                 # Calculate and clip (if appropriate) gradients on a per-batch basis
-                encoder_gradients, decoder_gradients = loss_wrapper((xc, yc, xt, yt))
-            
-            # Add gaussian noise
-            if settings['dp_enc']:
-                encoder_gradients = [tensor + torch.randn_like(tensor) * (settings['clipping_bound']**2 * sigma**2) for tensor in encoder_gradients]
-            if settings['dp_dec']:
-                decoder_gradients = [tensor + torch.randn_like(tensor) * (settings['clipping_bound']**2 * sigma**2) for tensor in decoder_gradients]
-            
-            
+                encoder_gradients, decoder_gradients = loss_wrapper((xc, yc, xt, yt))  
+                
             # We have now calculated the loss/gradients
             # Apply gradients to update model
             # Update encoder parameters           
             for param, grad in zip(model.encoder.parameters(), encoder_gradients):
-                #param.data.sub_(optimizer.param_groups[0]['lr'] * grad)
                 param.grad = grad
                 
             # Update decoder parameters
             for param, grad in zip(model.decoder.parameters(), decoder_gradients):
-                #param.data.sub_(optimizer.param_groups[0]['lr'] * grad)
                 param.grad = grad
 
             # If epoch is 0, that means we are doing a warmup and don't want
@@ -350,6 +362,7 @@ def train_model_dp_torch(
                 yt_pred, _, _, _ = nps.predict(
                     model,xc, yc, xt, num_samples=settings['num_samples'], dtype_lik=torch.float32
                     ) 
+            
             # Accuracy of the non-padding values
             greedy_accuracy = calc_greedy_acc_onehot(yt,yt_pred,cat_axis=-2,padding_value=settings['padding_value'])
             # Sample accuracy is the model's confidence in the true category
@@ -375,6 +388,10 @@ def train_model_dp_torch(
         print(f"Sample train accuracy: {np.round(float(train_acc_sample_all_epochs[-1]),3)}")
         print(f"Greedy train confidence of predictions: {np.round(float(train_conf_greedy_all_epochs[-1]),3)}")
         
+        # Metrics to keep track of the encoder gradient L2 norms (useful to work out if c is too high/low)
+        enc_norms_all_epochs.append(enc_norms_per_epoch.result())
+        dec_norms_all_epochs.append(dec_norms_per_epoch.result())
+        
         
         # Calculate accuracy using validation dataset
         if dataloader_val:            
@@ -399,7 +416,6 @@ def train_model_dp_torch(
                 # Update accuracy and confidence metrics
                 val_acc_greedy_per_epoch.update(greedy_accuracy)
                 val_acc_sample_per_epoch.update(sample_accuracy)
-            
             
             # Append to epoch metrics
             val_acc_greedy_all_epochs.append(val_acc_greedy_per_epoch.result())
@@ -427,12 +443,14 @@ def train_model_dp_torch(
         'loss' : loss_all_epochs,
         'train_acc_greedy' : train_acc_greedy_all_epochs,
         'train_acc_sample' : train_acc_sample_all_epochs,
-        'train_conf_greedy' : train_conf_greedy_all_epochs
+        'train_conf_greedy' : train_conf_greedy_all_epochs,
+        'enc_norms' : enc_norms_all_epochs,
+        'dec_norms' : dec_norms_all_epochs
+        
         }
     if dataloader_val:
         history['val_acc_greedy'] = val_acc_greedy_all_epochs
         history['val_acc_sample'] = val_acc_sample_all_epochs
-    
     
     # Save the history to CSV
     if settings['models_dir']:
