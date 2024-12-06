@@ -164,12 +164,18 @@ cython_debug/
 
 # Data folder
 data/
+data_from_csf/
 
 # Models folder
 models/
+models_from_csf/
 
 # Figures folder
 figures/
+figures_from_csf/
+
+# Julia comparison
+julia_results/
 
 # Mac temporary files
 *~
