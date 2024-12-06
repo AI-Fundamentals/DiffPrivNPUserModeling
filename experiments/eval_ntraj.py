@@ -93,10 +93,13 @@ if metadata_eval['n_traj'] != 10:
 print("Finished loading test dataset.")
 
 # %% Get dimensions of the data
+print("Getting dimensions of the data.")
 dataiter = iter(dataloader_eval)
 _,_,xt,yt = next(dataiter)
 dim_x = xt.shape[2]
 dim_y = yt.shape[2]
+
+print("Finished getting dimensions of the data.")
 
 # %% Construct the test model
 # These MUST be the same parameters as were used for training
