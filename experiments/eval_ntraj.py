@@ -143,14 +143,10 @@ print("Running through different n_traj values.")
 warnings.warn("Using default values for trajectory length. Users should check data dimensions and edit as necessary.", UserWarning)
 
 for ntraj in n_traj:
+    print(f"Running for n_traj = {ntraj}.")
     
-    end_idx_perm = 5 * ntraj
-    
-    if ntraj>0:    
-        end_idx_length = (5 * (ntraj-1)) + 1 
-    else:
-        end_idx_length = 0
-    
+    # Ex1
+    start_dim1 = 5*(ntraj)
     
     acc_greedy_this_ntraj = []
     acc_sample_this_ntraj = []
@@ -158,9 +154,6 @@ for ntraj in n_traj:
     
     # Iterate over the batches of the dataset.
     for step, (xc, yc, xt, yt) in enumerate(dataloader_eval):
-        # Set some trajectories to be padding (so not used)
-        xc[:,end_idx_perm:,:,end_idx_length:] = eval_settings['padding_value']
-        yc[:,end_idx_perm:,:,end_idx_length:] = eval_settings['padding_value']
         
         # Move tensors to training device (GPU)
         xc = xc.to(device)
@@ -168,13 +161,9 @@ for ntraj in n_traj:
         xt = xt.to(device)
         yt = yt.to(device)
         
-        if eval_settings['padding_value']:
-            # A mask for where the padding is. This is the same shape as the batch
-            padding_mask = (yt == eval_settings['padding_value'])
-            # This is collapsed along the categorical dimension
-            padding_mask = B.any(padding_mask,axis=-2)
-        else:
-            padding_mask = None
+        # xc2, yc2 = xc, yc
+        xc[:,start_dim1:,:,:] = train_settings['padding_value']
+        yc[:,start_dim1:,:,:] = train_settings['padding_value']
         
         # Forward pass
         with torch.no_grad():
