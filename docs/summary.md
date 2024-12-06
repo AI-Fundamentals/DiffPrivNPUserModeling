@@ -1,8 +1,14 @@
-![Text displaying the algorithm used to train the model](./algorithm.png)
 
-Note on L12 the width of the normal distribution is actually $\sqrt{c^{2}\sigma^2}$ 
 
-L12 has been moved between lines 9 and 10, so the noise is added per user rather than per batch.
+### Algorithm
+
+This is a summary of the algorithm implemented in the code, as taken from a draft paper *Differentially Private Probabilistic User Modelling* by *Sonee et al.*.
+
+<img src="./algorithm.png" title="" alt="Text displaying the algorithm used to train the model" width="586">
+
+Note that the order of some of the operations has been modified. L12 has been moved between lines 9 and 10, so the noise is added per user rather than per batch.
+
+For clarifty, also note on L12 the width of the normal distribution is actually \sqrt{c^{2}\sigma^2}
 
 ## Training data
 
@@ -14,7 +20,7 @@ Here are the model training metrics for an AGNP (attentive gaussian neural proce
 
 ![](ex1_acc_loss_vs_epochs.png)
 
-**Accuracy**
+**Accuracy terminology**
 
 The model outputs the probabilities of the different categories. 'Greedy accuracy' refers to the accuracy when comparing the most likely category to the true category. 'Sample accuracy' refers to considering the output probabilities as a distribution from which to sample; the sample accuracy is then the model's predicted probability of the true category.
 
