@@ -119,7 +119,13 @@ model = model.to(device)
 # %% Load the model weights
 # Load weights from file if required
 if eval_settings['init_weights']:
-    model_ex2.load_state_dict(torch.load(eval_settings['init_weights']))
+    try:
+        # This works if training on the same device type as evaluation
+        model.load_state_dict(torch.load(eval_settings['init_weights']))
+    except:
+        # This works e.g. if the model was trained on CUDA but is now running on mps on a Mac
+        model.load_state_dict(torch.load(eval_settings['init_weights'],map_location=torch.device('cpu')))
+        model = model.to(device)
 else:
     raise ValueError("Training settings file must contain the init_weights key with a value of the path to the file from which to load model weights.")
 
