@@ -100,7 +100,7 @@ dim_y = yt.shape[2]
 
 # %% Construct the test model
 # These MUST be the same parameters as were used for training
-model_ex2 = nps.construct_agnp(
+model = nps.construct_agnp(
     dim_x=dim_x, # From the data dimensions
     dim_y=dim_y, # From the data dimensions
     dim_embedding=128, # Specified in appendix as hidden dimensions
@@ -111,7 +111,7 @@ model_ex2 = nps.construct_agnp(
     lv_likelihood=train_settings['lv_likelihood'],
     nonlinearity=train_settings['nonlinearity'],
     )
-model_ex2 = model_ex2.to(device)
+model = model.to(device)
 
 # %% Load the model weights
 # Load weights from file if required
@@ -129,7 +129,7 @@ n_traj = np.arange(0,10)
 df_results = pd.DataFrame(columns=columns,index=n_traj,dtype='float')
 df_results.index.name = 'n_traj'
 
-model_ex2.eval()
+model.eval()
 print("Running through different n_traj values.")
 warnings.warn("Using default values for trajectory length. Users should check data dimensions and edit as necessary.", UserWarning)
 
@@ -170,7 +170,7 @@ for ntraj in n_traj:
         # Forward pass
         with torch.no_grad():
             yt_pred, _, _, _ = nps.predict(
-                model_ex2,xc, yc, xt, num_samples=train_settings['num_samples'], dtype_lik=torch.float32
+                model,xc, yc, xt, num_samples=train_settings['num_samples'], dtype_lik=torch.float32
                 ) 
 
         # Accuracy of the non-padding values
@@ -218,6 +218,6 @@ if not os.path.exists(eval_settings['figs_dir']):
     os.makedirs(eval_settings['figs_dir'])
 
 # Save the figure
-fig.savefig(os.path.join(eval_settings['figs_dir'],'ex2_eval_ntraj_metrics.png'))
+fig.savefig(os.path.join(eval_settings['figs_dir'],'ex_eval_ntraj_metrics.png'))
 
 print("Finished plotting n_traj eval metrics.")
