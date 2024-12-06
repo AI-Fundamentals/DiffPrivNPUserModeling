@@ -138,8 +138,7 @@ training_time = time_end-time_start
 print("Finished training the model.")
 print(f"Training time: {'{:.2f}'.format(training_time.total_seconds()/60)} minutes")
 
-# %%
-# Plot training metrics
+# %% # Plot training metrics
 
 # Make output folders
 fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8, 6), sharex=True)
