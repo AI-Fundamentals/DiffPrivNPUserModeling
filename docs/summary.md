@@ -1,5 +1,3 @@
-
-
 ### Algorithm
 
 This is a summary of the algorithm implemented in the code, as taken from a draft paper *Differentially Private Probabilistic User Modelling* by *Sonee et al.*.
@@ -8,7 +6,7 @@ This is a summary of the algorithm implemented in the code, as taken from a draf
 
 Note that the order of some of the operations has been modified. L12 has been moved between lines 9 and 10, so the noise is added per user rather than per batch.
 
-For clarifty, also note on L12 the width of the normal distribution is actually \sqrt{c^{2}\sigma^2}
+For clarity, also note on L12 the width of the normal distribution is actually $\sqrt{c^{2}\sigma^2}$
 
 ## Training data
 
