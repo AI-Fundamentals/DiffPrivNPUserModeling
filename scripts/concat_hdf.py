@@ -2,8 +2,6 @@ import os
 from dppum.data import concat_user_hdf_files
 
 
-
-
 def get_hdf_files(directory):
     # List all files in the directory
     files = os.listdir(directory)
