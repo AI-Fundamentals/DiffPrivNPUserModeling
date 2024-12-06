@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import json
 import matplotlib.pyplot as plt
+import warnings
 
 from dppum.data import hdf_to_dataloader_pad
 from dppum.util import print_dictionary, calc_greedy_acc_onehot, calc_true_confidence
@@ -129,6 +130,9 @@ df_results = pd.DataFrame(columns=columns,index=n_traj,dtype='float')
 df_results.index.name = 'n_traj'
 
 model_ex2.eval()
+print("Running through different n_traj values.")
+warnings.warn("Using default values for trajectory length. Users should check data dimensions and edit as necessary.", UserWarning)
+
 for ntraj in n_traj:
     
     end_idx_perm = 5 * ntraj
