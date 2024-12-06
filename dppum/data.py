@@ -237,18 +237,17 @@ def concat_user_hdf_files(filepaths, output_filepath):
     with h5py.File(output_filepath, 'w') as hf_out:
         # Create a group for metadata and add new_metadata to it
         metadata_group = hf_out.create_group('metadata')
-        for key, value in new_metadata.items():
-            metadata_group.create_dataset(key, data=value)
+        metadata_group.attrs.update(new_metadata)
 
         # Create a group for data
         data_group = hf_out.create_group('data')
 
         for filepath in filepaths:
             with h5py.File(filepath, 'r') as hf_in:
-                for key in hf_in.keys():
+                for key in hf_in['data'].keys():
                     # Create a new key for each dataset to ensure uniqueness
                     new_key = f"user_{user_counter}"
                     user_counter += 1
                     # Copy each dataset from the input file to the data group in the output file
-                    hf_in.copy(key, data_group, new_key)
+                    hf_in['data'].copy(key, data_group, new_key)
 
