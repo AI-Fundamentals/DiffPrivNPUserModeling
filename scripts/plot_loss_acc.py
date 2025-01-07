@@ -26,7 +26,7 @@ ax[1].set_xlim(0,70)
 ax[1].set_ylim(0, 1)
 ax[1].grid()
 
-plt.suptitle('Experiment 1, 6400 users, dim_lv=0, c=128')
+plt.suptitle('Experiment 1, 6400 users, dim_lv=128, c=1')
 
 # Adjust layout and display the plots
 plt.tight_layout()
