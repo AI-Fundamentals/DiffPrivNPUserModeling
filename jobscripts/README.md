@@ -1,19 +1,23 @@
-## CSF Jobscripts
+# CSF Jobscripts
 
 This folder contains jobscripts designed to run the code on the University of Manchester's [CSF3](https://ri.itservices.manchester.ac.uk/csf3/) high performance computing system. They each use the same hardware resources: a 4+ core CPU, and an NVidia A100 GPU. There will be a siginificant queue for the A100 if not used with elevated privileges and you may with to swap for a GPU with a shorter queue (e.g. a V100 or A10G).
 
-#### Workflow
+## Workflow
 
-**Step 0: [Copy jobscripts to main folder]**
+#### **Step 0: [Copy jobscripts to main folder]**
 
 These jobscripts are kept in a folder to keep the code tidy, but they must be copied to the parent folder (i.e. one level up from this folder) to run.
 
-**Step 1: [Setup Python Environment]**
+#### **Step 1: [Setup Python Environment]**
 
 - **Jobscript**: `jobscript_setup_environment`
+
 - **Editable Parameters**: `ENV_NAME`, `PYTHON_VERSION`
+
 - **Notes**: `PYTHON_VERSION` should match the one used by the PyTorch module, so for the default PyTorch 2.3.0 this is python 3.11.
+
 - **Logfile name**: `dppum-setup.oxxxxxxx`
+
 - **How to check it's run correctly**: Make sure there's no errors in the log file. There should then be a section near the end that says:
   
   ```Shell
@@ -30,7 +34,7 @@ These jobscripts are kept in a folder to keep the code tidy, but they must be co
   ========================= 1 passed, 1 warning in 6.06s =========================
   ```
 
-**Step 2: [Run unit tests]**
+#### **Step 2: [Run unit tests]**
 
 - **Jobscript**: `jobscript_unit_tests`
 - **Editable Parameters**: `ENV_NAME`
@@ -38,7 +42,7 @@ These jobscripts are kept in a folder to keep the code tidy, but they must be co
 - **Logfile name**: `dppum-utests.oxxxxxxx`
 - **How to check it's run correctly**: Near the end there should be a similar line to the setup script, saying that a number of tests have passed, and it should not say that any have failed.
 
-**Step 3: [Train model]**
+#### **Step 3: [Train model]**
 
 - **Jobscript**: `jobscript_ex1_train` or `jobscript_ex2_train`
 - **Editable Parameters**: `ENV_NAME`, settings file location
@@ -47,8 +51,16 @@ These jobscripts are kept in a folder to keep the code tidy, but they must be co
 - **How to check it's run correctly**: Check that the output files are created. The word "error" should not appear in the logfile. Near the start there is a similar environment check to the one in environment setup jobscript. You should then see details of the model training. If an error occurs, it is likely to be due to an error in the settings file.
 - **Ouptut files**:
   - In the models folder (from the settings file):
-    - `train_settings.json`: A copy of the settings file used for training
-    - `training_metrics.csv`: Training metrics (loss, training and validation accuracy)
-    - `weights_epoch_x.pt`: Model weights after `x` epochs of training
+    - `train_settings.json`: A copy of the settings file used for training.
+    - `training_metrics.csv`: Training metrics (loss, training and validation accuracy).
+    - `weights_epoch_x.pt`: Model weights after `x` epochs of training.
+  - In the figures folder (from the settings file):
+    - `training_metrics.png`: A plot of the training metrics (not intended for publication).
+  
+  #### Step 4: [Evaluate accuracy vs number of training epochs]
+  
+  #### Step 5: [Evaluate accuracy vs number of context trajectories]
+  
+  #### Step 6: [Make plots]
 
 
