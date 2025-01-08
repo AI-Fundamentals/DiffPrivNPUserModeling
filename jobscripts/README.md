@@ -4,11 +4,11 @@ This folder contains jobscripts designed to run the code on the University of Ma
 
 ## Workflow
 
-#### **Step 0: [Copy jobscripts to main folder]**
+### **Step 0: [Copy jobscripts to main folder]**
 
 These jobscripts are kept in a folder to keep the code tidy, but they must be copied to the parent folder (i.e. one level up from this folder) to run.
 
-#### **Step 1: [Setup Python Environment]**
+### **Step 1: [Setup Python Environment]**
 
 - **Jobscript**: `jobscript_setup_environment`
 
@@ -34,7 +34,7 @@ These jobscripts are kept in a folder to keep the code tidy, but they must be co
   ========================= 1 passed, 1 warning in 6.06s =========================
   ```
 
-#### **Step 2: [Run unit tests]**
+### **Step 2: [Run unit tests]**
 
 - **Jobscript**: `jobscript_unit_tests`
 - **Editable Parameters**: `ENV_NAME`
@@ -42,7 +42,7 @@ These jobscripts are kept in a folder to keep the code tidy, but they must be co
 - **Logfile name**: `dppum-utests.oxxxxxxx`
 - **How to check it's run correctly**: Near the end there should be a similar line to the setup script, saying that a number of tests have passed, and it should not say that any have failed.
 
-#### **Step 3: [Train model]**
+### **Step 3: [Train model]**
 
 - **Jobscript**: `jobscript_ex1_train` or `jobscript_ex2_train`
 - **Editable Parameters**: `ENV_NAME`, settings file location
@@ -56,11 +56,9 @@ These jobscripts are kept in a folder to keep the code tidy, but they must be co
     - `weights_epoch_x.pt`: Model weights after `x` epochs of training.
   - In the figures folder (from the settings file):
     - `training_metrics.png`: A plot of the training metrics (not intended for publication).
-  
-  #### Step 4: [Evaluate accuracy vs number of training epochs]
-  
-  #### Step 5: [Evaluate accuracy vs number of context trajectories]
-  
-  #### Step 6: [Make plots]
 
+### Step 4: [Evaluate accuracy vs number of training epochs]
 
+### Step 5: [Evaluate accuracy vs number of context trajectories]
+
+### Step 6: [Make plots]
