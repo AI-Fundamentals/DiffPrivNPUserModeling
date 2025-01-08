@@ -73,7 +73,7 @@ if not os.path.exists(eval_settings['models_dir']):
     os.makedirs(eval_settings['models_dir'])
 
 # Save settings to models dir
-with open(os.path.join(eval_settings['models_dir'], "eval_settings.json"), 'w') as json_file:
+with open(os.path.join(eval_settings['models_dir'], "eval_ntraj_settings.json"), 'w') as json_file:
     json.dump(eval_settings, json_file,indent=4)
 
 # %% Load the test dataset
