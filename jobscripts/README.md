@@ -18,7 +18,7 @@ These jobscripts are kept in a folder to keep the code tidy, but they must be co
 
 - **Notes**: `PYTHON_VERSION` should match the one used by the PyTorch module, so for the default PyTorch 2.3.0 this is python 3.11.
 
-- **Logfile name**: `dppum-setup.oxxxxxxx`
+- **stdout filename**: `dppum-setup.oxxxxxxx`
 
 - **How to check it's run correctly**: Make sure there's no errors in the log file. There should then be a section near the end that says:
   
@@ -42,7 +42,7 @@ These jobscripts are kept in a folder to keep the code tidy, but they must be co
 - **Python scripts used**: All `test_*.py` scripts in `/tests/` folder
 - **Editable Parameters**: `ENV_NAME`
 - **Notes**: ``ENV_NAME`` must match the one from `jobscript_setup_environment`.
-- **Logfile name**: `dppum-utests.oxxxxxxx`
+- **stdout filename**: `dppum-utests.oxxxxxxx`
 - **How to check it's run correctly**: Near the end there should be a similar line to the setup script, saying that a number of tests have passed, and it should not say that any have failed.
 
 ### **Step 3: [Train model]**
@@ -51,7 +51,7 @@ These jobscripts are kept in a folder to keep the code tidy, but they must be co
 - Python scripts used: `/experiments/train.py`
 - **Editable Parameters**: `ENV_NAME`, settings file location
 - **Notes**: ``ENV_NAME``must match the one from `jobscript_setup_environment`. The default settings file is `settings/settings_ex1_train.json` near the end of the script. You can add extra lines to run multiple settings files one after the other. You can also retrain an existing model using the `init_weights` key in the settings file.
-- **Logfile name**: `ex1-train.oxxxxxxx`
+- **stdout filename**: `ex1-train.oxxxxxxx`
 - **How to check it's run correctly**: Check that the output files are created. The word "error" should not appear in the logfile. Near the start there is a similar environment check to the one in environment setup jobscript. You should then see that it has loaded the settings file, metadata for the dataset, and details of the model training. If an error occurs, it is likely to be due to an error in the settings file.
 - **Ouptut files**:
   - In the models folder (from the settings file):
@@ -67,7 +67,7 @@ These jobscripts are kept in a folder to keep the code tidy, but they must be co
 - **Python scripts used**: `/experiments/eval_epochs.py`
 - **Editable Parameters**: `ENV_NAME`, settings file location
 - **Notes**: `ENV_NAME`must match the one from `jobscript_setup_environment`. The default settings file is `settings/settings_ex1_eval_epochs.json` near the end of the script. You can add extra lines to run multiple settings files one after the other. Make sure you set the models and figures folders to the same as in the training step in your settings file.
-- **Logfile name**: `ex1-eval-epochs.oxxxxxxx`
+- **stdout filename**: `ex1-eval-epochs.oxxxxxxx`
 - **How to check it's run correctly**: Check that the output files are created. The word "error" should not appear in the logfile. Near the start there is a similar environment check to the one in environment setup jobscript.You should then see that it has loaded the settings file, metadata for the dataset, and a note that it is proceeding with the evaluation. If an error occurs, it is likely to be due to an error in the settings file.
 - **Ouptut files**:
   - In the models folder (from the settings file):
@@ -82,7 +82,7 @@ These jobscripts are kept in a folder to keep the code tidy, but they must be co
 - **Python scripts used**: `/experiments/eval_ntraj.py`
 - **Editable Parameters**: `ENV_NAME`, settings file location
 - **Notes**: `ENV_NAME`must match the one from `jobscript_setup_environment`. The default settings file is `settings/settings_ex1_eval_epochs.json` near the end of the script. You can add extra lines to run multiple settings files one after the other. Make sure you set the models and figures folders to the same as in the training step in your settings file.
-- **Logfile name**: `ex1-eval-ntraj.oxxxxxxx`
+- **stdout filename**: `ex1-eval-ntraj.oxxxxxxx`
 - **How to check it's run correctly**: Check that the output files are created. The word "error" should not appear in the logfile. Near the start there is a similar environment check to the one in environment setup jobscript. You should then see that it has loaded the settings file, metadata for the dataset, and details of it looping through different numbers of context trajectories. If an error occurs, it is likely to be due to an error in the settings file.
 - **Ouptut files**:
   - In the models folder (from the settings file):
