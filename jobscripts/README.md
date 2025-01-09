@@ -12,6 +12,8 @@ These jobscripts are kept in a folder to keep the code tidy, but they must be co
 
 - **Jobscript**: `jobscript_setup_environment`
 
+- **Python scripts used**: `/tests/test_nps.py`
+
 - **Editable Parameters**: `ENV_NAME`, `PYTHON_VERSION`
 
 - **Notes**: `PYTHON_VERSION` should match the one used by the PyTorch module, so for the default PyTorch 2.3.0 this is python 3.11.
@@ -37,6 +39,7 @@ These jobscripts are kept in a folder to keep the code tidy, but they must be co
 ### **Step 2: [Run unit tests]**
 
 - **Jobscript**: `jobscript_unit_tests`
+- **Python scripts used**: All `test_*.py` scripts in `/tests/` folder
 - **Editable Parameters**: `ENV_NAME`
 - **Notes**: ``ENV_NAME`` must match the one from `jobscript_setup_environment`.
 - **Logfile name**: `dppum-utests.oxxxxxxx`
@@ -45,6 +48,7 @@ These jobscripts are kept in a folder to keep the code tidy, but they must be co
 ### **Step 3: [Train model]**
 
 - **Jobscript**: `jobscript_ex1_train`
+- Python scripts used: `/experiments/train.py`
 - **Editable Parameters**: `ENV_NAME`, settings file location
 - **Notes**: ``ENV_NAME``must match the one from `jobscript_setup_environment`. The default settings file is `settings/settings_ex1_train.json` near the end of the script. You can add extra lines to run multiple settings files one after the other. You can also retrain an existing model using the `init_weights` key in the settings file.
 - **Logfile name**: `ex1-train.oxxxxxxx`
@@ -60,6 +64,7 @@ These jobscripts are kept in a folder to keep the code tidy, but they must be co
 ### Step 4: [Evaluate accuracy vs number of training epochs]
 
 - **Jobscript**: `jobscript_ex1_eval_epochs`
+- **Python scripts used**: `/experiments/eval_epochs.py`
 - **Editable Parameters**: `ENV_NAME`, settings file location
 - **Notes**: `ENV_NAME`must match the one from `jobscript_setup_environment`. The default settings file is `settings/settings_ex1_eval_epochs.json` near the end of the script. You can add extra lines to run multiple settings files one after the other. Make sure you set the models and figures folders to the same as in the training step in your settings file.
 - **Logfile name**: `ex1-eval-epochs.oxxxxxxx`
@@ -74,6 +79,7 @@ These jobscripts are kept in a folder to keep the code tidy, but they must be co
 ### Step 5: [Evaluate accuracy vs number of context trajectories]
 
 - **Jobscript**: `jobscript_ex1_eval_ntraj`
+- **Python scripts used**: `/experiments/eval_ntraj.py`
 - **Editable Parameters**: `ENV_NAME`, settings file location
 - **Notes**: `ENV_NAME`must match the one from `jobscript_setup_environment`. The default settings file is `settings/settings_ex1_eval_epochs.json` near the end of the script. You can add extra lines to run multiple settings files one after the other. Make sure you set the models and figures folders to the same as in the training step in your settings file.
 - **Logfile name**: `ex1-eval-ntraj.oxxxxxxx`
