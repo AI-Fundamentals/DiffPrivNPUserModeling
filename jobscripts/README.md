@@ -4,9 +4,9 @@ This folder contains jobscripts designed to run the code on the University of Ma
 
 ## Workflow for experiment 1
 
-### **Step 0: [Copy jobscripts to main folder]**
+### **Step 0: [Clone repo and copy jobscripts to main folder]**
 
-These jobscripts are kept in a folder to keep the code tidy, but they must be copied to the parent folder (i.e. one level up from this folder) to run.
+Clone the repo onto CSF. These jobscripts are kept in a folder to keep the code tidy, but they must be copied to the parent folder (i.e. one level up from this folder) to run.
 
 ### **Step 1: [Setup Python Environment]**
 
