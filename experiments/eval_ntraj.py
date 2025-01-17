@@ -208,11 +208,11 @@ fig, ax = plt.subplots(figsize=(10, 6))
 
 ax.plot(df_results['acc_greedy'], label='acc_greedy', linestyle='-')
 ax.plot(df_results['acc_sample_Q50'], label='acc_sample_Q50', linestyle='-')
-ax.fill_between(df_results.index, df_results['acc_sample_Q5'], df_results['acc_sample_Q95'], color='skyblue', alpha=0.4)
-ax.set_xlabel('N training epochs')
+ax.fill_between(df_results.index, df_results['acc_sample_Q25'], df_results['acc_sample_Q75'], color='skyblue', alpha=0.4)
+ax.set_xlabel('N of context trajectories')
 ax.set_ylabel('Accuracy')
 ax.legend(loc='best')
-ax.grid(True)
+ax.grid(True) 
 plt.show()
 
 # Check if the directory exists
