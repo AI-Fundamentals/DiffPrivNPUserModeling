@@ -134,20 +134,25 @@ else:
 
 # Define a dataframe to store the results
 columns = ["acc_greedy", "acc_sample_mean", "acc_sample_Q5", "acc_sample_Q25", "acc_sample_Q50", "acc_sample_Q75", "acc_sample_Q95"]
-n_traj = np.arange(0,10)
+n_traj = np.arange(0,11)
 df_results = pd.DataFrame(columns=columns,index=n_traj,dtype='float')
 df_results.index.name = 'n_traj'
 
 model.eval()
-print("Running through different n_traj values.")
-warnings.warn("Using default values for trajectory length. Users should check data dimensions and edit as necessary.", UserWarning)
 
 for ntraj in n_traj:
-    print(f"Running for n_traj = {ntraj}.")
+    print(f"Running for n_traj = {ntraj}")
     
-    # Ex1
-    start_dim1 = 5*(ntraj)
-    
+    # Dimensions for cropping the data. Assumes dimension 0 is the batch dimension.
+    # Dimension 3 is then the length of the context trajectory (made up of
+    # multiple context trajectories).
+    if ntraj == 0:
+        start_dim3 = -1
+    elif eval_settings['experiment'] == 1:
+        start_dim3 = 10*(10-ntraj)
+    elif eval_settings['experiment'] == 2:
+        start_dim3 = 50 - 5*ntraj
+
     acc_greedy_this_ntraj = []
     acc_sample_this_ntraj = []
     conf_greedy_this_ntraj = []    
@@ -161,9 +166,9 @@ for ntraj in n_traj:
         xt = xt.to(device)
         yt = yt.to(device)
         
-        # xc2, yc2 = xc, yc
-        xc[:,start_dim1:,:,:] = train_settings['padding_value']
-        yc[:,start_dim1:,:,:] = train_settings['padding_value']
+        # Crop tensors to the right ntraj
+        xc = xc[:,:,:,start_dim3:]
+        yc = yc[:,:,:,start_dim3:]
         
         # Forward pass
         with torch.no_grad():
