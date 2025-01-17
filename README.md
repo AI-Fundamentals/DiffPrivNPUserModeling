@@ -48,8 +48,6 @@ Differentially Private Probabilistic User Modelling (in python). This is a pytho
    ```shell
    python -m pytest
    ```
-   
-   
 
 ## Training and evaluation
 
