@@ -114,6 +114,7 @@ def hdf_to_dataloader_pad(filepath, n_users=16, batch_size=1, padding_value=-1.)
         max_len = max([x.size(0) for x in data])
         max_dim2 = max([x.size(2) for x in data])
         padded = torch.full((len(data), max_len, data[0].size(1), max_dim2), padding_value)
+
         for i, tensor in enumerate(data):
             padded[i, :tensor.size(0), :, :tensor.size(2)] = tensor
         return padded
@@ -145,9 +146,9 @@ def hdf_to_dataloader_pad(filepath, n_users=16, batch_size=1, padding_value=-1.)
     # Load metadata from the HDF file
     metadata = hdf_get_metadata(filepath)
     # Augment the metadata
-    metadata['n_users'] = n_users
+    metadata['n_users'] = min(n_users,metadata['n_users'])
     metadata['batch_size'] = batch_size
-    metadata['n_batches'] = int(np.ceil(n_users/batch_size))
+    metadata['n_batches'] = int(np.ceil(metadata['n_users']/batch_size))
     
     return dataloader, metadata
 
@@ -191,4 +192,62 @@ def hdf_get_metadata(filepath):
                     item = item.decode('utf-8')
                 
                 metadata_dict[name] = item
+        else:
+            raise ValueError(f"File {filepath} does not contain any metadata.")
     return metadata_dict
+
+    
+def concat_user_hdf_files(filepaths, output_filepath):
+    """
+    Concatenates multiple HDF5 files into a new file. The keys for the output
+    file will be a contiguous list "user_1", "user_2" etc. with no repeats
+    regardless of what the input keys are.
+
+    Parameters
+    ----------
+    filepaths : list of str
+        The paths to the HDF5 files to concatenate.
+    output_filepath : str
+        The path to the output HDF5 file.
+    """
+    
+    # First check / concat the metadata
+    metadata_list = [hdf_get_metadata(filepath) for filepath in filepaths]
+    
+    # Check all eval are compatible
+    for index, metadata in enumerate(metadata_list[1:]):
+        if metadata["eval"] != metadata_list[0]['eval']:
+            raise ValueError(f"The hdf files all need to have the same 'eval' values. File {index+1} has a different value to file 0.")
+        if metadata["gen_type"] != metadata_list[0]['gen_type']:
+            raise ValueError(f"The hdf files all need to have the same 'gen_type' values. File {index+1} has a different value to file 0.")
+        if metadata["n_traj"] != metadata_list[0]['n_traj']:
+            raise ValueError(f"The hdf files all need to have the same 'n_traj' values. File {index+1} has a different value to file 0.")
+        # different n_users are compatible
+        if metadata["noise_variance"] != metadata_list[0]['noise_variance']:
+            raise ValueError(f"The hdf files all need to have the same 'noise_variance' values. File {index+1} has a different value to file 0.")
+        if metadata["p_bias"] != metadata_list[0]['p_bias']:
+            raise ValueError(f"The hdf files all need to have the same 'p_bias' values. File {index+1} has a different value to file 0.")
+        
+    #Make new metadata
+    total_users = sum(d["n_users"] for d in metadata_list)
+    new_metadata = metadata_list[0]
+    new_metadata['n_users'] = total_users
+    
+    user_counter = 1
+    with h5py.File(output_filepath, 'w') as hf_out:
+        # Create a group for metadata and add new_metadata to it
+        metadata_group = hf_out.create_group('metadata')
+        metadata_group.attrs.update(new_metadata)
+
+        # Create a group for data
+        data_group = hf_out.create_group('data')
+
+        for filepath in filepaths:
+            with h5py.File(filepath, 'r') as hf_in:
+                for key in hf_in['data'].keys():
+                    # Create a new key for each dataset to ensure uniqueness
+                    new_key = f"user_{user_counter}"
+                    user_counter += 1
+                    # Copy each dataset from the input file to the data group in the output file
+                    hf_in['data'].copy(key, data_group, new_key)
+
