@@ -69,19 +69,19 @@ Each setting file is a json with keys for relevant parameters for model training
 
 **Keys**:
 
-- **num_users : int**
+- **num_users**: int
   - Number of users to load from the training data hdf.
-- **batch_size : int**
+- **batch_size**: int
   - Number of users to put into each batch. Default is 4.
-- **eval_hdf : str**
+- **eval_hdf**: str
   - Path to the hdf file to load the evaluation data from. This should normally have n_traj of 1 - 8, the same as the training data.
-- **models_dir : str**
+- **models_dir**: str
   - The folder to load the trained models from.
-- **figs_dir : str**
+- **figs_dir**: str
   - The folder for output figures.
-- **num_samples : int**
+- **num_samples**: int
   - Number of samples to take for model evaluation.
-- **padding_value : float**
+- **padding_value**: float
   - Value to use for padding during batching. Should be a value that is not in the scope of the real data (e.g. use `-1` for one-hot encoded categorical data).
 
 ## Eval ntraj settings
@@ -94,19 +94,21 @@ Each setting file is a json with keys for relevant parameters for model training
 
 **Keys**:
 
-- **num_users : int**
+- **num_users**: int
   - Number of users to load from the training data hdf.
-- **batch_size : int**
+- **batch_size**: int
   - Number of users to put into each batch. Default is 4.
-- **eval_hdf : str**
+- **eval_hdf**: str
   - Path to the hdf file to load the evaluation data from for assessing the impact of n_traj. This should have n_traj = 10.
-- **models_dir : str**
+- **models_dir**: str
   - The folder to load the trained models from.
-- **figs_dir : str**
+- **figs_dir**: str
   - The folder for output figures.
-- **num_samples : int**
+- **num_samples**: int
   - Number of samples to take for model evaluation.
-- **padding_value : float**
+- **padding_value**: float
   - Value to use for padding during batching. Should be a value that is not in the scope of the real data (e.g. use `-1` for one-hot encoded categorical data).
-- **init_weights : str**
+- **init_weights**: str
   - Path to a file containing weights to initialize the model. If null/None, weights will be initialized randomly. An example would be `models/ex2/weights_epoch_5.pt`.
+- **Experiment**: int
+  - Must be `1` for experiment 1 or `2` for experiment 2. This is used to work out how to crop the data to the right dimensions.
