@@ -14,8 +14,6 @@ This folder contains jobscripts designed to run the code on the University of Ma
 
 4. Edit the relevant [settings files](../settings/README.md) for your experiments.
 
-5. 
-
 ### **Step 1: [Setup Python Environment]**
 
 - **Jobscript**: `jobscript_setup_environment`
