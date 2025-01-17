@@ -2,7 +2,7 @@
 
 This is a summary of the algorithm implemented in the code, as taken from a draft paper *Differentially Private Probabilistic User Modelling* by *Sonee et al.*.
 
-<img src="./algorithm.png" title="" alt="Text displaying the algorithm used to train the model" width="586">
+<img title="" src="./algorithm.png" alt="Text displaying the algorithm used to train the model" width="675">
 
 Note that the order of some of the operations has been modified. L12 has been moved between lines 9 and 10, so the noise is added per user rather than per batch.
 
