@@ -4,9 +4,17 @@ This folder contains jobscripts designed to run the code on the University of Ma
 
 ## Workflow for experiment 1
 
-### **Step 0: [Clone repo and copy jobscripts to main folder]**
+### **Step 0: [Setup repo/data and copy jobscripts to main folder]**
 
-Clone the repo onto CSF. These jobscripts are kept in a folder to keep the code tidy, but they must be copied to the parent folder (i.e. one level up from this folder) to run.
+1. Clone the repo onto CSF.
+
+2. Copy the relevant data files into the `/data/ex1/` and `/data/ex2` folders.
+
+3. Copy the jobscripts kept in this folder into the parent folder (i.e. one level up from this folder) to run.
+
+4. Edit the relevant [settings files](../settings/README.md) for your experiments.
+
+5. 
 
 ### **Step 1: [Setup Python Environment]**
 
