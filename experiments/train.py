@@ -86,6 +86,7 @@ if train_settings['val_hdf']:
     print(f"\nMetadata for dataloader from file '{train_settings['val_hdf']}':")
     print_dictionary(metadata_val)
 else:
+    print("\nNo validation data specified during training.")
     dataloader_val, metadata_val = None, None
 
 # %% Get dimensions of the data
