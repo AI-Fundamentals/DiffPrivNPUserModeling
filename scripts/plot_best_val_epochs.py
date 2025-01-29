@@ -1,7 +1,7 @@
 """
 Script to go through various folders of model runs,
 work out the best epoch (i.e. highest accuracy),
-and save that in settings files for eval_ntraj.
+and plot for the different values of epsilon.
 """
 
 import pandas as pd
