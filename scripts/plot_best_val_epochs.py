@@ -43,6 +43,7 @@ df_best_acc.plot(kind='line', marker='o',color=colors)
 plt.xlabel('n_users')
 plt.ylabel('Accuracy')
 plt.title('Best epoch, 1000 validation users')
+plt.xlim(0,1800)
 
 # Show the plot
 plt.savefig('figures/ex2/val_acc_best_epoch.png',dpi=300)
