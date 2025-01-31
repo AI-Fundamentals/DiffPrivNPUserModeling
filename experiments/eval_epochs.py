@@ -127,7 +127,12 @@ model.eval()
 for epoch in epochs:
     # Load the trained model
     model_name = f"weights_epoch_{epoch}.pt"
-    model.load_state_dict(torch.load(os.path.join(eval_settings['models_dir'], model_name)))
+    try:
+        model.load_state_dict(torch.load(os.path.join(eval_settings['models_dir'], model_name)))
+    except:
+        model.load_state_dict(torch.load(os.path.join(eval_settings['models_dir'], model_name),map_location=torch.device('cpu')))
+        model = model.to(device)
+    
     acc_greedy_this_epoch = []
     acc_sample_this_epoch = []
     conf_greedy_this_epoch = []    
