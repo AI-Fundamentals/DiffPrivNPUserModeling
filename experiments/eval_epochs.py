@@ -119,7 +119,7 @@ model = model.to(device)
 # This loop is quite similar to the training loop but does not train the model
 
 # Define a dataframe to store the results
-columns = ["acc_greedy", "acc_sample_mean", "acc_sample_Q5", "acc_sample_Q25", "acc_sample_Q50", "acc_sample_Q75", "acc_sample_Q95"]
+columns = ["acc_greedy", "acc_sample_mean","acc_sample_std", "acc_sample_Q5", "acc_sample_Q25", "acc_sample_Q50", "acc_sample_Q75", "acc_sample_Q95"]
 df_results = pd.DataFrame(columns=columns,index=epochs,dtype='float')
 df_results.index.name = 'epoch'
 
@@ -127,7 +127,12 @@ model.eval()
 for epoch in epochs:
     # Load the trained model
     model_name = f"weights_epoch_{epoch}.pt"
-    model.load_state_dict(torch.load(os.path.join(eval_settings['models_dir'], model_name)))
+    try:
+        model.load_state_dict(torch.load(os.path.join(eval_settings['models_dir'], model_name)))
+    except:
+        model.load_state_dict(torch.load(os.path.join(eval_settings['models_dir'], model_name),map_location=torch.device('cpu')))
+        model = model.to(device)
+    
     acc_greedy_this_epoch = []
     acc_sample_this_epoch = []
     conf_greedy_this_epoch = []    
@@ -168,6 +173,7 @@ for epoch in epochs:
     ##### End of epoch calculations #####
     df_results.loc[epoch,'acc_greedy'] = np.mean(acc_greedy_this_epoch)
     df_results.loc[epoch,'acc_sample_mean'] = np.mean(acc_sample_this_epoch)
+    df_results.loc[epoch,'acc_sample_std'] = np.std(acc_sample_this_epoch)
     df_results.loc[epoch,'acc_sample_Q5'] = np.quantile(acc_sample_this_epoch,0.05)
     df_results.loc[epoch,'acc_sample_Q25'] = np.quantile(acc_sample_this_epoch,0.25)
     df_results.loc[epoch,'acc_sample_Q50'] = np.quantile(acc_sample_this_epoch,0.5)
