@@ -1,6 +1,11 @@
 import h5py
 import numpy as np
 import torch
+import os
+
+# Set HDF file locking to false so you can load the same file in multiple
+# processes
+os.environ['HDF5_USE_FILE_LOCKING'] = 'FALSE'
 
 
 class HDFDataset_torch(torch.utils.data.Dataset):
@@ -29,7 +34,7 @@ class HDFDataset_torch(torch.utils.data.Dataset):
     def __init__(self, filepath, n_users=16):
         self.filepath = filepath
         self.n_users = n_users
-        with h5py.File(self.filepath, 'r') as hf:
+        with h5py.File(self.filepath, 'r', locking=False) as hf:
             self.batch_names = list(hf['data'].keys())
         np.random.shuffle(self.batch_names)
         self.selected_batches = self.batch_names[:self.n_users]
