@@ -55,6 +55,11 @@ except Exception as e:
     
 print("Finished loading test settings.")
 
+# %% Check eval_settings is in list of valid experiments
+valid_experiments = {"1", "2", "3"}
+if eval_settings['experiment'] not in valid_experiments:
+    raise ValueError(f"Invalid experiment value in eval settings. Must be one of {valid_experiments}.")
+
 # %% Load training settings
 train_settings_path = os.path.join(eval_settings['models_dir'],'train_settings.json')
 
