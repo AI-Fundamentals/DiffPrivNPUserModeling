@@ -56,7 +56,7 @@ except Exception as e:
 print("Finished loading test settings.")
 
 # %% Check eval_settings is in list of valid experiments
-valid_experiments = {"1", "2", "3"}
+valid_experiments = {1, 2, 3}
 if eval_settings['experiment'] not in valid_experiments:
     raise ValueError(f"Invalid experiment value in eval settings. Must be one of {valid_experiments}.")
 
