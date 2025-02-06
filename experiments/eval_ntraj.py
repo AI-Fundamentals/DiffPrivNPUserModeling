@@ -7,7 +7,6 @@ import numpy as np
 import pandas as pd
 import json
 import matplotlib.pyplot as plt
-import warnings
 
 from dppum.data import hdf_to_dataloader_pad
 from dppum.util import print_dictionary, calc_greedy_acc_onehot, calc_true_confidence
