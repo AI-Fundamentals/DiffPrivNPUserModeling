@@ -8,42 +8,73 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # %%
-eps_list = ["eps1","eps3","eps5","eps10","nodp"]
-num_train_users_list = [150,300,600,900,1200,1500,1800]
+eps_list = ["nodp","eps1","eps3","eps5","eps10"]
+labels = ["non-DP","eps1","eps3","eps5","eps10"]
+num_train_users_list = [50,100,150,300,600,900,1200,1500,1800]
 
 # %%
 
 df_best_epoch = pd.DataFrame(index=num_train_users_list,columns=eps_list)
 df_best_acc = pd.DataFrame(index=num_train_users_list,columns=eps_list)
+df_best_acc_Q25 = pd.DataFrame(index=num_train_users_list,columns=eps_list)
+df_best_acc_Q75 = pd.DataFrame(index=num_train_users_list,columns=eps_list)
 
 for eps in eps_list:
     for num_train_users in num_train_users_list:
         try:
             # Load CSV
-            filepath = f'models/ex2/{num_train_users}/{eps}/eval_acc_vs_epochs.csv'
-            df_acc = pd.read_csv(filepath)
-            df_acc.set_index('epoch',inplace=True)
+            filepath_train = f'models/ex2/{num_train_users}/{eps}/training_metrics.csv'
+            filepath_val = f'models/ex2/{num_train_users}/{eps}/eval_acc_vs_epochs.csv'
+            df_train = pd.read_csv(filepath_train)
+            df_train.set_index('epoch',inplace=True)
+            df_val = pd.read_csv(filepath_val)
+            df_val.set_index('epoch',inplace=True)
         
             # Find the best epoch
-            best_epoch = df_acc['acc_sample_mean'].argmax()
-            best_acc = df_acc['acc_sample_mean'][best_epoch]            
+            #best_epoch = df_val['acc_sample_mean'].argmax()
+            best_epoch = df_train['loss'].argmin()
+            best_acc = df_val['acc_sample_mean'][best_epoch]
+            best_acc_Q25 = df_val['acc_sample_Q25'][best_epoch]
+            best_acc_Q75 = df_val['acc_sample_Q75'][best_epoch]
             
             df_best_epoch.loc[num_train_users][eps] = best_epoch
             df_best_acc.loc[num_train_users][eps] = best_acc
+            df_best_acc_Q25.loc[num_train_users][eps] = best_acc_Q25
+            df_best_acc_Q75.loc[num_train_users][eps] = best_acc_Q75
+            
         except:
             pass
 
 # %% Make the plot
 
-# Plot the data
-colors = ['firebrick','grey','limegreen','blue','k']
-df_best_acc.plot(kind='line', marker='o',color=colors)
+
+# %% Convert the dataframes to numeric type to avoid type issues
+df_best_acc = df_best_acc.apply(pd.to_numeric)
+df_best_acc_Q25 = df_best_acc_Q25.apply(pd.to_numeric)
+df_best_acc_Q75 = df_best_acc_Q75.apply(pd.to_numeric)
+# %%
+colors = ['firebrick', 'orange', 'limegreen', 'blue', 'k']
+
+ax = df_best_acc.plot(kind='line', marker='o', color=colors)
+
+# Fill between Q75 and Q25 with alpha 0.1
+for eps, color in zip(eps_list,colors):
+    ax.fill_between(num_train_users_list, 
+                    df_best_acc_Q25[eps], 
+                    df_best_acc_Q75[eps], 
+                    color=color, 
+                    alpha=0.1)
+
+# Set the legend with custom labels
+ax.legend(labels)
+
+
 
 # Set the labels and title
-plt.xlabel('n_users')
+plt.xlabel('Users seen')
 plt.ylabel('Accuracy')
 plt.title('Best epoch, 1000 validation users')
-plt.xlim(0,1800)
+plt.xlim(0, 1800)
 
 # Show the plot
 plt.savefig('figures/ex2/val_acc_best_epoch.png',dpi=300)
