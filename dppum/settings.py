@@ -163,6 +163,9 @@ def default_settings_ex2_eval_ntraj():
             Path to a file containings weights to initialize the model. If
             null/None, weights will be initialized randomly. An example would
             be "models/ex2/weights_epoch_5.pt".
+        experiment : int
+            Experiment number. This is required to work out how to crop the
+            data, which is bespoke to each type of dataset.
         
     """ 
     
@@ -174,7 +177,8 @@ def default_settings_ex2_eval_ntraj():
         "figs_dir": "figures/ex2/eps1_128users/",
         "num_samples": 1,
         "padding_value": -1.0,
-        "init_weights": "models/ex2/eps1_128users/weights_epoch_5.pt"
+        "init_weights": "models/ex2/eps1_128users/weights_epoch_5.pt",
+        "experiment": 2
     }
     return settings
 
