@@ -156,6 +156,8 @@ for ntraj in n_traj:
         start_dim3 = 10*(10-ntraj)
     elif eval_settings['experiment'] == 2:
         start_dim3 = 50 - 5*ntraj
+    elif eval_settings['experiment'] == 3:
+        start_dim3 = 200 - 20*ntraj
 
     acc_greedy_this_ntraj = []
     acc_sample_this_ntraj = []
