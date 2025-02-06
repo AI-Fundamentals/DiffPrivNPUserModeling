@@ -54,7 +54,7 @@ df_best_acc_Q25 = df_best_acc_Q25.apply(pd.to_numeric)
 df_best_acc_Q75 = df_best_acc_Q75.apply(pd.to_numeric)
 
 # %% Make the plot
-colors = ['firebrick', 'orange', 'limegreen', 'blue', 'k']
+colors = ['k', 'firebrick', 'orange', 'limegreen', 'blue']
 
 # Plot the mean
 ax = df_best_acc.plot(kind='line', marker='o', color=colors, linestyle='--')
@@ -68,10 +68,9 @@ for eps, color in zip(eps_list,colors):
                     alpha=0.1)
 
 # Set the labels and title, legend etc.
-ax.legend(labels)
+plt.legend(labels,fontsize=16)
 plt.xlabel('Users seen',fontsize=18)
 plt.ylabel('Accuracy',fontsize=18)
-plt.legend(fontsize=16)
 plt.grid(True)
 plt.tight_layout()  
 
