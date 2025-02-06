@@ -47,6 +47,10 @@ for eps in eps_list:
 
 
 df_best_epoch.to_csv('models/ex2/ex2_best_epochs.csv')
+df_best_acc.to_csv('models/ex2/ex2_best_acc_mean.csv')
+df_best_acc_Q25.to_csv('models/ex2/ex2_best_acc_Q25.csv')
+df_best_acc_Q75.to_csv('models/ex2/ex2_best_acc_Q75.csv')
+
 
 # %% Convert the dataframes to numeric type to avoid type issues
 df_best_acc = df_best_acc.apply(pd.to_numeric)
