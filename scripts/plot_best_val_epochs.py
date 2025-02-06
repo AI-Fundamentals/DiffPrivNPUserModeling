@@ -11,9 +11,14 @@ import matplotlib.pyplot as plt
 eps_list = ["nodp","eps1","eps3","eps5","eps10"]
 labels = ["non-DP","eps1","eps3","eps5","eps10"]
 
-experiment = 2
+# Change this value to change the experiment
+experiment = 3
+
+
 if experiment == 2:
     num_train_users_list = [50,100,150,300,600,900,1200,1500,1800]
+elif experiment == 3:
+    num_train_users_list = [300]
 
 # %%
 
@@ -34,6 +39,7 @@ for eps in eps_list:
             df_val.set_index('epoch',inplace=True)
         
             # Find the best epoch
+            # Alternative method left in but commented out
             #best_epoch = df_val['acc_sample_mean'].argmax()
             best_epoch = df_train['loss'].argmin()
             best_acc = df_val['acc_sample_mean'][best_epoch]
