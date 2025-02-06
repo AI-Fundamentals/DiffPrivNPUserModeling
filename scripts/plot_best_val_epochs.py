@@ -45,19 +45,21 @@ for eps in eps_list:
         except:
             pass
 
-# %% Make the plot
 
+df_best_epoch.to_csv('models/ex2/ex2_best_epochs.csv')
 
 # %% Convert the dataframes to numeric type to avoid type issues
 df_best_acc = df_best_acc.apply(pd.to_numeric)
 df_best_acc_Q25 = df_best_acc_Q25.apply(pd.to_numeric)
 df_best_acc_Q75 = df_best_acc_Q75.apply(pd.to_numeric)
-# %%
+
+# %% Make the plot
 colors = ['firebrick', 'orange', 'limegreen', 'blue', 'k']
 
-ax = df_best_acc.plot(kind='line', marker='o', color=colors)
+# Plot the mean
+ax = df_best_acc.plot(kind='line', marker='o', color=colors, linestyle='--')
 
-# Fill between Q75 and Q25 with alpha 0.1
+# Plot the error bars
 for eps, color in zip(eps_list,colors):
     ax.fill_between(num_train_users_list, 
                     df_best_acc_Q25[eps], 
@@ -65,17 +67,14 @@ for eps, color in zip(eps_list,colors):
                     color=color, 
                     alpha=0.1)
 
-# Set the legend with custom labels
+# Set the labels and title, legend etc.
 ax.legend(labels)
-
-
-
-# Set the labels and title
-plt.xlabel('Users seen')
-plt.ylabel('Accuracy')
-plt.title('Best epoch, 1000 validation users')
-plt.xlim(0, 1800)
+plt.xlabel('Users seen',fontsize=18)
+plt.ylabel('Accuracy',fontsize=18)
+plt.legend(fontsize=16)
+plt.grid(True)
+plt.tight_layout()  
 
 # Show the plot
-plt.savefig('figures/ex2/val_acc_best_epoch.png',dpi=300)
+plt.savefig('figures/ex2/ex2_val_acc_best_epoch.png',dpi=200)
 plt.show()
