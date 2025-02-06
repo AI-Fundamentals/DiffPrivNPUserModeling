@@ -10,7 +10,10 @@ import matplotlib.pyplot as plt
 # %%
 eps_list = ["nodp","eps1","eps3","eps5","eps10"]
 labels = ["non-DP","eps1","eps3","eps5","eps10"]
-num_train_users_list = [50,100,150,300,600,900,1200,1500,1800]
+
+experiment = 2
+if experiment == 2:
+    num_train_users_list = [50,100,150,300,600,900,1200,1500,1800]
 
 # %%
 
@@ -23,8 +26,8 @@ for eps in eps_list:
     for num_train_users in num_train_users_list:
         try:
             # Load CSV
-            filepath_train = f'models/ex2/{num_train_users}/{eps}/training_metrics.csv'
-            filepath_val = f'models/ex2/{num_train_users}/{eps}/eval_acc_vs_epochs.csv'
+            filepath_train = f'models/ex{experiment}/{num_train_users}/{eps}/training_metrics.csv'
+            filepath_val = f'models/ex{experiment}/{num_train_users}/{eps}/eval_acc_vs_epochs.csv'
             df_train = pd.read_csv(filepath_train)
             df_train.set_index('epoch',inplace=True)
             df_val = pd.read_csv(filepath_val)
@@ -46,10 +49,10 @@ for eps in eps_list:
             pass
 
 
-df_best_epoch.to_csv('models/ex2/ex2_best_epochs.csv')
-df_best_acc.to_csv('models/ex2/ex2_best_acc_mean.csv')
-df_best_acc_Q25.to_csv('models/ex2/ex2_best_acc_Q25.csv')
-df_best_acc_Q75.to_csv('models/ex2/ex2_best_acc_Q75.csv')
+df_best_epoch.to_csv(f'models/ex{experiment}/ex{experiment}_best_epochs.csv')
+df_best_acc.to_csv(f'models/ex{experiment}/ex{experiment}_best_acc_mean.csv')
+df_best_acc_Q25.to_csv(f'models/ex{experiment}/ex{experiment}_best_acc_Q25.csv')
+df_best_acc_Q75.to_csv(f'models/ex{experiment}/ex{experiment}_best_acc_Q75.csv')
 
 
 # %% Convert the dataframes to numeric type to avoid type issues
@@ -79,5 +82,5 @@ plt.grid(True)
 plt.tight_layout()  
 
 # Show the plot
-plt.savefig('figures/ex2/ex2_val_acc_best_epoch.png',dpi=200)
+plt.savefig(f'figures/ex{experiment}/ex{experiment}_val_acc_best_epoch.png',dpi=200)
 plt.show()
