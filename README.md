@@ -2,13 +2,13 @@
 
 Differentially Private Probabilistic User Modelling (in python). This is a python implementation of [this](https://github.com/hamalajaa/DifferentiablyPrivateProbabilisticUserModeling) Julia repo.
 
-#### Contact details
+## Contact details
 
 This repo was developed by [Jonathan Taylor](mailto:jonathan.taylormanchester.ac.uk), Research IT, University of Manchester.
 
 Questions about the scientific content should be directed to the paper's corresponding author, [Hari Harikumar](mailto:haripriya.harikumar@manchester.ac.uk).
 
-#### Installation instructions
+## Installation instructions
 
 1. Clone and enter the repo:
    
