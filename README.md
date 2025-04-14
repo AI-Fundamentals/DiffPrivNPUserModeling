@@ -17,7 +17,7 @@ Questions about the scientific content should be directed to the paper's corresp
    cd dp-priv-python
    ```
    
-   NB if using CSF, please ignore the rest of the instructions and follow the workflow in the [jobscripts folder](jobscripts/README.MD).
+   NB if using CSF, please ignore the rest of the instructions and follow the workflow in the [jobscripts folder](jobscripts/README.md).
 
 2. Create and activate a python 3.11 environment
 
