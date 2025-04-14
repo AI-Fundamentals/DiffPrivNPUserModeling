@@ -91,7 +91,7 @@ To run the n_traj evaluation (i.e. model performance vs number of context trajec
 python -m experiments.eval_ntraj -settings settings/settings_ex2_eval_epochs.json
 ```
 
-## Workflow overview
+## Workflow Overview
 
 1. Generate training data using the [Julia data generation code](https://github.com/AI-Fundamentals/DifferentiableUserModels-DataGen).
 2. Run training script `experiments/train.py` with an appropriate settings file. Load training data from data folder. Save model weights and metadata parameters in models folder. Save training metrics plot to figures folder.
@@ -107,4 +107,4 @@ Each model training or evaluation run requires a `json` settings file (otherwise
 
 ## Scripts folder
 
-The [scripts folder](scripts/) contains some useful scripts. Most of these are for plotting the output data.
+The [scripts folder](scripts/) contains some useful scripts. Most of these are for plotting the final output data by loading the CSV files created during steps 3 and 4 in the [workflow overview](#workflow-overview) section.
