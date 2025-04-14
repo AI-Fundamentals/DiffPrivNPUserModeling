@@ -97,9 +97,9 @@ python -m experiments.eval_ntraj -settings settings/settings_ex2_eval_epochs.jso
 2. Run training script `experiments/train.py` with an appropriate settings file. Load training data from data folder. Save model weights and metadata parameters in models folder. Save training metrics plot to figures folder.
 3. Run `experiments/eval_epochs.py`, with an appropriate settings file, to evaluate model performance for different numbers of training epochs.
 4. Run `experiments/eval_ntraj.py`, with an appropriate settings file, to evaluate model performence for different numbers of inference trajectories. This requires the user to specify a specific set of model weights to use- this will likely be the best training epoch (as evaluated during step 3).
-5. Load test performance data and plot. Save to figures folder.
+5. Load test performance data from CSV files and plot. Save to figures folder.
 
-For a detailed description of the workflow, see the [jobscripts folder](/jobscripts/README.md).## Settings files
+For a detailed description of the workflow, see the [jobscripts folder](/jobscripts/README.md).
 
 ## Settings files
 
