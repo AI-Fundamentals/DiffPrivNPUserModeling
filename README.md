@@ -102,3 +102,7 @@ python -m experiments.eval_ntraj -settings settings/settings_ex2_eval_epochs.jso
 For a detailed description of the workflow, see the [jobscripts folder](/jobscripts/README.md).## Settings files
 
 Each model training or evaluation run requires a `json` settings file (otherwise a set of default settings will be used). Example files, and a detailed explanation of the various settings, are given in the [settings folder](settings/).
+
+## Scripts folder
+
+The [scripts folder](scripts/) contains some useful scripts. Most of these are for plotting the output data.
