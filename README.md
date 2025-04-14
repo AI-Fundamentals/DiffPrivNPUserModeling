@@ -2,6 +2,12 @@
 
 Differentially Private Probabilistic User Modelling (in python). This is a python implementation of [this](https://github.com/hamalajaa/DifferentiablyPrivateProbabilisticUserModeling) Julia repo.
 
+#### Contact details
+
+This repo was developed by [Jonathan Taylor](mailto:jonathan.taylormanchester.ac.uk), Research IT, University of Manchester.
+
+Questions about the scientific content should be directed to the paper's corresponding author, [Hari Harikumar](mailto:haripriya.harikumar@manchester.ac.uk).
+
 #### Installation instructions
 
 1. Clone and enter the repo:
@@ -87,7 +93,5 @@ To run the n_traj evaluation (i.e. model performance vs number of context trajec
 2. Run training script. Load training data from data folder. Save model weights and metadata parameters in models folder. Save training metrics plot to figures folder.
 3. Run evaluation script(s). Load test data from model folder. Load models weights from model folder and save test performance data to model folder.
 4. Load test performance data and plot. Save to figures folder.
-
-
 
 For a detailed description of the workflow, see the [jobscripts folder](/jobscripts/README.md).
