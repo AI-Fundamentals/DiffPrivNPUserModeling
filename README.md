@@ -2,13 +2,13 @@
 
 Differentially Private Probabilistic User Modelling (in python). This is a python implementation of [this](https://github.com/hamalajaa/DifferentiablyPrivateProbabilisticUserModeling) Julia repo.
 
-## Contact details
+## Contact Details
 
 This repo was developed by [Jonathan Taylor](mailto:jonathan.taylormanchester.ac.uk), Research IT, University of Manchester.
 
 Questions about the scientific content should be directed to the paper's corresponding author, [Hari Harikumar](mailto:haripriya.harikumar@manchester.ac.uk).
 
-## Installation instructions
+## Installation Instructions
 
 1. Clone and enter the repo:
    
@@ -55,7 +55,7 @@ Questions about the scientific content should be directed to the paper's corresp
    python -m pytest
    ```
 
-## Training and evaluation
+## Training and Evaluation
 
 #### Training data
 
@@ -101,10 +101,10 @@ python -m experiments.eval_ntraj -settings settings/settings_ex2_eval_epochs.jso
 
 For a detailed description of the workflow, see the [jobscripts folder](/jobscripts/README.md).
 
-## Settings files
+## Settings Files
 
 Each model training or evaluation run requires a `json` settings file (otherwise a set of default settings will be used). Example files, and a detailed explanation of the various settings, are given in the [settings folder](settings/).
 
-## Scripts folder
+## Scripts Folder
 
 The [scripts folder](scripts/) contains some useful scripts. Most of these are for plotting the final output data by loading the CSV files created during steps 3 and 4 in the [workflow overview](#workflow-overview) section.
