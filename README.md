@@ -32,13 +32,13 @@ Questions about the scientific content should be directed to the paper's corresp
    - On a system with Nvidia GPU:
    
    ```shell
-   pip install torch
+   pip install torch==2.3.0
    ```
    
    - On Mac with Silicon GPU:
    
    ```shell
-   pip install --pre torch --extra-index-url https://download.pytorch.org/whl/nightly/cpu
+   pip install --pre torch==2.3.0 --extra-index-url https://download.pytorch.org/whl/nightly/cpu
    ```
    
    - On high-performance computing systems, refer to the relevant documentation.
