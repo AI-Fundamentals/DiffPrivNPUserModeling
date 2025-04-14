@@ -7,7 +7,6 @@ import numpy as np
 import pandas as pd
 import json
 import matplotlib.pyplot as plt
-import warnings
 
 from dppum.data import hdf_to_dataloader_pad
 from dppum.util import print_dictionary, calc_greedy_acc_onehot, calc_true_confidence
@@ -54,6 +53,11 @@ except Exception as e:
     eval_settings['settings_file_path'] = "Default"
     
 print("Finished loading test settings.")
+
+# %% Check eval_settings is in list of valid experiments
+valid_experiments = {1, 2, 3}
+if eval_settings['experiment'] not in valid_experiments:
+    raise ValueError(f"Invalid experiment value in eval settings. Must be one of {valid_experiments}.")
 
 # %% Load training settings
 train_settings_path = os.path.join(eval_settings['models_dir'],'train_settings.json')
@@ -152,6 +156,8 @@ for ntraj in n_traj:
         start_dim3 = 10*(10-ntraj)
     elif eval_settings['experiment'] == 2:
         start_dim3 = 50 - 5*ntraj
+    elif eval_settings['experiment'] == 3:
+        start_dim3 = 200 - 20*ntraj
 
     acc_greedy_this_ntraj = []
     acc_sample_this_ntraj = []
