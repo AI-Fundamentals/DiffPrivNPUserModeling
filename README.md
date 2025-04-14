@@ -2,13 +2,13 @@
 
 Differentially Private Probabilistic User Modelling (in python). This is a python implementation of [this](https://github.com/hamalajaa/DifferentiablyPrivateProbabilisticUserModeling) Julia repo.
 
-#### Contact details
+## Contact Details
 
 This repo was developed by [Jonathan Taylor](mailto:jonathan.taylormanchester.ac.uk), Research IT, University of Manchester.
 
 Questions about the scientific content should be directed to the paper's corresponding author, [Hari Harikumar](mailto:haripriya.harikumar@manchester.ac.uk).
 
-#### Installation instructions
+## Installation Instructions
 
 1. Clone and enter the repo:
    
@@ -55,7 +55,7 @@ Questions about the scientific content should be directed to the paper's corresp
    python -m pytest
    ```
 
-## Training and evaluation
+## Training and Evaluation
 
 #### Training data
 
@@ -66,7 +66,7 @@ This repo requires pre-computed data which are generated using [this Julia code]
 To run the training for experiment 2:
 
 ```shell
-python -m experiments.ex2.experiment2_train -settings settings/settings_ex2_train.json
+python -m experiments.train -settings settings/settings_ex2_train.json
 ```
 
 Settings must be loaded from a valid `json` file. If no valid file is found (or the `-settings` argument isn't used), the default settings will be loaded instead. For full details of the settings file, see the docstrings in [dppum/settings.py](dppum/settings.py). Each function in this file returns a dictionary with the same keys as are required in the relevant settings file.
@@ -80,18 +80,31 @@ In the training settings json file, there is an item 'init_weights'. Set this to
 To run the epochs evaluation (i.e. model performance vs number of training epochs) for experiment2:
 
 ```shell
-python -m experiments.ex2.experiment2_eval_epochs -settings settings/settings_ex2_eval_epochs.json
+python -m experiments.eval_epochs -settings settings/settings_ex2_eval_epochs.json
 ```
 
 This will then save a figure in your `figs_dir` folder from the settings file, and also the evaluation metrics will also be saved in the `models_dir` folder.
 
-To run the n_traj evaluation (i.e. model performance vs number of context trajectories), run the experiment2_eval_ntraj script. *NB this is not yet fully implemented.*
+To run the n_traj evaluation (i.e. model performance vs number of context trajectories), run the experiment2_eval_ntraj script:
 
-## Workflow
+```shell
+python -m experiments.eval_ntraj -settings settings/settings_ex2_eval_epochs.json
+```
 
-1. Generate training data using the [Julia code](https://github.com/AI-Fundamentals/DifferentiableUserModels-DataGen).
-2. Run training script. Load training data from data folder. Save model weights and metadata parameters in models folder. Save training metrics plot to figures folder.
-3. Run evaluation script(s). Load test data from model folder. Load models weights from model folder and save test performance data to model folder.
-4. Load test performance data and plot. Save to figures folder.
+## Workflow Overview
+
+1. Generate training data using the [Julia data generation code](https://github.com/AI-Fundamentals/DifferentiableUserModels-DataGen).
+2. Run training script `experiments/train.py` with an appropriate settings file. Load training data from data folder. Save model weights and metadata parameters in models folder. Save training metrics plot to figures folder.
+3. Run `experiments/eval_epochs.py`, with an appropriate settings file, to evaluate model performance for different numbers of training epochs.
+4. Run `experiments/eval_ntraj.py`, with an appropriate settings file, to evaluate model performence for different numbers of inference trajectories. This requires the user to specify a specific set of model weights to use- this will likely be the best training epoch (as evaluated during step 3).
+5. Load test performance data from CSV files and plot. Save to figures folder.
 
 For a detailed description of the workflow, see the [jobscripts folder](/jobscripts/README.md).
+
+## Settings Files
+
+Each model training or evaluation run requires a `json` settings file (otherwise a set of default settings will be used). Example files, and a detailed explanation of the various settings, are given in the [settings folder](settings/).
+
+## Scripts Folder
+
+The [scripts folder](scripts/) contains some useful scripts. Most of these are for plotting the final output data by loading the CSV files created during steps 3 and 4 in the [workflow overview](#workflow-overview) section.
