@@ -1,0 +1,11 @@
+{
+    "num_users": 128,
+    "batch_size": 4,
+    "eval_hdf": "data/ex3/ex3_eval_ntraj_data10.hdf",
+    "models_dir": "models/ex3/eps1_128users/",
+    "figs_dir": "figures/ex3/eps1_128users/",
+    "num_samples": 1,
+    "padding_value": -1.0,
+    "init_weights": "models/ex3/eps1_128users/weights_epoch_5.pt",
+    "experiment": 3
+}
