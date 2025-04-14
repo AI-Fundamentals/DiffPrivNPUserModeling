@@ -91,11 +91,12 @@ To run the n_traj evaluation (i.e. model performance vs number of context trajec
 python -m experiments.eval_ntraj -settings settings/settings_ex2_eval_epochs.json
 ```
 
-## Workflow
+## Workflow overview
 
-1. Generate training data using the [Julia code](https://github.com/AI-Fundamentals/DifferentiableUserModels-DataGen).
-2. Run training script. Load training data from data folder. Save model weights and metadata parameters in models folder. Save training metrics plot to figures folder.
-3. Run evaluation script(s). Load test data from model folder. Load models weights from model folder and save test performance data to model folder.
-4. Load test performance data and plot. Save to figures folder.
+1. Generate training data using the [Julia data generation code](https://github.com/AI-Fundamentals/DifferentiableUserModels-DataGen).
+2. Run training script `experiments/train.py` with an appropriate settings file. Load training data from data folder. Save model weights and metadata parameters in models folder. Save training metrics plot to figures folder.
+3. Run `experiments/eval_epochs.py`, with an appropriate settings file, to evaluate model performance for different numbers of training epochs.
+4. Run `experiments/eval_ntraj.py`, with an appropriate settings file, to evaluate model performence for different numbers of inference trajectories. This requires the user to specify a specific set of model weights to use- this will likely be the best training epoch (as evaluated during step 3).
+5. Load test performance data and plot. Save to figures folder.
 
 For a detailed description of the workflow, see the [jobscripts folder](/jobscripts/README.md).
