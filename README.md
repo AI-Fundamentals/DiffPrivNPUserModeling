@@ -66,7 +66,7 @@ This repo requires pre-computed data which are generated using [this Julia code]
 To run the training for experiment 2:
 
 ```shell
-python -m experiments.ex2.experiment2_train -settings settings/settings_ex2_train.json
+python -m experiments.train -settings settings/settings_ex2_train.json
 ```
 
 Settings must be loaded from a valid `json` file. If no valid file is found (or the `-settings` argument isn't used), the default settings will be loaded instead. For full details of the settings file, see the docstrings in [dppum/settings.py](dppum/settings.py). Each function in this file returns a dictionary with the same keys as are required in the relevant settings file.
@@ -80,12 +80,16 @@ In the training settings json file, there is an item 'init_weights'. Set this to
 To run the epochs evaluation (i.e. model performance vs number of training epochs) for experiment2:
 
 ```shell
-python -m experiments.ex2.experiment2_eval_epochs -settings settings/settings_ex2_eval_epochs.json
+python -m experiments.eval_epochs -settings settings/settings_ex2_eval_epochs.json
 ```
 
 This will then save a figure in your `figs_dir` folder from the settings file, and also the evaluation metrics will also be saved in the `models_dir` folder.
 
-To run the n_traj evaluation (i.e. model performance vs number of context trajectories), run the experiment2_eval_ntraj script. *NB this is not yet fully implemented.*
+To run the n_traj evaluation (i.e. model performance vs number of context trajectories), run the experiment2_eval_ntraj script:
+
+```shell
+python -m experiments.eval_ntraj -settings settings/settings_ex2_eval_epochs.json
+```
 
 ## Workflow
 
