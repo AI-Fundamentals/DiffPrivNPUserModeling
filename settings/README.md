@@ -6,7 +6,7 @@ Each setting file is a json with keys for relevant parameters for model training
 
 **Purpose**: Training the model.
 
-**Examples files**: `settings_ex1_train.json` and `settings_ex2_train.json`
+**Examples files**: [experiment 1](ex1/settings_ex1_train.json), [experiment 2](ex2/settings_ex2_train.json), [experiment 3](ex3/settings_ex3_train.json)
 
 **Settings function**: A dictionary of example settings is also returned by the function `dppum.default_settings_ex2_train()`
 
@@ -63,7 +63,7 @@ Each setting file is a json with keys for relevant parameters for model training
 
 **Purpose**: Evaluating the model accuracy vs number of training epochs.
 
-**Example files**: `settings_ex1_eval_epochs.json` and `settings_ex2_eval_epochs.json`
+**Example files**: [experiment 1](ex1/settings_ex1_eval_epochs.json),  [experiment 2](ex2/settings_ex2_eval_epochs.json), [experiment 3](ex3/settings_ex3_eval_epochs.json)
 
 **Settings function**: A dictionary of example settings is also returned by the function `dppum.default_settings_ex2_eval_epochs()`
 
@@ -88,9 +88,9 @@ Each setting file is a json with keys for relevant parameters for model training
 
 **Purpose**: Evaluating the accuracy of a trained model vs number of context trajectories provided at inference.
 
-**Example files**: `settings_ex1_eval_epochs.json` and `settings_ex2_eval_epochs.json`
+**Example files**: [experiment 1](ex1/settings_ex1_eval_ntraj.json), [experiment 2](ex2/settings_ex2_eval_ntraj.json), [experiment 3](ex3/settings_ex3_eval_ntraj.json)
 
-**Settings function**: A dictionary of example settings is also returned by the function `dppum.default_settings_ex2_eval_epochs()`
+**Settings function**: A dictionary of example settings is also returned by the function `dppum.default_settings_ex2_eval_ntraj()`
 
 **Keys**:
 
@@ -110,5 +110,5 @@ Each setting file is a json with keys for relevant parameters for model training
   - Value to use for padding during batching. Should be a value that is not in the scope of the real data (e.g. use `-1` for one-hot encoded categorical data).
 - **init_weights**: str
   - Path to a file containing weights to initialize the model. If null/None, weights will be initialized randomly. An example would be `models/ex2/weights_epoch_5.pt`.
-- **Experiment**: int
-  - Must be `1` for experiment 1 or `2` for experiment 2. This is used to work out how to crop the data to the right dimensions.
+- **experiment**: int
+  - Experiment number. For example, must be `1` for experiment 1 or `2` for experiment 2. This is used to work out how to crop the data to the right dimensions.
