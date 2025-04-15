@@ -69,7 +69,7 @@ To run the training for experiment 2:
 python -m experiments.train -settings settings/settings_ex2_train.json
 ```
 
-Settings must be loaded from a valid `json` file. If no valid file is found (or the `-settings` argument isn't used), the default settings will be loaded instead. For full details of the settings file, see the docstrings in [dppum/settings.py](dppum/settings.py). Each function in this file returns a dictionary with the same keys as are required in the relevant settings file.
+Settings must be loaded from a valid `json` file. If no valid file is found (or the `-settings` argument isn't used), the default settings will be loaded instead. For full details of the settings files, and some example files, see the [settings folder](settings/).
 
 #### Re-training a pre-trained model
 
