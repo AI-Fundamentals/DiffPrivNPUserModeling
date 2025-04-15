@@ -171,7 +171,7 @@ def default_settings_ex2_eval_ntraj():
     
     settings = {
         "num_users": 128,
-        "batch_size": 4,
+        "batch_size": 1,
         "eval_hdf": "data/ex2/ex2_eval_ntraj_data.hdf",
         "models_dir": "models/ex2/eps1_128users/",
         "figs_dir": "figures/ex2/eps1_128users/",
