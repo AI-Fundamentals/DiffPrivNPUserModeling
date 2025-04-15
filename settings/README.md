@@ -6,7 +6,7 @@ Each setting file is a json with keys for relevant parameters for model training
 
 **Purpose**: Training the model.
 
-**Examples files**: [experiment 1](ex1/settings_ex1_train.json), [experiment 2](ex1/settings_ex2_train.json), [experiment 3](ex3/settings_ex3_train.json)
+**Examples files**: [experiment 1](ex1/settings_ex1_train.json), [experiment 2](ex2/settings_ex2_train.json), [experiment 3](ex3/settings_ex3_train.json)
 
 **Settings function**: A dictionary of example settings is also returned by the function `dppum.default_settings_ex2_train()`
 
