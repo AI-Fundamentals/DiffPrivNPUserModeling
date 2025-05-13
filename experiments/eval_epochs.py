@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from dppum.data import hdf_to_dataloader_pad
 from dppum.util import print_dictionary, calc_greedy_acc_onehot, calc_true_confidence
 from dppum.train import get_device_type
-from dppum.settings import default_settings_ex2_test
+from dppum.settings import default_settings_ex2_eval_epochs
 
 print("Finished importing packages.")
 
@@ -23,7 +23,7 @@ nps.lab.set_global_device(device)
 if device == "mps":
     # Set pytorch to fallback to cpu for features where mps not available
     os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
-print("fDevice set to '{device}'")
+print(f"Device set to '{device}'")
 
 # %%
 # Parse the settings file from the command line argument
@@ -34,7 +34,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-settings", 
                     help="Path to settings json file.", 
                     type=str, 
-                    default="settings/settings_ex2_test.json")
+                    default="settings/settings_ex2_eval_epochs.json")
 
 # Parsing the arguments to a dictionary
 eval_settings_file_path = vars(parser.parse_args())['settings']
@@ -48,8 +48,8 @@ try:
     print("Loaded settings successfully.")
 except Exception as e:
     print("Failed to load settings due to the following error:", e)
-    print("\nUsing default settings from function default_settings_ex2_test().")
-    eval_settings = default_settings_ex2_test()
+    print("\nUsing default settings from function default_settings_ex2_eval_epochs().")
+    eval_settings = default_settings_ex2_eval_epochs()
     eval_settings['settings_file_path'] = "Default"
 
 # Save the command line args to a json in model save folder
@@ -59,7 +59,7 @@ if not os.path.exists(eval_settings['models_dir']):
     os.makedirs(eval_settings['models_dir'])
 
 # Save settings to models dir
-with open(os.path.join(eval_settings['models_dir'], "eval_settings.json"), 'w') as json_file:
+with open(os.path.join(eval_settings['models_dir'], "eval_epochs_settings.json"), 'w') as json_file:
     json.dump(eval_settings, json_file,indent=4)
 
 print("Finished loading test settings.")
@@ -84,22 +84,27 @@ else:
 # %% Load the test dataset
 
 # Load and prepare the data
-dataloader_test, metadata_test = hdf_to_dataloader_pad(eval_settings['test_hdf'],
+dataloader_eval, metadata_eval = hdf_to_dataloader_pad(eval_settings['eval_hdf'],
                                             n_users=eval_settings['num_users'],
                                             batch_size=eval_settings['batch_size'],
                                             padding_value=eval_settings['padding_value']
                                             )
-print(f"\nMetadata for dataloader from file '{eval_settings['test_hdf']}':")
-print_dictionary(metadata_test)
+print(f"\nMetadata for dataloader from file '{eval_settings['eval_hdf']}':")
+print_dictionary(metadata_eval)
 
 print("Finished loading test dataset.")
 
+# %% Get dimensions of the data
+dataiter = iter(dataloader_eval)
+_,_,xt,yt = next(dataiter)
+dim_x = xt.shape[2]
+dim_y = yt.shape[2]
 
 # %% Construct the test model
 # These MUST be the same parameters as were used for training
-model_ex2 = nps.construct_agnp(
-    dim_x=17, # From the data dimensions
-    dim_y=9, # From the data dimensions
+model = nps.construct_agnp(
+    dim_x=dim_x, # From the data dimensions
+    dim_y=dim_y, # From the data dimensions
     dim_embedding=128, # Specified in appendix as hidden dimensions
     num_enc_layers=6, # Specified in appendix as number of layers
     num_dec_layers=6, # Specified in appendix as number of layers
@@ -108,27 +113,32 @@ model_ex2 = nps.construct_agnp(
     lv_likelihood=train_settings['lv_likelihood'],
     nonlinearity=train_settings['nonlinearity'],
     )
-model_ex2 = model_ex2.to(device)
+model = model.to(device)
 
 # %% Loop through epochs and test accuracy
 # This loop is quite similar to the training loop but does not train the model
 
 # Define a dataframe to store the results
-columns = ["acc_greedy", "acc_sample_mean", "acc_sample_Q5", "acc_sample_Q25", "acc_sample_Q50", "acc_sample_Q75", "acc_sample_Q95"]
+columns = ["acc_greedy", "acc_sample_mean","acc_sample_std", "acc_sample_Q5", "acc_sample_Q25", "acc_sample_Q50", "acc_sample_Q75", "acc_sample_Q95"]
 df_results = pd.DataFrame(columns=columns,index=epochs,dtype='float')
 df_results.index.name = 'epoch'
 
-model_ex2.eval()
+model.eval()
 for epoch in epochs:
     # Load the trained model
     model_name = f"weights_epoch_{epoch}.pt"
-    model_ex2.load_state_dict(torch.load(os.path.join(eval_settings['models_dir'], model_name)))
+    try:
+        model.load_state_dict(torch.load(os.path.join(eval_settings['models_dir'], model_name)))
+    except:
+        model.load_state_dict(torch.load(os.path.join(eval_settings['models_dir'], model_name),map_location=torch.device('cpu')))
+        model = model.to(device)
+    
     acc_greedy_this_epoch = []
     acc_sample_this_epoch = []
     conf_greedy_this_epoch = []    
     
     # Iterate over the batches of the dataset.
-    for step, (xc, yc, xt, yt) in enumerate(dataloader_test):
+    for step, (xc, yc, xt, yt) in enumerate(dataloader_eval):
         # Move tensors to training device (GPU)
         xc = xc.to(device)
         yc = yc.to(device)
@@ -146,7 +156,7 @@ for epoch in epochs:
         # Forward pass
         with torch.no_grad():
             yt_pred, _, _, _ = nps.predict(
-                model_ex2,xc, yc, xt, num_samples=train_settings['num_samples'], dtype_lik=torch.float32
+                model,xc, yc, xt, num_samples=train_settings['num_samples'], dtype_lik=torch.float32
                 ) 
 
         # Accuracy of the non-padding values
@@ -163,6 +173,7 @@ for epoch in epochs:
     ##### End of epoch calculations #####
     df_results.loc[epoch,'acc_greedy'] = np.mean(acc_greedy_this_epoch)
     df_results.loc[epoch,'acc_sample_mean'] = np.mean(acc_sample_this_epoch)
+    df_results.loc[epoch,'acc_sample_std'] = np.std(acc_sample_this_epoch)
     df_results.loc[epoch,'acc_sample_Q5'] = np.quantile(acc_sample_this_epoch,0.05)
     df_results.loc[epoch,'acc_sample_Q25'] = np.quantile(acc_sample_this_epoch,0.25)
     df_results.loc[epoch,'acc_sample_Q50'] = np.quantile(acc_sample_this_epoch,0.5)
@@ -172,7 +183,7 @@ for epoch in epochs:
 
 # %% Save accuracy data
 accuracy_csv_path = os.path.join(eval_settings['models_dir'],"eval_acc_vs_epochs.csv")
-df_results.to_csv(accuracy_csv_path,index=True)
+df_results.round(3).to_csv(accuracy_csv_path,index=True)
 
 
 # %% Plot accuracy vs epochs
@@ -184,7 +195,7 @@ ax.plot(df_results['acc_greedy'], label='acc_greedy', linestyle='-')
 ax.plot(df_results['acc_sample_Q50'], label='acc_sample_Q50', linestyle='-')
 ax.fill_between(df_results.index, df_results['acc_sample_Q5'], df_results['acc_sample_Q95'], color='skyblue', alpha=0.4)
 ax.set_xlabel('N training epochs')
-ax.set_xlabel('Accuracy')
+ax.set_ylabel('Accuracy')
 ax.legend(loc='best')
 ax.grid(True)
 plt.show()
@@ -195,7 +206,7 @@ if not os.path.exists(eval_settings['figs_dir']):
     os.makedirs(eval_settings['figs_dir'])
 
 # Save the figure
-fig.savefig(os.path.join(eval_settings['figs_dir'],'experiment2_eval_metrics.png'))
+fig.savefig(os.path.join(eval_settings['figs_dir'],'eval_epochs_metrics.png'))
 
 
-print("Finished plotting training metrics.")
+print("Finished plotting eval epochs metrics.")

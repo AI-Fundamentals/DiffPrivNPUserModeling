@@ -21,7 +21,7 @@ nps.lab.set_global_device(device)
 if device == "mps":
     # Set pytorch to fallback to cpu for features where mps not available
     os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
-print("fDevice set to '{device}'")
+print(f"Device set to '{device}'")
 
 
 # %%
@@ -77,46 +77,57 @@ dataloader_train, metadata_train = hdf_to_dataloader_pad(train_settings['train_h
 print(f"\nMetadata for dataloader from file '{train_settings['train_hdf']}':")
 print_dictionary(metadata_train)
 
-dataloader_val,metadata_val = hdf_to_dataloader_pad(train_settings['val_hdf'],
-                                            n_users=train_settings['num_users'],
-                                            batch_size=train_settings['batch_size'],
-                                            padding_value=train_settings['padding_value']
-                                            )
-print(f"\nMetadata for dataloader from file '{train_settings['val_hdf']}':")
-print_dictionary(metadata_val)
+if train_settings['val_hdf']:
+    dataloader_val, metadata_val = hdf_to_dataloader_pad(train_settings['val_hdf'],
+                                                        n_users=train_settings['num_users'],
+                                                        batch_size=train_settings['batch_size'],
+                                                        padding_value=train_settings['padding_value']
+                                                        )
+    print(f"\nMetadata for dataloader from file '{train_settings['val_hdf']}':")
+    print_dictionary(metadata_val)
+else:
+    print("\nNo validation data specified during training.")
+    dataloader_val, metadata_val = None, None
 
+# %% Get dimensions of the data
+dataiter = iter(dataloader_train)
+_,_,xt,yt = next(dataiter)
+dim_x = xt.shape[2]
+dim_y = yt.shape[2]
 
-# %%
-# Construct the model
-model_ex2 = nps.construct_agnp(
-    dim_x=17, # From the data dimensions
-    dim_y=9, # From the data dimensions
+# %% Construct the model
+model = nps.construct_agnp(
+    dim_x=dim_x, # From the data dimensions
+    dim_y=dim_y, # From the data dimensions
     dim_embedding=128, # Specified in appendix as hidden dimensions
     num_enc_layers=6, # Specified in appendix as number of layers
     num_dec_layers=6, # Specified in appendix as number of layers
     likelihood=train_settings['likelihood'],
     dim_lv=train_settings['dim_lv'],
     lv_likelihood=train_settings['lv_likelihood'],
-    nonlinearity=train_settings['nonlinearity'],
+    nonlinearity=train_settings['nonlinearity']
     )
-model_ex2 = model_ex2.to(device)
+
+model = model.to(device)
 
 print("Finished constructing the model.")
 
-# %%
-# Setup optimizer
+# %% Load weights from file if required
+if train_settings['init_weights']:
+    model.load_state_dict(torch.load(train_settings['init_weights']))
+
+# %% Setup optimizer
 valid_optimizers = ['Adam']
 if train_settings['optimizer'] == 'Adam':
-    optimizer = torch.optim.Adam(model_ex2.parameters(), lr=train_settings['learning_rate'])
+    optimizer = torch.optim.Adam(model.parameters(), lr=train_settings['learning_rate'])
 else:
     raise ValueError(f"Invalid optimizer name. Expected one of: {valid_optimizers}")
 
-# %%
-# Train model using train_model_dp_torch function
+# %% # Train model using train_model_dp_torch function
 time_start = dt.datetime.now()
 
 history = train_model_dp_torch(
-    model_ex2,
+    model,
     dataloader_train,
     metadata_train,
     loss_fn=np_elbo_cat_torch,
@@ -130,8 +141,7 @@ training_time = time_end-time_start
 print("Finished training the model.")
 print(f"Training time: {'{:.2f}'.format(training_time.total_seconds()/60)} minutes")
 
-# %%
-# Plot training metrics
+# %% # Plot training metrics
 
 # Make output folders
 fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8, 6), sharex=True)
@@ -141,9 +151,9 @@ ax[0].plot(history['epoch'], history['loss'], label='Loss')
 ax[1].plot(history['epoch'], history['train_acc_greedy'], label='Train Acc (greedy)')
 ax[1].plot(history['epoch'], history['train_acc_sample'], label='Train Acc (sample)')
 ax[1].plot(history['epoch'], history['train_conf_greedy'], label='Train Confidence (greedy)')
-if train_settings['warmup_epoch']:
-    ax[1].plot(history['epoch'], history['val_acc_greedy'], label='Val Acc (greedy)')    
-    ax[1].plot(history['epoch'], history['val_acc_sample'], label='Val Acc (sample)')    
+if train_settings['val_hdf']:
+    ax[1].plot(history['epoch'], history['val_acc_greedy'], label='Val Acc (greedy)', linestyle='--')    
+    ax[1].plot(history['epoch'], history['val_acc_sample'], label='Val Acc (sample)', linestyle='--')    
 
 # Adding labels and title
 ax[0].set_xlabel('Epochs completed')
@@ -165,9 +175,9 @@ if not os.path.exists(train_settings['figs_dir']):
     os.makedirs(train_settings['figs_dir'])
 
 # Save the figure
-fig.savefig(os.path.join(train_settings['figs_dir'],'experiment2_training_metrics.png'))
+fig.savefig(os.path.join(train_settings['figs_dir'],'training_metrics.png'))
 
 print("Finished plotting training metrics.")
 
 # %%
-print("Finished training experiment2.py training script.")
+print("Finished train.py training script.")

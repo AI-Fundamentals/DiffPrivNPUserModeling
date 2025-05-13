@@ -1,53 +1,110 @@
 # dp-priv-python
-Differentially Private Probabilistic User Modelling (in python)
 
+Differentially Private Probabilistic User Modelling (in python). This is a python implementation of [this](https://github.com/hamalajaa/DifferentiablyPrivateProbabilisticUserModeling) Julia repo.
 
-#### Installation instructions
-1. Create and activate a python 3.9 environment
-2. Install packages from pip:
+## Contact Details
 
-    ```
-    pip install -r requirements.txt
-    ```
-2. Install PyTorch:
-   1. On a "standard" system with Nvidia GPU:
+This repo was developed by [Jonathan Taylor](mailto:jonathan.taylormanchester.ac.uk), Research IT, University of Manchester.
+
+Questions about the scientific content should be directed to the paper's corresponding author, [Hari Harikumar](mailto:haripriya.harikumar@manchester.ac.uk).
+
+## Installation Instructions
+
+1. Clone and enter the repo:
+   
+   ```shell
+   git clone https://github.com/AI-Fundamentals/dp-priv-python.git
+   cd dp-priv-python
    ```
-    pip install torch
-    ```
-   2. On Mac with Silicon GPU:
+   
+   NB if using CSF, please ignore the rest of the instructions and follow the workflow in the [jobscripts folder](jobscripts/README.md).
 
-    ```
-    pip install --pre torch --extra-index-url https://download.pytorch.org/whl/nightly/cpu
-    ```
-   3. On high-performance computing systems, refer to the relevant documentation.
+2. Create and activate a python 3.11 environment
 
-4. Install `neuralprocesses` from github:
+3. Install packages from pip:
+   
+   ```shell
+   pip install -r requirements.txt
+   ```
 
-    ```
-    pip install git+https://github.com/wesselb/neuralprocesses.git
-    ```
+4. Install PyTorch:
+   
+   - On a system with Nvidia GPU:
+   
+   ```shell
+   pip install torch==2.3.0
+   ```
+   
+   - On Mac with Silicon GPU:
+   
+   ```shell
+   pip install --pre torch==2.3.0 --extra-index-url https://download.pytorch.org/whl/nightly/cpu
+   ```
+   
+   - On high-performance computing systems, refer to the relevant documentation.
 
-6. Test the environment installation:
+5. Test the environment installation:
+   
+   ```shell
+   pytest tests/test_nps.py
+   ```
 
-    ```
-    pytest tests/test_nps.py
-    ```
-    
+6. Run unit tests:
+   
+   ```shell
+   python -m pytest
+   ```
 
+## Training and Evaluation
 
 #### Training data
+
 This repo requires pre-computed data which are generated using [this Julia code](https://github.com/AI-Fundamentals/DifferentiableUserModels-DataGen).
 
-#### Example usage
+#### Example training
+
 To run the training for experiment 2:
 
+```shell
+python -m experiments.train -settings settings/settings_ex2_train.json
 ```
-python -m experiments.ex2.experiment2_train -settings settings/settings_ex2_train.json
+
+Settings must be loaded from a valid `json` file. If no valid file is found (or the `-settings` argument isn't used), the default settings will be loaded instead. For full details of the settings files, and some example files, see the [settings folder](settings/).
+
+#### Re-training a pre-trained model
+
+In the training settings json file, there is an item 'init_weights'. Set this to the path of a file containing weights from a previous model training run. These weights will then be used as the initial training weights.
+
+#### Example evaluation
+
+To run the epochs evaluation (i.e. model performance vs number of training epochs) for experiment2:
+
+```shell
+python -m experiments.eval_epochs -settings settings/settings_ex2_eval_epochs.json
 ```
-Settings must be loaded from a valid `json` file. If no valid file is found (or the `-settings` argument isn't used), the default settings will be loaded instead. For full details of the settings file, see the docstrings in [dppum/settings.py](dppum/settings.py).
 
+This will then save a figure in your `figs_dir` folder from the settings file, and also the evaluation metrics will also be saved in the `models_dir` folder.
 
-## Workflow
-1. Run training script. Load training data from data folder. Save model weights and metadata parameters in models folder. Save training metrics plot to figures folder.
-2. Run test script. Load test data from model folder. Load models weights from model folder and save test performance data to model folder.
-3. Load test performance data and plot. Save to figures folder.
+To run the n_traj evaluation (i.e. model performance vs number of context trajectories), run the experiment2_eval_ntraj script:
+
+```shell
+python -m experiments.eval_ntraj -settings settings/settings_ex2_eval_epochs.json
+```
+
+## Workflow Overview
+
+1. Generate training data using the [Julia data generation code](https://github.com/AI-Fundamentals/DifferentiableUserModels-DataGen).
+2. Run training script `experiments/train.py` with an appropriate settings file. Load training data from data folder. Save model weights and metadata parameters in models folder. Save training metrics plot to figures folder.
+3. Run `experiments/eval_epochs.py`, with an appropriate settings file, to evaluate model performance for different numbers of training epochs.
+4. Run `experiments/eval_ntraj.py`, with an appropriate settings file, to evaluate model performence for different numbers of inference trajectories. This requires the user to specify a specific set of model weights to use- this will likely be the best training epoch (as evaluated during step 3).
+5. Load test performance data from CSV files and plot. Save to figures folder.
+
+For a detailed description of the workflow, see the [jobscripts folder](/jobscripts/README.md).
+
+## Settings Files
+
+Each model training or evaluation run requires a `json` settings file (otherwise a set of default settings will be used). Example files, and a detailed explanation of the various settings, are given in the [settings folder](settings/).
+
+## Scripts Folder
+
+The [scripts folder](scripts/) contains some useful scripts. Most of these are for plotting the final output data by loading the CSV files created during steps 3 and 4 in the [workflow overview](#workflow-overview) section.

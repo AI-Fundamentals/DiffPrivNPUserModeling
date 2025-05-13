@@ -60,7 +60,7 @@ def np_elbo_cat_torch(
     # type of `yt`.
     if not dtype_lik:
         dtype_lik = float64
-
+    
     if subsume_context:
         # Only here also update the targets.
         contexts_q, xt, yt = _merge_context_target(contexts, xt, yt)
@@ -107,27 +107,34 @@ def np_elbo_cat_torch(
     
     # d.mean is the mean of our samples from the latent distribution through 
     # the decoder
-    # Transpose y_true and y_pred to shape [minibatch, num_categories,[data_dimensions]]
-    # so they can go into torch.nn.CrossEntropyLoss correctly 
-    
-    yt_true_transposed = swap_axes(yt,cat_axis,1)
+    # Transpose y_pred to shape [minibatch, num_categories,[data_dimensions]]
+    # so it can go into torch.nn.CrossEntropyLoss correctly 
+    # Also get labels for the true yt, so its [minibatch, [data_dimensions]]
     yt_pred_transposed = swap_axes(d.mean[0], cat_axis,1)
-    yt_pred_transposed = B.cast(dtype_lik,yt_pred_transposed)
-
-    # Calculate the softmax cross-entropy reconstruction loss
-    loss_function = torch.nn.CrossEntropyLoss(reduction='none')
-    recon_loss = loss_function(yt_pred_transposed, yt_true_transposed)
-
-    # If there is padding, make sure we set the reconstruction loss to zero
-    if padding_value is not None:  # It gives an error if you do "if padding_values:"
+    yt_pred_transposed = B.cast(dtype_lik,yt_pred_transposed)    
+    yt_labels = torch.argmax(yt, dim=cat_axis)
+    yt_labels = B.cast(torch.long,yt_labels)
+    
+    # If there is padding, make sure rows in yt_labels are the padding value
+    if padding_value is not None:  # It gives an error if you do "if padding_value:"
         # If padding is a single value
         if B.size(padding_value) == 1:
             # Identify the padding
+            # True = padding. False = real data.
             padding_mask = (yt == padding_value)
             padding_mask = B.any(padding_mask, axis=cat_axis)
         else:
             raise ValueError("'padding_value' must be a single value")
-            
+        # For the padding parts, assign yt_labels to be padding value
+        padding_correct_dtype = torch.tensor(int(padding_value), dtype=torch.long, device=yt_labels.device)
+        yt_labels = B.where(padding_mask, padding_correct_dtype, yt_labels)
+
+    # Calculate the softmax cross-entropy reconstruction loss
+    loss_function = torch.nn.CrossEntropyLoss(reduction='none',ignore_index=int(padding_value))
+    recon_loss = loss_function(yt_pred_transposed, yt_labels)
+    
+    # If there is padding, make sure we set the reconstruction loss to zero        
+    if padding_value is not None:
         # For the padding parts, assign the loss to zero
         zero_correct_dtype = torch.tensor(0., dtype=dtype_lik, device=recon_loss.device)
         recon_loss = B.where(padding_mask, zero_correct_dtype, recon_loss)
@@ -162,7 +169,7 @@ def np_elbo_explicit(
     subsume_context=False,
     fix_noise=None,
     dtype_lik=None,
-    padding_values=None,
+    padding_value=None,
 
     **kw_args,
 ):
@@ -186,7 +193,7 @@ def np_elbo_explicit(
         fix_noise (float, optional): Fix the likelihood variance to this value.
         dtype_lik (dtype, optional): Data type to use for the likelihood computation.
             Defaults to the 64-bit variant of the data type of `yt`.
-        padding_values : float, optional
+        padding_value : float, optional
             Padding value for yt which will be discarded during the loss calculations.
 
     Returns:
@@ -245,7 +252,7 @@ def np_elbo_explicit(
         **kw_args,
     )
     d = nps.util.fix_noise(d, fix_noise)
-    
+
     # d.mean is the mean of our samples from the latent distribution through 
     # the decoder
     yt_pred = d.mean[0]
@@ -259,14 +266,14 @@ def np_elbo_explicit(
     recon_loss = logpdf_explicit(yt_pred_prob, yt,axis=cat_axis)
 
     # If there is padding, make sure we set the reconstruction loss to zero
-    if padding_values is not None:  # It gives an error if you do "if padding_values:"
+    if padding_value is not None:  # It gives an error if you do "if padding_value:"
         # If padding is a single value
-        if B.size(padding_values) == 1:
+        if B.size(padding_value) == 1:
             # Identify the padding
-            padding_mask = (yt == padding_values)
+            padding_mask = (yt == padding_value)
             padding_mask = B.any(padding_mask, axis=cat_axis)
         else:
-            raise ValueError("'padding_values' must be a single value")
+            raise ValueError("'padding_value' must be a single value")
             
         # For the padding parts, assign the loss to zero
         recon_loss = B.where(padding_mask, 0., recon_loss)    
