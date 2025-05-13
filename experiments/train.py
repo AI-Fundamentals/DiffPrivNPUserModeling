@@ -7,11 +7,11 @@ import datetime as dt
 import lab as B
 import torch
 
-from dppum.data import hdf_to_dataloader_pad
-from dppum.loss import np_elbo_cat_torch
-from dppum.util import print_dictionary
-from dppum.train import train_model_dp_torch, get_device_type
-from dppum.settings import default_settings_ex2_train
+from src.data import hdf_to_dataloader_pad
+from src.loss import np_elbo_cat_torch
+from src.util import print_dictionary
+from src.train import train_model_dp_torch, get_device_type
+from src.settings import default_settings_ex2_train
 
 # %%
 # Get GPU type

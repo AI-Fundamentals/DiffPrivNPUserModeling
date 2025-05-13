@@ -6,10 +6,10 @@ import lab as B
 import pandas as pd
 import neuralprocesses.torch as nps
 
-from dppum.privacy_oracle import get_sigma_from_privacy_loss_distribution as get_sigma
-from dppum.util import calc_greedy_confidence, calc_true_confidence, calc_greedy_acc_onehot, average_grads_batch_torch
-    
-  
+from src.privacy_oracle import get_sigma_from_privacy_loss_distribution as get_sigma
+from src.util import calc_greedy_confidence, calc_true_confidence, calc_greedy_acc_onehot, average_grads_batch_torch
+
+
 class AverageMeter(object):
     """Computes and stores the average and current value. This is used as a 
     training metric.

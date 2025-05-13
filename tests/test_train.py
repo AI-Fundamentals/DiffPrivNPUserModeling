@@ -1,5 +1,5 @@
 import torch
-from dppum.train import get_device_type, average_grads_batch_torch, AverageMeter
+from src.train import get_device_type, average_grads_batch_torch, AverageMeter
 
 def test_get_device_type():
     device = get_device_type()
