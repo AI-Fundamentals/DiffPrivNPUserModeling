@@ -4,7 +4,7 @@ import neuralprocesses as nps
 import numpy as np
 import torch
 
-from dppum.util import logpdf_explicit, swap_axes
+from src.util import logpdf_explicit, swap_axes
 
 
 def np_elbo_cat_torch(

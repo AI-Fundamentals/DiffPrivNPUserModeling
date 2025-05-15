@@ -7,7 +7,7 @@ import lab as B
 # It's something to do with dispatch in Plum?
 import neuralprocesses.torch as nps
 
-from dppum.util import (
+from src.util import (
     calc_greedy_acc_onehot,
     calc_greedy_confidence,
     calc_true_confidence,

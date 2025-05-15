@@ -8,10 +8,10 @@ import pandas as pd
 import json
 import matplotlib.pyplot as plt
 
-from dppum.data import hdf_to_dataloader_pad
-from dppum.util import print_dictionary, calc_greedy_acc_onehot, calc_true_confidence
-from dppum.train import get_device_type
-from dppum.settings import default_settings_ex2_eval_ntraj
+from src.data import hdf_to_dataloader_pad
+from src.util import print_dictionary, calc_greedy_acc_onehot, calc_true_confidence
+from src.train import get_device_type
+from src.settings import default_settings_ex2_eval_ntraj
 
 print("Finished importing packages.")
 
