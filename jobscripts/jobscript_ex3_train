@@ -1,0 +1,51 @@
+#!/bin/bash --login
+ 
+# Job will run in the current directory (where you ran qsub)
+#$ -cwd
+ 
+# Mount a NVIDIA a100 GPU
+#$ -l a100
+ 
+# Request 4 CPU core
+#$ -pe smp.pe 4
+
+# When running work in relation to Kaski projects
+#$ -P sk01.prj
+ 
+# Name the project name
+#$ -N ex1-train
+ 
+# Join output file to .o
+#$ -j y
+
+# Purge modules
+module purge
+ 
+# PyTorch 2.3.0 using Python 3.11 for GPUs: (uses CUDA 12.1, Anaconda3, 2023.09)
+module load apps/binapps/pytorch/2.3.0-311-gpu-cu121
+
+# Name of the environment
+ENV_NAME="dppum"
+
+source activate $ENV_NAME
+
+# Check if activation was successful
+if [ $? -eq 0 ]; then
+    echo "Successfully activated $ENV_NAME"
+else
+    echo "Failed to activate $ENV_NAME. Aborting."
+    exit 1
+fi
+
+echo -e "\nRunning a test of the environment $ENV_NAME:\n"
+python3 -c "
+from dppum.train import get_device_type
+print(get_device_type())
+"
+echo -e "\nFinished running environment test. It should have said something like 'cuda:0'"
+
+echo "Running experiments/train.py with settings for ex3."
+# Run with -u flag so print statements should print immediately
+python3 -u -m experiments.train -settings settings/settings_ex3_train.json
+
+echo -e "\nFinished ex3 training jobscript."
