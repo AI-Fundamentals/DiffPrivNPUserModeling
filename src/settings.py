@@ -1,7 +1,7 @@
 
 def default_settings_ex2_train():
     """Returns a dictionary of settings for training a model for experiment 2.
-    
+
     Returns
     -------
     settings : dict
@@ -61,42 +61,41 @@ def default_settings_ex2_train():
         "lv_likelihood" : str
             Likelihood of the latent variable. Must be one of “het”, “dense”,
             or “spikes-beta”.
-    """ 
-    
+    """
+
     settings = {
-    "num_users": 128,
-    "batch_size": 4,
-    "train_hdf": "data/ex2/ex2_train_data.hdf",
-    "val_hdf": "data/ex2/ex2_eval_epochs_data.hdf",
-    "models_dir": "models/ex2/eps1_128users/",
-    "figs_dir": "figures/ex2/eps1_128users/",
-    "init_weights": None,
-    "num_samples": 1,
-    "num_epochs": 5,
-    "epsilon": 1.0,
-    "delta": None,
-    "clipping_bound": 2.0,
-    "clip_grads_per_user": "loop",
-    "learning_rate": 0.0005,
-    "warmup_epoch": True,
-    "dp_enc" : True,
-    "dp_dec" : False,
-    "shuffle" : False,
-    "optimizer" : "Adam",
-    "padding_value" : -1.0,
-    "nonlinearity" : "LeakyReLU",
-    "likelihood" : "het",
-    "dim_lv" : 0,
-    "lv_likelihood" : "het",
+        "num_users": 128,
+        "batch_size": 4,
+        "train_hdf": "data/ex2/ex2_train_data.hdf",
+        "val_hdf": None,
+        "models_dir": "models/ex2/eps1_128users/",
+        "figs_dir": "figures/ex2/eps1_128users/",
+        "init_weights": None,
+        "num_samples": 1,
+        "num_epochs": 5,
+        "epsilon": 1.0,
+        "delta": None,
+        "clipping_bound": 2.0,
+        "clip_grads_per_user": "loop",
+        "learning_rate": 0.0005,
+        "warmup_epoch": True,
+        "dp_enc": True,
+        "dp_dec": False,
+        "shuffle": False,
+        "optimizer": "Adam",
+        "padding_value": -1.0,
+        "nonlinearity": "LeakyReLU",
+        "likelihood": "het",
+        "dim_lv": 0,
+        "lv_likelihood": "het",
     }
     return settings
 
 
-
-def default_settings_ex2_eval_epochs():
-    """Returns a dictionary of settings for evaluating performance of a model
+def default_settings_ex2_val():
+    """Returns a dictionary of settings for validating performance of a model
     for experiment 2 as a function of number of training epochs.
-    
+
     Returns
     -------
     settings : dict
@@ -119,13 +118,13 @@ def default_settings_ex2_eval_epochs():
             Value to use for padding during batching. Should be a value that is
             not in the scope of the real data (e.g. use -1 for one-hot encoded
             categorical data.)
-        
-    """ 
-    
+
+    """
+
     settings = {
         "num_users": 128,
         "batch_size": 4,
-        "eval_hdf": "data/ex2/ex2_eval_epochs_data.hdf",
+        "val_hdf": "data/ex2/ex2_val_data.hdf",
         "models_dir": "models/ex2/eps1_128users/",
         "figs_dir": "figures/ex2/eps1_128users/",
         "num_samples": 1,
@@ -133,10 +132,11 @@ def default_settings_ex2_eval_epochs():
     }
     return settings
 
+
 def default_settings_ex2_eval_ntraj():
     """Returns a dictionary of settings for testing a model for experiment 2,
     to evaluate the impact of varying n_traj.
-    
+
     Returns
     -------
     settings : dict
@@ -166,9 +166,9 @@ def default_settings_ex2_eval_ntraj():
         experiment : int
             Experiment number. This is required to work out how to crop the
             data, which is bespoke to each type of dataset.
-        
-    """ 
-    
+
+    """
+
     settings = {
         "num_users": 128,
         "batch_size": 1,
@@ -181,7 +181,3 @@ def default_settings_ex2_eval_ntraj():
         "experiment": 2
     }
     return settings
-
-
-
-
