@@ -8,7 +8,7 @@ Each setting file is a json with keys for relevant parameters for model training
 
 **Examples files**: [experiment 1](ex1/settings_ex1_train.json), [experiment 2](ex2/settings_ex2_train.json), [experiment 3](ex3/settings_ex3_train.json)
 
-**Settings function**: A dictionary of example settings is also returned by the function `dppum.default_settings_ex2_train()`
+**Settings function**: A dictionary of example settings is also returned by the function `src.default_settings_ex2_train()`
 
 **Keys**:
 
@@ -59,13 +59,13 @@ Each setting file is a json with keys for relevant parameters for model training
 - **lv_likelihood**: `str`
   - Likelihood of the latent variable. Must be one of `het`, `dense`, or `spikes-beta`.
 
-## Eval epochs settings
+## Validation settings
 
 **Purpose**: Evaluating the model accuracy vs number of training epochs.
 
-**Example files**: [experiment 1](ex1/settings_ex1_eval_epochs.json),  [experiment 2](ex2/settings_ex2_eval_epochs.json), [experiment 3](ex3/settings_ex3_eval_epochs.json)
+**Example files**: [experiment 1](ex1/settings_ex1_val.json),  [experiment 2](ex2/settings_ex2_val.json), [experiment 3](ex3/settings_ex3_val_.json)
 
-**Settings function**: A dictionary of example settings is also returned by the function `dppum.default_settings_ex2_eval_epochs()`
+**Settings function**: A dictionary of example settings is also returned by the function `src.default_settings_ex2_val()`
 
 **Keys**:
 
@@ -73,7 +73,7 @@ Each setting file is a json with keys for relevant parameters for model training
   - Number of users to load from the training data hdf.
 - **batch_size**: int
   - Number of users to put into each batch. Default is 4.
-- **eval_hdf**: str
+- **val_hdf**: str
   - Path to the hdf file to load the evaluation data from. This should normally have n_traj of 1 - 8, the same as the training data.
 - **models_dir**: str
   - The folder to load the trained models from.
