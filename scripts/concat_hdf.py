@@ -1,5 +1,5 @@
 import os
-from dppum.data import concat_user_hdf_files
+from src.data import concat_user_hdf_files
 
 
 def get_hdf_files(directory):
