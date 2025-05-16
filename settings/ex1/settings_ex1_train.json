@@ -2,7 +2,7 @@
     "num_users": 128,
     "batch_size": 4,
     "train_hdf": "data/ex1/ex1_train_data.hdf",
-    "val_hdf": "data/ex1/ex1_val_data.hdf",
+    "val_hdf": null,
     "models_dir": "models/ex1/eps1_128users/",
     "figs_dir": "figures/ex1/eps1_128users/",
     "init_weights": null,
