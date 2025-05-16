@@ -13,7 +13,7 @@
 #$ -P sk01.prj
  
 # Name the project name
-#$ -N ex1-eval-epochs
+#$ -N ex1-val
  
 # Join output file to .o
 #$ -j y
@@ -46,8 +46,8 @@ print(get_device_type())
 echo -e "\nFinished running environment test. It should have said something like 'cuda:0'"
 
 
-echo "Running experiments/eval_epochs.py with settings for ex1."
+echo "Running experiments/val.py with settings for ex1."
 # Run with -u flag so print statements should print immediately
-python3 -u -m experiments.eval_epochs -settings settings/settings_ex1_eval_epochs.json
+python3 -u -m experiments.val -settings settings/settings_ex1_val.json
 
-echo -e "\nFinished ex1 eval_epochs jobscript."
+echo -e "\nFinished ex1 val jobscript."
