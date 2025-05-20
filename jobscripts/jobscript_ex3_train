@@ -46,6 +46,6 @@ echo -e "\nFinished running environment test. It should have said something like
 
 echo "Running experiments/train.py with settings for ex3."
 # Run with -u flag so print statements should print immediately
-python3 -u -m experiments.train -settings settings/settings_ex3_train.json
+python3 -u -m experiments.train -settings settings/ex3/settings_ex3_train.json
 
 echo -e "\nFinished ex3 training jobscript."
