@@ -10,11 +10,12 @@ Questions about the scientific content should be directed to the paper's corresp
 
 ## Installation Instructions
 
-1. Clone and enter the repo:
+1. Clone and enter the repo, then switch to the main branch for the latest release:
    
    ```shell
    git clone https://github.com/AI-Fundamentals/dp-priv-python.git
    cd dp-priv-python
+   git checkout main
    ```
    
    NB if using CSF, please ignore the rest of the instructions and follow the workflow in the [jobscripts folder](jobscripts/README.md).
