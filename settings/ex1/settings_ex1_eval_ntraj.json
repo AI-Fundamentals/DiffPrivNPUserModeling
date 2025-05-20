@@ -6,6 +6,6 @@
     "figs_dir": "figures/ex1/eps1_128users/",
     "num_samples": 1,
     "padding_value": -1.0,
-    "init_weights": "models/ex1/eps1_128users/weights_epoch_5.pt"
+    "init_weights": "models/ex1/eps1_128users/weights_epoch_5.pt",
     "experiment": 1
 }
