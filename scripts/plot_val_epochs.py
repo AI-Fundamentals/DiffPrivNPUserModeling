@@ -16,19 +16,20 @@ labels = ["eps 1", "eps 5", "eps 10", "non-DP"]
 
 # %% Plot of just accuracy
 # Initialize the plot
-fig, ax = plt.subplots(1,2,figsize=(8,5))
+fig, ax = plt.subplots(1, 2, figsize=(8, 5))
 
 # Loop through each file path, load the CSV if it exists, and plot the 'train_acc_sample' column
 for folder_path, color, label in zip(folder_list, colors, labels):
-    file_path_eval = folder_path + 'eval_acc_vs_epochs.csv'
-    if os.path.exists(file_path_eval):
-        df = pd.read_csv(file_path_eval, index_col='epoch')
+    file_path_val = folder_path + 'val_acc_vs_epochs.csv'
+    if os.path.exists(file_path_val):
+        df = pd.read_csv(file_path_val, index_col='epoch')
         ax[0].plot(df.index, df['acc_greedy'], label=label, color=color)
         ax[1].plot(df.index, df['acc_sample_Q50'], label=label, color=color)
-        ax[1].fill_between(df.index, df['acc_sample_Q25'], df['acc_sample_Q75'], color=color, alpha=0.1)
+        ax[1].fill_between(df.index, df['acc_sample_Q25'],
+                           df['acc_sample_Q75'], color=color, alpha=0.1)
 
     else:
-        print(f"Warning: {file_path_eval} does not exist and will be skipped.")
+        print(f"Warning: {file_path_val} does not exist and will be skipped.")
 
 # Add labels, title, and legend
 ax[0].set_xlabel('N of training epochs')
@@ -56,30 +57,31 @@ ax[1].grid(which='both', linestyle='--')
 plt.suptitle('Experiment 1, 6400 users, dim_lv=0, c=2')
 
 plt.tight_layout()
-plt.savefig('figures/ex1/ex1_acc_vs_epochs.png',dpi=200)
+plt.savefig('figures/ex1/ex1_acc_vs_epochs.png', dpi=200)
 plt.show()
 
 # %% Same plot but with training loss as well
 # Initialize the plot
-fig, ax = plt.subplots(1,3,figsize=(8,4))
+fig, ax = plt.subplots(1, 3, figsize=(8, 4))
 
 # Loop through each file path, load the CSV if it exists, and plot the 'train_acc_sample' column
 for folder_path, color, label in zip(folder_list, colors, labels):
-    file_path_eval = folder_path + 'eval_acc_vs_epochs.csv'
+    file_path_val = folder_path + 'val_acc_vs_epochs.csv'
     file_path_train = folder_path + 'training_metrics.csv'
-    if os.path.exists(file_path_eval):
-        df = pd.read_csv(file_path_eval, index_col='epoch')
+    if os.path.exists(file_path_val):
+        df = pd.read_csv(file_path_val, index_col='epoch')
         ax[1].plot(df.index, df['acc_greedy'], label=label, color=color)
         ax[2].plot(df.index, df['acc_sample_Q50'], label=label, color=color)
-        ax[2].fill_between(df.index, df['acc_sample_Q25'], df['acc_sample_Q75'], color=color, alpha=0.1)
+        ax[2].fill_between(df.index, df['acc_sample_Q25'],
+                           df['acc_sample_Q75'], color=color, alpha=0.1)
     else:
-        print(f"Warning: {file_path_eval} does not exist and will be skipped.")
-        
+        print(f"Warning: {file_path_val} does not exist and will be skipped.")
+
     if os.path.exists(file_path_train):
         df = pd.read_csv(file_path_train, index_col='epoch')
         ax[0].plot(df.index, df['loss'], label=label, color=color)
     else:
-        print(f"Warning: {file_path_eval} does not exist and will be skipped.")
+        print(f"Warning: {file_path_val} does not exist and will be skipped.")
 
 # Add labels, title, and legend
 ax[0].set_xlabel('N of training epochs')
@@ -114,5 +116,5 @@ ax[2].grid(which='both', linestyle='--')
 plt.suptitle('Experiment 1, 6400 users, dim_lv=0, c=2')
 
 plt.tight_layout()
-plt.savefig('figures/ex1/ex1_acc_loss_vs_epochs.png',dpi=200)
+plt.savefig('figures/ex1/ex1_acc_loss_vs_epochs.png', dpi=200)
 plt.show()

@@ -10,11 +10,12 @@ Questions about the scientific content should be directed to the paper's corresp
 
 ## Installation Instructions
 
-1. Clone and enter the repo:
+1. Clone and enter the repo, then switch to the main branch for the latest release:
    
    ```shell
    git clone https://github.com/AI-Fundamentals/dp-priv-python.git
    cd dp-priv-python
+   git checkout main
    ```
    
    NB if using CSF, please ignore the rest of the instructions and follow the workflow in the [jobscripts folder](jobscripts/README.md).
@@ -66,7 +67,7 @@ This repo requires pre-computed data which are generated using [this Julia code]
 To run the training for experiment 2:
 
 ```shell
-python -m experiments.train -settings settings/settings_ex2_train.json
+python -m experiments.train -settings settings/ex2/settings_ex2_train.json
 ```
 
 Settings must be loaded from a valid `json` file. If no valid file is found (or the `-settings` argument isn't used), the default settings will be loaded instead. For full details of the settings files, and some example files, see the [settings folder](settings/).
@@ -75,27 +76,29 @@ Settings must be loaded from a valid `json` file. If no valid file is found (or 
 
 In the training settings json file, there is an item 'init_weights'. Set this to the path of a file containing weights from a previous model training run. These weights will then be used as the initial training weights.
 
-#### Example evaluation
+#### Example validation
 
-To run the epochs evaluation (i.e. model performance vs number of training epochs) for experiment2:
+To run the validation script (i.e. model performance vs number of training epochs) for experiment 2:
 
 ```shell
-python -m experiments.eval_epochs -settings settings/settings_ex2_eval_epochs.json
+python -m experiments.val -settings settings/ex2/settings_ex2_val.json
 ```
 
 This will then save a figure in your `figs_dir` folder from the settings file, and also the evaluation metrics will also be saved in the `models_dir` folder.
 
+#### Example evaluation
+
 To run the n_traj evaluation (i.e. model performance vs number of context trajectories), run the experiment2_eval_ntraj script:
 
 ```shell
-python -m experiments.eval_ntraj -settings settings/settings_ex2_eval_epochs.json
+python -m experiments.eval_ntraj -settings settings/ex2/settings_ex2_val.json
 ```
 
 ## Workflow Overview
 
 1. Generate training data using the [Julia data generation code](https://github.com/AI-Fundamentals/DifferentiableUserModels-DataGen).
 2. Run training script `experiments/train.py` with an appropriate settings file. Load training data from data folder. Save model weights and metadata parameters in models folder. Save training metrics plot to figures folder.
-3. Run `experiments/eval_epochs.py`, with an appropriate settings file, to evaluate model performance for different numbers of training epochs.
+3. Run `experiments/val.py`, with an appropriate settings file, to validate model performance for different numbers of training epochs.
 4. Run `experiments/eval_ntraj.py`, with an appropriate settings file, to evaluate model performence for different numbers of inference trajectories. This requires the user to specify a specific set of model weights to use- this will likely be the best training epoch (as evaluated during step 3).
 5. Load test performance data from CSV files and plot. Save to figures folder.
 

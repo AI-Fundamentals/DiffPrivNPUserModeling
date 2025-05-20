@@ -56,7 +56,7 @@ This folder contains jobscripts designed to run the code on the University of Ma
 - **Jobscript**: `jobscript_ex1_train`
 - Python scripts used: `/experiments/train.py`
 - **Editable Parameters**: `ENV_NAME`, settings file location
-- **Notes**: ``ENV_NAME``must match the one from `jobscript_setup_environment`. The default settings file is `settings/settings_ex1_train.json` near the end of the script. You can add extra lines to run multiple settings files one after the other. You can also retrain an existing model using the `init_weights` key in the settings file.
+- **Notes**: ``ENV_NAME``must match the one from `jobscript_setup_environment`. The default settings file is `settings/ex1/settings_ex1_train.json` near the end of the script. You can add extra lines to run multiple settings files one after the other. You can also retrain an existing model using the `init_weights` key in the settings file.
 - **stdout filename**: `ex1-train.oxxxxxxx`
 - **How to check it's run correctly**: Check that the output files are created. The word "error" should not appear in the logfile. Near the start there is a similar environment check to the one in environment setup jobscript. You should then see that it has loaded the settings file, metadata for the dataset, and details of the model training. If an error occurs, it is likely to be due to an error in the settings file.
 - **Ouptut files**:
@@ -69,25 +69,25 @@ This folder contains jobscripts designed to run the code on the University of Ma
 
 ### Step 4: [Evaluate accuracy vs number of training epochs]
 
-- **Jobscript**: `jobscript_ex1_eval_epochs`
-- **Python scripts used**: `/experiments/eval_epochs.py`
+- **Jobscript**: `jobscript_ex1_val`
+- **Python scripts used**: `/experiments/val.py`
 - **Editable Parameters**: `ENV_NAME`, settings file location
-- **Notes**: `ENV_NAME`must match the one from `jobscript_setup_environment`. The default settings file is `settings/settings_ex1_eval_epochs.json` near the end of the script. You can add extra lines to run multiple settings files one after the other. Make sure you set the models and figures folders to the same as in the training step in your settings file.
-- **stdout filename**: `ex1-eval-epochs.oxxxxxxx`
+- **Notes**: `ENV_NAME`must match the one from `jobscript_setup_environment`. The default settings file is `settings/ex1/settings_ex1_val.json` near the end of the script. You can add extra lines to run multiple settings files one after the other. Make sure you set the models and figures folders to the same as in the training step in your settings file.
+- **stdout filename**: `ex1-val.oxxxxxxx`
 - **How to check it's run correctly**: Check that the output files are created. The word "error" should not appear in the logfile. Near the start there is a similar environment check to the one in environment setup jobscript.You should then see that it has loaded the settings file, metadata for the dataset, and a note that it is proceeding with the evaluation. If an error occurs, it is likely to be due to an error in the settings file.
 - **Ouptut files**:
   - In the models folder (from the settings file):
-    - `eval_epochs_settings.json`: A copy of the settings file used for training.
-    - `eval_acc_vs_epochs.csv`: Evaluation accuracy vs number of epochs.
+    - `val_settings.json`: A copy of the settings file used for training.
+    - `val_acc_vs_epochs.csv`: Evaluation accuracy vs number of epochs.
   - In the figures folder (from the settings file):
-    - `eval_epochs_metrics.png`: A plot of the evaluation metrics.
+    - `valmetrics.png`: A plot of the evaluation metrics.
 
 ### Step 5: [Evaluate accuracy vs number of context trajectories]
 
 - **Jobscript**: `jobscript_ex1_eval_ntraj`
 - **Python scripts used**: `/experiments/eval_ntraj.py`
 - **Editable Parameters**: `ENV_NAME`, settings file location
-- **Notes**: `ENV_NAME`must match the one from `jobscript_setup_environment`. The default settings file is `settings/settings_ex1_eval_epochs.json` near the end of the script. You can add extra lines to run multiple settings files one after the other. Make sure you set the models and figures folders to the same as in the training step in your settings file.
+- **Notes**: `ENV_NAME`must match the one from `jobscript_setup_environment`. The default settings file is `settings/ex1/settings_ex1_val.json` near the end of the script. You can add extra lines to run multiple settings files one after the other. Make sure you set the models and figures folders to the same as in the training step in your settings file.
 - **stdout filename**: `ex1-eval-ntraj.oxxxxxxx`
 - **How to check it's run correctly**: Check that the output files are created. The word "error" should not appear in the logfile. Near the start there is a similar environment check to the one in environment setup jobscript. You should then see that it has loaded the settings file, metadata for the dataset, and details of it looping through different numbers of context trajectories. If an error occurs, it is likely to be due to an error in the settings file.
 - **Ouptut files**:
