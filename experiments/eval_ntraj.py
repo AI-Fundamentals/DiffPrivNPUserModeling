@@ -34,7 +34,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-settings",
                     help="Path to settings json file.",
                     type=str,
-                    default="settings/settings_ex2_eval_ntraj.json")
+                    default="settings/ex2/settings_ex2_eval_ntraj.json")
 
 # Parsing the arguments to a dictionary
 eval_settings_file_path = vars(parser.parse_args())['settings']

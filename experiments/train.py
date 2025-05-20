@@ -31,7 +31,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-settings",
                     help="Path to settings json file.",
                     type=str,
-                    default="settings/settings_ex2_train.json")
+                    default="settings/ex2/settings_ex2_train.json")
 
 # Parsing the arguments to a dictionary
 settings_file_path = vars(parser.parse_args())['settings']
