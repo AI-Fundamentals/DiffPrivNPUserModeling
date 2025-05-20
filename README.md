@@ -91,7 +91,7 @@ This will then save a figure in your `figs_dir` folder from the settings file, a
 To run the n_traj evaluation (i.e. model performance vs number of context trajectories), run the experiment2_eval_ntraj script:
 
 ```shell
-python -m experiments.eval_ntraj -settings settings/ex2/settings_ex2_eval_epochs.json
+python -m experiments.eval_ntraj -settings settings/ex2/settings_ex2_val.json
 ```
 
 ## Workflow Overview
