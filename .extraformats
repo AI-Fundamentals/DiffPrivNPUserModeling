@@ -1,4 +1,4 @@
 {
 "requirements.txt": "python",
-"jobscripts/jobscript*": "python"
+"jobscript*": "python"
 }
