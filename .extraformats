@@ -1,5 +1,6 @@
 {
 "requirements.txt": "python",
+"jobscript_ex1_train": "python",
 "jobscript_ex1_val": "python",
 "jobscript_ex1_eval_ntraj": "python",
 "jobscript_ex2_train": "python",
