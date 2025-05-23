@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 University of Manchester
+
+SPDX-License-Identifier: apache-2.0
+-->
+
 # CSF Jobscripts
 
 This folder contains jobscripts designed to run the code on the University of Manchester's [CSF3](https://ri.itservices.manchester.ac.uk/csf3/) high performance computing system. They each use the same hardware resources: a 4+ core CPU, and an NVidia A100 GPU. There will be a siginificant queue for the A100 if not used with elevated privileges and you may with to swap for a GPU with a shorter queue (e.g. a V100 or A10G).

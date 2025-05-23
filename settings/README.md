@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 University of Manchester
+
+SPDX-License-Identifier: apache-2.0
+-->
+
 # Settings files
 
 Each setting file is a json with keys for relevant parameters for model training and evaluation. The files are then loaded in as dictionaries when used in the python scripts. Suggested default settings are contained within the example files. The main things you may wish to edit are the `num_users`, `num_epochs`, `models_dir`, and `figs_dir`.

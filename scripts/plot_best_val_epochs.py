@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 University of Manchester
+#
+# SPDX-License-Identifier: apache-2.0
+
 """
 Script to go through various folders of model runs,
 work out the best epoch (i.e. highest accuracy),

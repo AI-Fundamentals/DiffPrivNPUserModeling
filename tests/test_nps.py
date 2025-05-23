@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 University of Manchester
+#
+# SPDX-License-Identifier: apache-2.0
+
 # A basic example to check if you can run a basic GNP model from the
 # neuralprocesses library
 # Example from https://wessel.ai/neuralprocesses/basic_usage.html

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 University of Manchester
+#
+# SPDX-License-Identifier: apache-2.0
+
 import torch
 from src.train import get_device_type, average_grads_batch_torch, AverageMeter
 
