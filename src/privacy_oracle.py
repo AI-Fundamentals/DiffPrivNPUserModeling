@@ -1,3 +1,6 @@
+# This script has been copied directly from the source repository
+# https://github.com/hamalajaa/DifferentiablyPrivateProbabilisticUserModeling/blob/main/src/privacy_oracle.py
+
 import scipy.optimize
 import numpy as np
 from dp_accounting.pld import privacy_loss_distribution

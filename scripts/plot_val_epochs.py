@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 University of Manchester
+#
+# SPDX-License-Identifier: apache-2.0
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import os

@@ -1,5 +1,9 @@
 #!/bin/bash --login
- 
+
+# SPDX-FileCopyrightText: 2025 University of Manchester
+#
+# SPDX-License-Identifier: apache-2.0
+
 # Job will run in the current directory (where you ran qsub)
 #$ -cwd
 

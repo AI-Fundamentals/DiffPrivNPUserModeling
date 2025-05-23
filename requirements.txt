@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 University of Manchester
+#
+# SPDX-License-Identifier: apache-2.0
+
 argparse==1.4.0
 auto_mix_prep==0.2.0
 dp_accounting==0.4.3
