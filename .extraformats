@@ -1,4 +1,13 @@
 {
 "requirements.txt": "python",
-"jobscript*": "python",
+"jobscript_ex1_val": "python",
+"jobscript_ex1_eval_ntraj": "python",
+"jobscript_ex2_train": "python",
+"jobscript_ex2_val": "python",
+"jobscript_ex2_eval_ntraj": "python",
+"jobscript_ex3_train": "python",
+"jobscript_ex3_val": "python",
+"jobscript_ex3_eval_ntraj": "python",
+"jobscript_setup_environment": "python",
+"jobscript_unit_tests": "python"
 }
