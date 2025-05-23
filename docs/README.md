@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 University of Manchester
+
+SPDX-License-Identifier: apache-2.0
+-->
+
 ### Algorithm
 
 This is a summary of the algorithm implemented in the code, as taken from a draft paper *Differentially Private Probabilistic User Modelling* by *Sonee et al.*.

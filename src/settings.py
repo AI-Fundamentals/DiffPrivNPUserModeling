@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2025 University of Manchester
+#
+# SPDX-License-Identifier: apache-2.0
 
 def default_settings_ex2_train():
     """Returns a dictionary of settings for training a model for experiment 2.

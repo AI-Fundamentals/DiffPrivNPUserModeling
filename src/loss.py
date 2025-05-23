@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 University of Manchester
+#
+# SPDX-License-Identifier: apache-2.0
+
 from neuralprocesses.model.elbo import _merge_context_target, _kl
 import lab as B
 import neuralprocesses as nps

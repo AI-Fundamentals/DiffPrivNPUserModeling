@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 University of Manchester
+#
+# SPDX-License-Identifier: apache-2.0
+
 """
 Several additional definitions for working with NP-based models.
 These come from the DP user modelling Julia code
