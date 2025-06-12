@@ -4,7 +4,7 @@ SPDX-FileCopyrightText: 2025 University of Manchester
 SPDX-License-Identifier: apache-2.0
 -->
 
-# dp-priv-python
+# DiffPrivNPUserModeling
 
 Differentially Private Probabilistic User Modelling (in python). This is a python implementation of [this](https://github.com/hamalajaa/DifferentiablyPrivateProbabilisticUserModeling) Julia repo.
 
