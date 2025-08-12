@@ -12,7 +12,7 @@ Differentially Private Probabilistic User Modelling (in python). This is a pytho
 
 This repo was developed by [Jonathan Taylor](mailto:jonathan.taylormanchester.ac.uk), Research IT, University of Manchester.
 
-Questions about the scientific content should be directed to the paper's corresponding author, [Hari Harikumar](mailto:haripriya.harikumar@manchester.ac.uk).
+Questions about the scientific content should be directed to the paper's corresponding author, [Haripriya Harikumar](mailto:haripriya.harikumar@manchester.ac.uk).
 
 ## Installation Instructions
 
