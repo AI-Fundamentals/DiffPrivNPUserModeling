@@ -4,15 +4,22 @@ SPDX-FileCopyrightText: 2025 University of Manchester
 SPDX-License-Identifier: apache-2.0
 -->
 
-# DiffPrivNPUserModeling
+# Privacy-Preserving Neural Processes for Probabilistic User Modeling
 
-Differentially Private Probabilistic User Modelling (in python). This is a python implementation of [this](https://github.com/hamalajaa/DifferentiablyPrivateProbabilisticUserModeling) Julia repo.
+This code repository is for our paper Privacy-Preserving Neural Processes for Probabilistic User Modeling (in python). In this work, we explore the integration of Neural Processes with Differential Privacy using DP-SGD and PLD for user-level privacy in probabilistic user modeling. This is a python implementation of [this](https://github.com/hamalajaa/DifferentiablyPrivateProbabilisticUserModeling) Julia repo.
+
+# Features
+ * Neural Process-based user modeling: Learn probabilistic representations of user behavior.
+
+ * Differential Privacy Integration: Achieve privacy-preserving predictions with DP-SGD and PLD.
+
+ * Customizable Pipeline: Adapt the model for various user data types and privacy budgets.
 
 ## Contact Details
 
 This repo was developed by [Jonathan Taylor](mailto:jonathan.taylormanchester.ac.uk), Research IT, University of Manchester.
 
-Questions about the scientific content should be directed to the paper's corresponding author, [Hari Harikumar](mailto:haripriya.harikumar@manchester.ac.uk).
+Questions about the scientific content should be directed to the paper's corresponding author, [Haripriya Harikumar](mailto:haripriya.harikumar@manchester.ac.uk).
 
 ## Installation Instructions
 
